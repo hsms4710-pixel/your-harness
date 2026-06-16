@@ -4,11 +4,11 @@ description: |
   Harness Archaeology — 从项目代码中识别特征，生成定制化 Harness Engineering 系统。
   不是输出推荐文档，而是生成可执行的定制化系统：脚本、Hook、Skill、工作流。
   支持 Python/Go/TypeScript 项目、Monorepo、复杂构建系统。
-  核心：识别项目模式 → 生成定制脚本 → 配置自动化 Hook → 输出完整系统。
-  v3.2.0: 增强 PDM/Turborepo/golangci-lint v2/ty/ast-grep 检测，基于 FastAPI/Gin/Next.js 测试优化。
-version: 3.2.0
+  核心：识别项目模式 → 识别 SDD 实践 → 生成定制脚本 → 配置自动化 Hook → 输出完整系统。
+  v3.3: 融合 Spec Kit/OpenSpec/Superpowers 最佳实践，识别 Constitution/Specs/TDD/7阶段工作流。
+version: 3.3.0
 author: agent_created
-tags: [harness, archaeology, reverse-engineering, code-analysis, customization]
+tags: [harness, archaeology, reverse-engineering, code-analysis, customization, sdd]
 ---
 
 # Harness Archaeology
@@ -1314,6 +1314,12 @@ Constitution 不再是详细的规范文档，而是项目特征摘要：
 
 ## 版本历史
 
+- v3.3.0 (2026-06-16): 融合 SDD 工具最佳实践
+  - 添加 Constitution 生成支持（借鉴 Spec Kit）
+  - 添加 Specs 识别支持（借鉴 OpenSpec）
+  - 添加 TDD 实践检测（借鉴 Superpowers）
+  - 添加 7 阶段工作流识别
+  - 添加质量门禁配置识别
 - v3.2.0 (2026-06-16): 基于 FastAPI/Gin/Next.js 测试优化
   - 添加 PDM 包管理器检测
   - 添加 golangci-lint v2 配置解析

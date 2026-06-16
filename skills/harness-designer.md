@@ -4,11 +4,11 @@ description: |
   Harness Designer — 生成和修改定制化 Harness Engineering 系统。
   接收 harness-archaeology 的项目特征识别结果，生成完整的定制化系统。
   支持四种模式：Greenfield、Guided Discovery、Brownfield、From Inferred。
-  输出：定制脚本 + Hook + Skill + 工作流 + Constitution 摘要 + CI 配置。
-  v3.1: 增加 CI/CD 集成、可视化展示、批量操作支持。
-version: 3.1.0
+  输出：定制脚本 + Hook + Skill + 工作流 + Constitution 摘要 + CI 配置 + Specs + Tasks。
+  v3.2: 借鉴 Spec Kit/OpenSpec/Superpowers 最佳实践，添加 Constitution 生成、质量门禁、任务拆分、TDD 支持。
+version: 3.2.0
 author: agent_created
-tags: [harness, designer, customization, scripts, hooks, skills, ci-cd, visualization]
+tags: [harness, designer, customization, scripts, hooks, skills, ci-cd, sdd, constitution, specs, tasks]
 ---
 
 # Harness Designer
@@ -21,15 +21,215 @@ tags: [harness, designer, customization, scripts, hooks, skills, ci-cd, visualiz
 - 基于项目模式生成定制化系统
 - 将考古结果转化为可执行的脚本、Hook、Skill、工作流
 
-## 核心职责（v3.0 重构）
+## 核心职责（v3.2 重构 - 融合 SDD 最佳实践）
 
 ```
 输入: harness-archaeology 的项目特征识别结果
 输出: 完整的定制化 Harness Engineering 系统
 
 转换过程:
-  项目特征 → 识别模式 → 生成脚本 → 配置 Hook → 封装 Skill → 编写工作流
+  项目特征 → 识别模式 → 生成 Constitution → 生成 Specs → 生成 Tasks 
+           → 生成脚本 → 配置 Hook → 封装 Skill → 编写工作流
 ```
+
+### 借鉴 SDD 工具的最佳实践
+
+| 来源 | 最佳实践 | 应用到 Harness |
+|------|----------|---------------|
+| **Spec Kit** | Constitution 定义项目治理原则 | 生成项目级 Constitution |
+| **Spec Kit** | Specs 聚焦 what 和 why | 生成功能规格文档 |
+| **Spec Kit** | Tasks 从 Plan 拆解 | 生成可执行任务列表 |
+| **OpenSpec** | AGENTS.md 作为 AI 指南 | 生成 AI 协作指南 |
+| **OpenSpec** | 变更追踪 (proposal → archive) | 生成变更管理流程 |
+| **Superpowers** | TDD 强制验证 | 生成 TDD 检查脚本 |
+| **Superpowers** | 内联自审 (Inline Self-Review) | 生成代码审查检查清单 |
+| **Superpowers** | 7 阶段工作流 | 生成完整开发流程 |
+
+### Constitution 生成规则（借鉴 Spec Kit）
+
+Constitution 定义项目的治理原则和开发指南：
+
+```markdown
+# Constitution - 项目治理原则
+
+## 1. 代码质量标准
+- 所有代码必须通过 lint 检查
+- 所有代码必须通过类型检查
+- 代码覆盖率要求: {coverage_requirement}%
+
+## 2. 测试标准
+- 遵循 TDD: 先写测试，再写实现
+- 每个公开函数必须有测试
+- 测试命名: test_<function>_<scenario>_<expected>
+
+## 3. 文档标准
+- 公开 API 必须有 docstring
+- 复杂逻辑必须有注释
+- README 必须包含安装和使用说明
+
+## 4. 提交标准
+- 遵循 Conventional Commits
+- 格式: <type>(<scope>): <subject>
+- PR 必须关联 Issue 或 Spec
+
+## 5. 安全标准
+- 禁止硬编码敏感信息
+- 所有输入必须验证
+- 定期更新依赖
+```
+
+### Specs 生成规则（借鉴 OpenSpec）
+
+Specs 聚焦于 what 和 why，不涉及 how：
+
+```markdown
+# Spec: [功能名称]
+
+## 概述
+[功能的简要描述]
+
+## 需求
+
+### Requirement: [需求名称]
+[需求的详细描述]
+
+#### Scenario: [场景名称]
+**GIVEN** [前置条件]
+**WHEN** [触发条件]
+**THEN** [预期结果]
+
+## 验收标准
+- [ ] [标准 1]
+- [ ] [标准 2]
+```
+
+### Tasks 生成规则（借鉴 Spec Kit）
+
+从 Specs 拆解出可执行任务：
+
+```markdown
+# Tasks - [功能名称]
+
+## 任务列表
+
+### Task 1: [任务名称]
+- **类型**: setup | test | implement | review
+- **预估**: [时间]
+- **依赖**: [前置任务]
+- **描述**: [任务描述]
+- **验收**: [完成标准]
+
+### Task 2: [任务名称]
+...
+
+## 依赖关系图
+
+```mermaid
+graph TD
+    T1[Task 1] --> T2[Task 2]
+    T1 --> T3[Task 3]
+    T2 --> T4[Task 4]
+    T3 --> T4
+```
+
+## 执行顺序
+1. Task 1 (无依赖)
+2. Task 2 / Task 3 (可并行)
+3. Task 4 (依赖 T2, T3)
+```
+
+### TDD 检查脚本（借鉴 Superpowers）
+
+生成 TDD 验证脚本：
+
+```python
+#!/usr/bin/env python3
+"""
+TDD 验证脚本
+确保测试先于实现编写
+"""
+import os
+import subprocess
+from pathlib import Path
+from datetime import datetime
+
+class TDDValidator:
+    def __init__(self, project_root: str = "."):
+        self.root = Path(project_root)
+        self.git_log = self._get_git_log()
+    
+    def _get_git_log(self, limit: int = 20):
+        """获取最近的 git 提交"""
+        result = subprocess.run(
+            ["git", "log", f"-{limit}", "--format=%H|%s|%ad", "--date=short"],
+            capture_output=True, text=True, cwd=self.root
+        )
+        return [line.split("|") for line in result.stdout.strip().split("\n") if line]
+    
+    def check_test_first(self, file_path: str) -> dict:
+        """检查测试是否在实现之前编写"""
+        file_path = Path(file_path)
+        test_file = file_path.parent / f"test_{file_path.stem}{file_path.suffix}"
+        
+        if not test_file.exists():
+            return {
+                "status": "warn",
+                "message": f"缺少测试文件: {test_file}",
+                "recommendation": f"先编写 {test_file} 再实现 {file_path}"
+            }
+        
+        # 检查 git 历史中测试是否先于实现
+        test_commits = []
+        impl_commits = []
+        
+        for commit, subject, date in self.git_log:
+            changed_files = subprocess.run(
+                ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit],
+                capture_output=True, text=True, cwd=self.root
+            ).stdout.strip().split("\n")
+            
+            if str(test_file) in changed_files:
+                test_commits.append((commit, date))
+            if str(file_path) in changed_files:
+                impl_commits.append((commit, date))
+        
+        if not test_commits or not impl_commits:
+            return {"status": "skip", "message": "文件不在最近提交中"}
+        
+        first_test = test_commits[0][1]
+        first_impl = impl_commits[0][1]
+        
+        if first_test <= first_impl:
+            return {"status": "pass", "message": "测试先于实现"}
+        else:
+            return {
+                "status": "warn",
+                "message": "实现先于测试编写",
+                "recommendation": "建议遵循 TDD: 先写测试，再写实现"
+            }
+    
+    def validate_tdd_compliance(self) -> dict:
+        """验证整个项目的 TDD 合规性"""
+        results = {
+            "summary": {"pass": 0, "warn": 0, "skip": 0},
+            "details": []
+        }
+        
+        # 扫描所有实现文件
+        for py_file in self.root.rglob("*.py"):
+            if py_file.name.startswith("test_"):
+                continue
+            if py_file.name.startswith("__"):
+                continue
+            
+            result = self.check_test_first(py_file)
+            results["details"].append({
+                "file": str(py_file),
+                **result
+            })
+            results["summary"][result["status"]] += 1
+        
+        return results
 
 ## 四种模式
 
@@ -696,8 +896,194 @@ def check_api_keys():
 
 ---
 
+## 质量门禁生成规则（借鉴 Superpowers）
+
+### 7 阶段工作流
+
+生成完整的开发工作流，参考 Superpowers 的 7 阶段：
+
+```markdown
+# 开发工作流
+
+## 阶段 1: Brainstorming（头脑风暴）
+- 明确需求和目标
+- 讨论可能的方案
+- 确定范围和约束
+
+## 阶段 2: Clarify（澄清）
+- 澄清模糊的需求
+- 确认边界条件
+- 验证假设
+
+## 阶段 3: Specify（规格化）
+- 编写 Spec 文档
+- 定义验收标准
+- 聚焦 what 和 why
+
+## 阶段 4: Plan（计划）
+- 拆解任务
+- 估算时间
+- 确定依赖关系
+
+## 阶段 5: Implement（实现）
+- 遵循 TDD
+- 逐步实现
+- 持续验证
+
+## 阶段 6: Review（审查）
+- 代码审查
+- 自审检查
+- 质量验证
+
+## 阶段 7: Archive（归档）
+- 更新文档
+- 归档变更
+- 总结经验
+```
+
+### 内联自审检查清单（借鉴 Superpowers Inline Self-Review）
+
+生成代码审查检查清单：
+
+```markdown
+# 代码审查自审清单
+
+## 实现前检查
+- [ ] 是否理解了需求？
+- [ ] 是否有更简单的方案？
+- [ ] 是否考虑了边界条件？
+
+## 实现中检查
+- [ ] 代码是否符合项目风格？
+- [ ] 是否添加了必要的注释？
+- [ ] 是否考虑了错误处理？
+
+## 实现后检查
+- [ ] 所有测试是否通过？
+- [ ] 是否更新了文档？
+- [ ] 是否清理了临时代码？
+
+## TDD 检查
+- [ ] 测试是否先于实现？
+- [ ] 测试覆盖是否完整？
+- [ ] 测试命名是否清晰？
+```
+
+### 质量门禁配置
+
+生成质量门禁配置文件：
+
+```yaml
+# .harness/gates/quality-gates.yaml
+quality_gates:
+  pre_commit:
+    - name: lint
+      command: "{lint_command}"
+      severity: warn
+      auto_fix: true
+    
+    - name: type_check
+      command: "{type_check_command}"
+      severity: error
+      auto_fix: false
+      
+    - name: tdd_check
+      command: "python .harness/scripts/check-tdd.py"
+      severity: warn
+      auto_fix: false
+      
+  pre_push:
+    - name: test
+      command: "{test_command}"
+      severity: error
+      auto_fix: false
+      
+    - name: coverage
+      command: "{coverage_command}"
+      severity: warn
+      threshold: 80
+      
+  pre_merge:
+    - name: security_scan
+      command: "{security_command}"
+      severity: error
+      auto_fix: false
+      
+    - name: code_review
+      type: manual
+      severity: error
+      required_approvers: 1
+```
+
+---
+
+## CI/CD 集成模板
+
+### GitHub Actions 完整模板
+
+```yaml
+# .github/workflows/harness-ci.yml
+name: Harness CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup
+        run: |
+          # 根据项目类型配置环境
+          
+      - name: Run Quality Gates
+        run: |
+          python .harness/scripts/check-quality.py
+          python .harness/scripts/check-tdd.py
+          
+      - name: Run Tests
+        run: |
+          # 运行测试
+          
+      - name: Check Coverage
+        run: |
+          # 检查覆盖率
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          severity: 'CRITICAL,HIGH'
+
+  api-sync:
+    if: contains(matrix.changes, 'api/') || contains(matrix.changes, 'src/api/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check API Sync
+        run: |
+          python .harness/scripts/check-api-sync.py --all
+```
+
+---
+
 ## 版本历史
 
+- v3.2.0 (2026-06-16): 融合 SDD 工具最佳实践，添加 Constitution 生成、质量门禁、任务拆分、TDD 支持、内联自审、7 阶段工作流
+- v3.1.0 (2026-06-16): 增加 CI/CD 集成、可视化展示、批量操作支持
 - v3.0.0 (2026-06-15): 重构为定制化系统输出，生成脚本/Hook/Skill/工作流
 - v2.2.0 (2026-06-15): 增加 From Inferred 模式、AI/LLM 项目特殊处理
 - v2.1.0: 初始版本
