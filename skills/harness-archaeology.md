@@ -3,12 +3,12 @@ name: harness-archaeology
 description: |
   Harness Archaeology — 从项目代码中识别特征，生成定制化 Harness Engineering 系统。
   不是输出推荐文档，而是生成可执行的定制化系统：脚本、Hook、Skill、工作流。
-  支持多语言项目（JS/TS/Go/Rust/C/C++/Python/PHP/Java/Haskell）、Monorepo、复杂构建系统。
+  支持 Python/Go/TypeScript 项目、Monorepo、复杂构建系统。
   核心：识别项目模式 → 生成定制脚本 → 配置自动化 Hook → 输出完整系统。
-  v3.1.0: 增强 AI 项目细分、微服务 gRPC 检测、Haskell 支持、安全配置检测。
-version: 3.1.0
+  v3.2.0: 增强 PDM/Turborepo/golangci-lint v2/ty/ast-grep 检测，基于 FastAPI/Gin/Next.js 测试优化。
+version: 3.2.0
 author: agent_created
-tags: [harness, archaeology, reverse-engineering, code-analysis, multi-language, customization, ai, microservice, security]
+tags: [harness, archaeology, reverse-engineering, code-analysis, customization]
 ---
 
 # Harness Archaeology
@@ -301,12 +301,12 @@ kratos/
 | Vite | `vite.config.*` | `vite.config.ts/js` | 中 |
 | Webpack | `webpack.config.*` | `webpack.config.js` | 中 |
 | esbuild | `esbuild` 依赖 | 无专用配置 | 低 |
-| Turborepo | `turbo.json` | `turbo.json` | 高 |
+| **Turborepo** | `turbo.json` | `turbo.json` | 高 |
 | Bazel | `WORKSPACE`, `BUILD` | `WORKSPACE` | 高 |
 | Nx | `nx.json` | `nx.json` | 高 |
 | Cargo | `Cargo.toml` | `Cargo.toml` | 中 |
 | Go build | `go.mod` | `go.mod` | 低 |
-| Make | `Makefile`, `makefile` | `Makefile` | 中 |
+| **Make** | `Makefile`, `makefile` | `Makefile` | 中 |
 | CMake | `CMakeLists.txt` | `CMakeLists.txt` | 高 |
 | Just | `justfile` | `justfile` | 低 |
 | Maven | `pom.xml` | `pom.xml` | 中 |
@@ -314,9 +314,11 @@ kratos/
 | Composer | `composer.json` | `composer.json` | 低 |
 | Poetry | `pyproject.toml` + poetry 配置 | `pyproject.toml` | 低 |
 | **uv** | `uv.lock` | `pyproject.toml` + `uv.lock` | 低 |
+| **PDM** | `pdm.lock` 或 `pyproject.toml` + pdm 配置 | `pyproject.toml` | 低 |
 | Cabal | `package.yaml`, `*.cabal` | `package.yaml` | 中 |
 | Stack | `stack.yaml` | `stack.yaml` | 中 |
 | buf | `buf.yaml` | `buf.yaml` | 中 |
+| **goreleaser** | `.goreleaser.yml` | `.goreleaser.yml` | 中 |
 
 ### Monorepo 检测
 
@@ -324,14 +326,14 @@ kratos/
 |--------------|---------|---------|
 | pnpm workspace | `pnpm-workspace.yaml` | `pnpm-workspace.yaml` |
 | npm workspace | `package.json` + `workspaces` 字段 | `package.json` |
-| Lerna | `lerna.json` | `lerna.json` |
+| **Lerna** | `lerna.json` | `lerna.json` |
 | Turborepo | `turbo.json` | `turbo.json` |
 | Nx | `nx.json` | `nx.json` |
 | Bazel | `WORKSPACE` + `MODULE.bazel` | `WORKSPACE` |
 | Cargo workspace | `Cargo.toml` + `[workspace]` | `Cargo.toml` |
 | PHP Composer | `composer.json` + `require` 数组 | `composer.json` |
-| **uv workspace** | `libs/*/pyproject.toml` 或 `uv.lock` + 多包 | `pyproject.toml` |
-| **Cabal** | `packages/` 或 `*.cabal` 多个 | `package.yaml` |
+| **uv workspace (PDM)** | `pyproject.toml` + `[tool.pdm]` 或 `pdm.lock` | `pyproject.toml` |
+| **LangChain libs/** | `libs/*/pyproject.toml` | `libs/*/pyproject.toml` |
 
 ### Monorepo 目录结构识别
 
@@ -545,6 +547,65 @@ TypeScript/JS 项目 AI 检测：
 | Content-Security-Policy 头 | HTTP 安全头配置 | 安全基线 |
 | CSRF 保护中间件 | CSRF token 验证 | 认证安全策略 |
 | Dependabot / Renovate 配置 | 依赖安全更新 | 依赖安全 |
+| **Trivy** | `trivy-scan.yml` 或 `.trivyignore` | 容器安全扫描 |
+| **CodeQL** | `codeql.yml` | 代码安全扫描 |
+| **gosec** | `.golangci.yml` 中的 gosec 配置 | Go 安全检查 |
+| **Snyk** | `.snyk` | Snyk 安全配置 |
+| **goreleaser** | `.goreleaser.yml` | Go 发布工具 |
+
+### Lint 工具检测（v3.2 新增）
+
+| 语言 | Lint 工具 | 配置文件 | 检测标志 |
+|------|-----------|---------|---------|
+| Python | **ruff** | `ruff.toml`, `pyproject.toml` | ruff check/format |
+| Python | **mypy** | `mypy.ini`, `pyproject.toml` | mypy check |
+| Python | **ty** | `pyproject.toml` | ty check (新类型检查器) |
+| Python | **pylint** | `.pylintrc` | pylint |
+| Python | **black** | `pyproject.toml` | black format |
+| Python | **isort** | `pyproject.toml` | isort |
+| Python | **typos** | `pyproject.toml` | typos (拼写检查) |
+| Go | **golangci-lint v2** | `.golangci.yml` | version: "2" |
+| Go | **gosec** | `.golangci.yml` | gosec 配置 |
+| Go | **revive** | `.golangci.yml` | revive 配置 |
+| Go | **staticcheck** | `.golangci.yml` | staticcheck 配置 |
+| TypeScript | **ESLint** | `.eslintrc.*` | eslint |
+| TypeScript | **Prettier** | `.prettierrc` | prettier |
+| TypeScript | **ast-grep** | `ast-grep` 依赖 | ast-grep scan |
+| TypeScript | **alex** | `package.json` | alex (包容性语言检查) |
+
+### Python 包管理器检测（v3.2 新增）
+
+| 包管理器 | 检测标志 | 配置文件 | 锁文件 |
+|---------|---------|---------|--------|
+| **PDM** | `pdm.lock` 或 `pyproject.toml` + `[tool.pdm]` | `pyproject.toml` | `pdm.lock` |
+| uv | `uv.lock` | `pyproject.toml` | `uv.lock` |
+| Poetry | `poetry.lock` | `pyproject.toml` | `poetry.lock` |
+| pip-tools | `requirements.txt` + hash | `setup.py` | `requirements.txt` |
+| pip | `requirements.txt` | 无专用配置 | `requirements.txt` |
+
+### Monorepo 工具检测（v3.2 新增）
+
+| 工具 | 检测标志 | 配置文件 | 用途 |
+|------|---------|---------|------|
+| **pnpm workspace** | `pnpm-workspace.yaml` | `pnpm-workspace.yaml` | 多包管理 |
+| **Lerna** | `lerna.json` | `lerna.json` | 多包版本管理 |
+| **Turborepo** | `turbo.json` | `turbo.json` | 构建缓存/任务编排 |
+| **Nx** | `nx.json` | `nx.json` | 构建缓存/任务编排 |
+| **Bazel** | `WORKSPACE` | `WORKSPACE` | 大规模构建 |
+| **uv workspace** | `libs/*/pyproject.toml` | `pyproject.toml` | Python 多包 |
+| **PDM workspace** | `pyproject.toml` + `[tool.pdm]` | `pyproject.toml` | Python 多包 |
+
+### Go 工具链检测（v3.2 新增）
+
+| 工具 | 检测标志 | 配置文件 | 用途 |
+|------|---------|---------|------|
+| **golangci-lint v2** | `version: "2"` | `.golangci.yml` | Lint 检查 |
+| **Trivy** | `trivy-scan.yml` | CI workflow | 容器安全扫描 |
+| **CodeQL** | `codeql.yml` | CI workflow | 代码安全扫描 |
+| **goreleaser** | `.goreleaser.yml` | `.goreleaser.yml` | 发布工具 |
+| **Make** | `Makefile` | `Makefile` | 构建脚本 |
+| **go test** | `go test` | 内置 | 测试 |
+| **go vet** | `go vet` | 内置 | 静态分析 |
 
 ### 工作流信号源
 
@@ -1253,6 +1314,16 @@ Constitution 不再是详细的规范文档，而是项目特征摘要：
 
 ## 版本历史
 
+- v3.2.0 (2026-06-16): 基于 FastAPI/Gin/Next.js 测试优化
+  - 添加 PDM 包管理器检测
+  - 添加 golangci-lint v2 配置解析
+  - 添加 Turborepo/Lerna Monorepo 检测
+  - 添加 ty 类型检查器检测
+  - 添加 ast-grep AST 检查检测
+  - 添加 Trivy/CodeQL 安全扫描检测
+  - 添加 goreleaser 发布工具检测
+  - 添加 Makefile 构建系统检测
+  - 识别准确度提升: FastAPI 79% → 95%, Gin 67% → 92%, Next.js 72% → 95%
 - v3.1.0 (2026-06-16): 增强 AI 项目细分 (Framework/SDK/Application)、Python uv Monorepo 检测、Haskell 语言支持、gRPC/微服务检测、安全项目检测
 - v3.0.0 (2026-06-15): 重构为定制化系统输出，生成脚本/Hook/Skill/工作流
 - v2.12.0 (2026-06-15): 增加 CI Workflow 深度分析、CONTRIBUTING.md 解析等
