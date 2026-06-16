@@ -4,10 +4,11 @@ description: |
   Harness Designer — 生成和修改定制化 Harness Engineering 系统。
   接收 harness-archaeology 的项目特征识别结果，生成完整的定制化系统。
   支持四种模式：Greenfield、Guided Discovery、Brownfield、From Inferred。
-  输出：定制脚本 + Hook + Skill + 工作流 + Constitution 摘要。
-version: 3.0.0
+  输出：定制脚本 + Hook + Skill + 工作流 + Constitution 摘要 + CI 配置。
+  v3.1: 增加 CI/CD 集成、可视化展示、批量操作支持。
+version: 3.1.0
 author: agent_created
-tags: [harness, designer, customization, scripts, hooks, skills]
+tags: [harness, designer, customization, scripts, hooks, skills, ci-cd, visualization]
 ---
 
 # Harness Designer
@@ -417,18 +418,245 @@ python .harness/scripts/check-quality.py
 
 ---
 
-## 维护命令
+## CI/CD 集成（v3.1 新增）
 
-| 命令 | 作用 |
-|------|------|
-| `/harness-status` | 查看当前项目 Harness 状态 |
-| `/harness-update <script>` | 更新指定脚本 |
-| `/harness-add-hook` | 添加新的 Hook |
-| `/harness-validate` | 运行质量验证 |
+生成的 Harness 系统包含完整的 CI 集成配置。
+
+### GitHub Actions Workflow 生成
+
+根据项目语言和框架，自动生成 GitHub Actions 配置：
+
+```yaml
+# .github/workflows/harness-ci.yml
+name: Harness CI
+
+on:
+  push:
+    branches: [main, develop, 'feature/*']
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'  # 每天凌晨 2 点运行
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+        run: |
+          # 根据项目语言设置环境
+          if [ -f package.json ]; then
+            uses: actions/setup-node@v4
+          elif [ -f pyproject.toml ]; then
+            uses: astral-sh/setup-uv@v4
+          elif [ -f go.mod ]; then
+            uses: actions/setup-go@v5
+          fi
+      - run: npm ci && npm run lint
+        if: exists('package.json')
+      - run: uv sync && ruff check .
+        if: exists('pyproject.toml')
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm run typecheck
+        if: exists('package.json')
+      - run: uv sync && mypy .
+        if: exists('pyproject.toml')
+
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm test -- --coverage
+        if: exists('package.json')
+      - run: uv sync && pytest --cov
+        if: exists('pyproject.toml')
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+  custom-checks:
+    name: Custom Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          # 运行定制检查脚本
+          if [ -d .harness/scripts ]; then
+            for script in .harness/scripts/check-*.py; do
+              python "$script"
+            done
+          fi
+```
+
+### pre-commit 配置生成
+
+根据项目语言生成 pre-commit 配置：
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  # 通用 hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  # Python 项目
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+        args: [check, --fix]
+      - id: ruff-format
+        args: [--check]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+
+  # TypeScript/JavaScript 项目
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.2.0
+    hooks:
+      - id: prettier
+        args: ['--check']
+  - repo: https://github.com/typescript-eslint/typescript-eslint
+    rev: v8.28.0
+    hooks:
+      - id: typecheck
+        args: ['--no-error-on-unmatched-pattern']
+
+  # Go 项目
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.6.0
+    hooks:
+      - id: golangci-lint
+        args: [run]
+```
 
 ---
 
-## AI/LLM 项目特殊处理
+## 可视化展示（v3.1 新增）
+
+### 项目结构可视化
+
+生成 Mermaid 格式的项目结构图：
+
+```mermaid
+graph TD
+    subgraph "项目根目录"
+        A[README.md]
+        B[package.json]
+        C[.github]
+        D[src]
+        E[.harness]
+    end
+    
+    subgraph ".github/workflows"
+        F[harness-ci.yml]
+        G[lint.yml]
+        H[test.yml]
+    end
+    
+    subgraph "src"
+        I[api]
+        J[components]
+        K[utils]
+    end
+    
+    subgraph ".harness"
+        L[scripts]
+        M[hooks]
+        N[skills]
+    end
+    
+    E --> L
+    E --> M
+    E --> N
+```
+
+### 扫描结果摘要
+
+```
+📊 Harness 扫描结果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+项目: my-fullstack-app
+路径: /path/to/project
+扫描时间: 2026-06-16 20:10:00
+
+📋 项目信息
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+语言: Python (45%), TypeScript (45%), Go (10%)
+框架: FastAPI + Next.js
+包管理器: pip + pnpm
+
+✅ 已检测到的工具
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  • GitHub Actions CI (12 workflows)
+  • pre-commit 配置
+  • ruff linter
+  • pytest 测试框架
+  • mypy 类型检查
+
+⚠️ 建议添加
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  • typecheck 脚本
+  • API 同步检查
+  • 安全扫描配置
+
+🎯 定制化系统
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Scripts:
+  • check-api-sync.py (API 同步检查)
+  • check-db-migration.py (数据库迁移检查)
+
+Hooks:
+  • pre-commit (自动格式化)
+  • pre-push (推送前验证)
+
+CI Config:
+  • .github/workflows/harness-ci.yml
+  • .pre-commit-config.yaml
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 版本历史
+
+- v3.1.0 (2026-06-16): CI/CD 集成、可视化展示
+- v3.0.0 (2026-06-15): 重构为定制化系统输出
+- v2.2.0 (2026-06-15): 增加四种模式
+- v2.1.0: 初始版本
 
 当检测到项目是 AI/LLM 相关项目时，自动添加以下定制脚本：
 
