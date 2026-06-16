@@ -10,36 +10,276 @@ description: |
   - "我有多个项目，怎么统一管理"
   - "新项目，用 Python + FastAPI"
   
+  v3.4: 增加需求澄清对话、确认环节，避免过度自动化。
+  
   支持模式：Greenfield（新项目）、Guided Discovery（技术栈未知）、Archaeology（识别项目特征）、定制化系统生成。
-  核心：识别项目特征 → 生成定制化 Harness Engineering 系统（脚本 + Hook + Skill + 工作流 + CI 配置）。
-version: 3.1.0
+  核心：需求澄清 → 确认理解 → 识别特征 → 生成定制系统。
+version: 3.4.0
 author: agent_created
-tags: [harness, architect, orchestrator, customization, ci-cd, smart-routing]
+tags: [harness, architect, orchestrator, customization, ci-cd, smart-routing, clarification, confirmation]
 ---
 
 # Harness Architect — Orchestrator
 
 Harness 工程的总调度器。根据用户意图自动路由到对应的专业 Skill。
 
-## 核心理念（v3.0 重构）
+## 核心理念（v3.4 重构）
 
-**输出定制化 Harness Engineering 系统，而非通用推荐文档**。
+**智能协作，而非过度自动化**。
 
 ```
-传统方式（错误）：
-  "推荐使用 pytest" + "推荐使用 ruff" + "推荐使用 mypy"
-  → 用户自己配置，没有自动化，没有集成
+❌ 过度自动化（v3.0-3.3 的问题）：
+  用户说"生成 Harness"
+  → 直接扫描 → 直接生成 → 用户被动接受
+  → 可能基于错误假设生成
+  → 用户不知道为什么这样配置
 
-我们的方式（正确）：
-  识别项目是 "API-Driven Development"
-  → 生成 check-api-sync.py 脚本
-  → 配置 pre-commit Hook 自动检查
-  → 封装 api-sync-check Skill
-  → 编写 api-change.md 工作流
-  → 完整可执行系统
+✅ 智能协作（v3.4 的方式）：
+  用户说"生成 Harness"
+  → 需求澄清对话：了解用户真正需求
+  → 确认理解：展示推断结果，等待确认
+  → 智能生成：基于确认的需求生成
+  → 支持调整：用户可以随时调整
 ```
 
-## 智能意图识别（v3.1 新增）
+### 需求澄清对话（v3.4 新增）
+
+**核心原则**：在生成前，通过对话了解用户需求，避免基于错误假设生成。
+
+#### 问题库设计
+
+```yaml
+# 需求澄清问题库
+
+project_context:
+  - id: project_type
+    question: "这是新项目还是已有项目？"
+    options:
+      - label: "🚀 新项目"
+        description: "从零开始，使用标准模板"
+        impact: "使用 Greenfield 模式，生成标准规范"
+      - label: "📁 已有项目"
+        description: "已有代码，需要扫描后生成"
+        impact: "使用 Brownfield 模式，扫描后生成定制规范"
+      - label: "🔧 重构项目"
+        description: "正在重构，需要逐步引导"
+        impact: "使用 Guided Discovery 模式，逐步引导"
+    skip_if: "用户明确指定了项目路径或技术栈"
+    default: "📁 已有项目"
+
+  - id: team_size
+    question: "团队规模多大？"
+    options:
+      - label: "👤 个人项目"
+        description: "自己开发，不需要协作检查"
+        impact: "生成简化版规范，减少协作相关检查"
+        gates:
+          - code_review: "optional"
+          - documentation: "minimal"
+      - label: "👥 小团队 (<5人)"
+        description: "小团队协作，基础规范"
+        impact: "生成标准规范，包含基础协作检查"
+        gates:
+          - code_review: "recommended"
+          - documentation: "core only"
+      - label: "🏢 中团队 (5-20人)"
+        description: "中型团队，需要完整规范"
+        impact: "生成完整规范，包含代码审查和协作流程"
+        gates:
+          - code_review: "required"
+          - documentation: "required"
+      - label: "🏛️ 大团队 (20+人)"
+        description: "大型团队，需要严格规范"
+        impact: "生成严格规范，包含完整的质量门禁"
+        gates:
+          - code_review: "required"
+          - documentation: "required"
+          - test_coverage: ">= 80%"
+    default: "👥 小团队 (<5人)"
+
+quality_requirements:
+  - id: quality_level
+    question: "对代码质量的要求？"
+    options:
+      - label: "🎯 严格（大厂标准）"
+        description: "高测试覆盖率，完整文档"
+        impact: "测试覆盖率 > 80%，所有代码必须有文档，严格代码审查"
+        gates:
+          - test_coverage: ">= 80%"
+          - documentation: "required"
+          - code_review: "required"
+          - lint: "strict"
+      - label: "✅ 标准"
+        description: "平衡质量与效率"
+        impact: "测试覆盖率 > 60%，核心代码有文档，推荐代码审查"
+        gates:
+          - test_coverage: ">= 60%"
+          - documentation: "core only"
+          - code_review: "recommended"
+          - lint: "standard"
+      - label: "🚀 宽松（快速迭代）"
+        description: "快速开发，质量其次"
+        impact: "测试覆盖率 > 40%，文档可选，代码审查可选"
+        gates:
+          - test_coverage: ">= 40%"
+          - documentation: "optional"
+          - code_review: "optional"
+          - lint: "relaxed"
+    default: "✅ 标准"
+
+ci_integration:
+  - id: ci_platform
+    question: "使用什么 CI 平台？"
+    options:
+      - label: "🐙 GitHub Actions"
+        description: "GitHub 原生 CI"
+        impact: "生成 GitHub Actions workflow"
+        output: ".github/workflows/harness.yml"
+      - label: "🔷 GitLab CI"
+        description: "GitLab 原生 CI"
+        impact: "生成 GitLab CI configuration"
+        output: ".gitlab-ci.yml"
+      - label: "👷 Jenkins"
+        description: "自托管 Jenkins"
+        impact: "生成 Jenkins pipeline script"
+        output: "Jenkinsfile"
+      - label: "🚫 无 CI"
+        description: "不使用 CI 平台"
+        impact: "只生成脚本和 Hook，不生成 CI 配置"
+        output: "none"
+    default: "🐙 GitHub Actions"
+
+  - id: ci_trigger
+    question: "在什么情况下触发检查？"
+    options:
+      - label: "🔄 每次提交 (PR/Merge)"
+        description: "在 PR 和 Merge 时触发检查"
+        impact: "在 PR 和 Merge 事件触发"
+      - label: "⏰ 定时检查 (每天)"
+        description: "每天定时触发检查"
+        impact: "配置定时触发（需要 GitHub Actions）"
+      - label: "✋ 手动触发"
+        description: "只生成手动运行的脚本"
+        impact: "只生成 scripts/ 目录内容"
+    default: "🔄 每次提交 (PR/Merge)"
+    skip_if: "ci_platform == '无 CI'"
+
+compliance:
+  - id: security_requirements
+    question: "有安全合规要求吗？"
+    options:
+      - label: "🛡️ 无特殊要求"
+        description: "普通项目，无特殊安全要求"
+        impact: "不添加安全扫描检查"
+        checks: []
+      - label: "🔐 基础安全"
+        description: "添加依赖漏洞扫描"
+        impact: "添加依赖漏洞扫描检查"
+        checks:
+          - "dependency-vulnerability"
+      - label: "📝 GDPR 合规"
+        description: "需要符合 GDPR 数据保护要求"
+        impact: "添加数据保护相关检查"
+        checks:
+          - "dependency-vulnerability"
+          - "sensitive-data"
+          - "privacy-check"
+      - label: "🔒 等保合规"
+        description: "需要符合中国等保要求"
+        impact: "添加完整的安全检查"
+        checks:
+          - "dependency-vulnerability"
+          - "sensitive-data"
+          - "access-control"
+          - "audit-log"
+    default: "🛡️ 无特殊要求"
+```
+
+#### 对话流程实现
+
+```
+用户发起请求
+    ↓
+【步骤 1】判断是否需要需求澄清
+    - 如果用户明确指定了技术栈和项目类型 → 跳过澄清
+    - 如果用户只说"生成 Harness" → 进入澄清对话
+    
+【步骤 2】逐个问题询问
+    对于每个问题：
+    1. 展示问题和选项
+    2. 说明每个选项的影响
+    3. 用户选择或跳过（使用默认值）
+    4. 记录用户选择
+    
+【步骤 3】生成配置摘要
+    展示用户的全部选择：
+    - 项目类型: 已有项目
+    - 团队规模: 小团队 (<5人)
+    - 质量要求: 标准
+    - CI 平台: GitHub Actions
+    - 安全要求: 无特殊要求
+    
+【步骤 4】确认并继续
+    用户确认后，进入正常的两阶段流程
+```
+
+#### 智能跳过规则
+
+```yaml
+# 某些情况下可以跳过问题
+
+skip_rules:
+  - if: "用户明确说'新项目'"
+    skip: [project_type]
+    auto_select: "🚀 新项目"
+    
+  - if: "用户提供了项目路径且项目存在"
+    skip: [project_type]
+    auto_select: "📁 已有项目"
+    
+  - if: "用户明确说'个人项目'或'自己用'"
+    skip: [team_size]
+    auto_select: "👤 个人项目"
+    
+  - if: "用户明确说'严格'或'大厂标准'"
+    skip: [quality_level]
+    auto_select: "🎯 严格（大厂标准）"
+    
+  - if: "项目目录中存在 .gitlab-ci.yml"
+    skip: [ci_platform]
+    auto_select: "🔷 GitLab CI"
+    
+  - if: "项目目录中存在 Jenkinsfile"
+    skip: [ci_platform]
+    auto_select: "👷 Jenkins"
+```
+
+#### 配置摘要输出格式
+
+```
+📋 需求澄清完成！以下是您的配置：
+
+┌─────────────────────────────────────────────────┐
+│ 项目配置摘要                                     │
+├─────────────────────────────────────────────────┤
+│ 📁 项目类型: 已有项目                            │
+│ 👥 团队规模: 小团队 (<5人)                        │
+│ ✅ 质量要求: 标准                                 │
+│ 🐙 CI 平台: GitHub Actions                       │
+│ 🔄 CI 触发: 每次提交 (PR/Merge)                   │
+│ 🛡️ 安全要求: 无特殊要求                          │
+├─────────────────────────────────────────────────┤
+│ 预计生成内容:                                    │
+│ • Constitution (项目治理原则)                    │
+│ • 4 个定制脚本                                   │
+│ • 2 个自动化 Hook                                │
+│ • GitHub Actions CI 配置                         │
+└─────────────────────────────────────────────────┘
+
+确认这个配置吗？(Y/n)
+```
+
+## 智能意图识别
 
 ### 触发词和意图模式
 

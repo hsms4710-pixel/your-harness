@@ -4,11 +4,11 @@ description: |
   Harness Archaeology — 从项目代码中识别特征，生成定制化 Harness Engineering 系统。
   不是输出推荐文档，而是生成可执行的定制化系统：脚本、Hook、Skill、工作流。
   支持 Python/Go/TypeScript 项目、Monorepo、复杂构建系统。
-  核心：识别项目模式 → 识别 SDD 实践 → 生成定制脚本 → 配置自动化 Hook → 输出完整系统。
-  v3.3: 融合 Spec Kit/OpenSpec/Superpowers 最佳实践，识别 Constitution/Specs/TDD/7阶段工作流。
-version: 3.3.0
+  
+  v3.4: 增加确认环节，扫描后展示推断结果等待用户确认。
+version: 3.4.0
 author: agent_created
-tags: [harness, archaeology, reverse-engineering, code-analysis, customization, sdd]
+tags: [harness, archaeology, reverse-engineering, code-analysis, customization, confirmation]
 ---
 
 # Harness Archaeology
@@ -21,27 +21,252 @@ tags: [harness, archaeology, reverse-engineering, code-analysis, customization, 
 - 需要从现有代码库识别项目模式和特征
 - 需要生成可执行的脚本、Hook、Skill、工作流
 
-## 核心原则（v3.0 重构）
+## 核心原则（v3.4 重构）
 
-**不是输出推荐文档，而是生成可执行的定制化系统**。
+**智能协作，而非盲目自动化**。
 
 ```
-传统方式（错误）：
-  扫描项目 → 输出"推荐使用 pytest" → 用户自己配置
+❌ 盲目自动化（v3.0-3.3 的问题）：
+  扫描项目 → 输出推断结果 → 直接生成
+  → 推断可能不准确
+  → 用户不知道为什么这样推断
+  → 生成的内容可能不符合预期
 
-我们的方式（正确）：
-  扫描项目 → 识别"Python + FastAPI + 前后端分离" 
-           → 生成 check-api-sync.py 脚本
-           → 配置 pre-commit Hook 自动检查
-           → 生成 api-sync-check Skill
-           → 输出完整可执行系统
+✅ 智能协作（v3.4 的方式）：
+  扫描项目 → 展示推断结果 → 等待用户确认/修正
+          → 基于确认的结果生成
+          → 支持用户调整后再生成
 ```
 
-关键规则：
-- 识别项目模式，而非推荐通用方案
-- 生成定制脚本，而非通用模板
-- 配置自动化 Hook，而非手动检查
-- 输出完整系统，而非推荐文档
+### 确认环节（v3.4 新增）
+
+**核心原则**：关键决策点必须与用户确认，不盲目推断。
+
+#### 确认点设计
+
+```yaml
+# 确认点配置
+
+confirmation_points:
+  # 确认点 1: 项目特征推断
+  - id: project_features
+    trigger: "扫描完成后"
+    title: "📋 项目特征识别结果"
+    message_template: |
+      我识别到以下项目特征：
+      
+      **语言和框架**
+      - 主语言: {language}
+      - 框架: {framework}
+      - 包管理器: {package_manager}
+      
+      **工具链**
+      - Lint: {lint_tool}
+      - 测试: {test_framework}
+      - CI 平台: {ci_platform}
+      
+      **项目模式**
+      - 模式: {project_pattern}
+      - 置信度: {confidence}
+      
+      这些识别结果正确吗？有需要修正的吗？
+    options:
+      - label: "✅ 全部正确"
+        action: "continue"
+      - label: "✏️ 需要修正"
+        action: "enter_modification"
+      - label: "❓ 我也不确定"
+        action: "show_details_and_recommend"
+    wait_for_user: true
+    allow_modification: true
+
+  # 确认点 2: 存量代码问题
+  - id: legacy_code_handling
+    trigger: "发现存量代码问题时"
+    title: "⚠️ 存量代码问题"
+    message_template: |
+      扫描发现 {total_count} 个文件可能存在规范问题：
+      
+      **问题分类**
+      - 代码风格问题: {style_count} 个
+      - 类型错误: {type_count} 个
+      - 测试缺失: {test_count} 个
+      - 文档缺失: {doc_count} 个
+      
+      **影响范围**
+      {affected_files_preview}
+      
+      您希望如何处理这些存量代码？
+    options:
+      - label: "🔧 立即全部修复"
+        description: "生成修复脚本，立即修复所有问题"
+        impact: "生成 fix-all.sh 脚本，可能耗时较长"
+      - label: "📊 渐进式收紧（推荐）"
+        description: "分阶段修复，先对新代码强制检查"
+        impact: "生成收紧计划，3-6个月逐步修复"
+      - label: "⏭️ 暂不处理"
+        description: "只对新提交的代码进行检查"
+        impact: "存量代码标记为 exempt，只检查新代码"
+    wait_for_user: true
+    default: "📊 渐进式收紧（推荐）"
+
+  # 确认点 3: 优先级确认
+  - id: priority_confirmation
+    trigger: "准备生成时"
+    title: "🎯 生成优先级确认"
+    message_template: |
+      基于您的需求和项目特征，我建议按以下优先级生成：
+      
+      **高优先级** (必须生成)
+      {high_priority_items}
+      
+      **中优先级** (建议生成)
+      {medium_priority_items}
+      
+      **低优先级** (可选生成)
+      {low_priority_items}
+      
+      您希望调整优先级吗？
+    options:
+      - label: "✅ 按建议生成"
+        description: "按上述优先级生成所有内容"
+        action: "generate_all"
+      - label: "📝 调整优先级"
+        description: "修改某些项的优先级"
+        action: "enter_priority_adjustment"
+      - label: "⚡ 只生成高优先级"
+        description: "只生成高优先级内容，节省时间"
+        action: "generate_high_only"
+    wait_for_user: true
+
+  # 确认点 4: 最终确认
+  - id: final_confirmation
+    trigger: "生成前"
+    title: "🚀 开始生成确认"
+    message_template: |
+      确认生成以下内容：
+      
+      **输出目录**: `.harness/`
+      
+      **将生成的内容**:
+      - constitution.md (项目治理原则)
+      - scripts/ (定制脚本: {script_count} 个)
+      - hooks/ (自动化 Hook: {hook_count} 个)
+      - skills/ (可调用 Skill: {skill_count} 个)
+      - workflows/ (工作流: {workflow_count} 个)
+      {ci_config_if_applicable}
+      
+      **不会影响的内容**:
+      - 不修改现有代码
+      - 不删除现有文件
+      - 所有生成的文件都在 .harness/ 目录
+      
+      确认开始生成吗？
+    options:
+      - label: "🚀 开始生成"
+        action: "start_generation"
+      - label: "↩️ 返回修改"
+        action: "return_to_previous"
+      - label: "❌ 取消"
+        action: "cancel"
+    wait_for_user: true
+```
+
+#### 确认流程实现
+
+```
+扫描项目
+    ↓
+【步骤 1】项目特征识别
+    - 检测语言、框架、工具链
+    - 识别项目模式
+    - 计算置信度
+    
+【步骤 2】展示推断结果
+    展示识别到的特征：
+    - 主语言: Python
+    - 框架: FastAPI
+    - 包管理器: PDM
+    - ...
+    
+【步骤 3】等待用户确认
+    用户可以：
+    - 确认全部正确
+    - 指出需要修正的地方
+    - 表示不确定（显示更多细节）
+    
+【步骤 4】处理存量代码问题（如有）
+    展示发现的问题：
+    - 45 个文件有规范问题
+    - 提供处理选项
+    
+【步骤 5】确认优先级
+    展示生成优先级：
+    - 高优先级: check-pydantic-sync.py
+    - 中优先级: check-tdd.py
+    - 低优先级: check-performance.py
+    
+【步骤 6】最终确认并生成
+```
+
+#### 置信度分层
+
+```yaml
+# 不同置信度的处理方式
+
+confidence_levels:
+  high: 
+    threshold: 0.9
+    handling: "直接使用，不需要特别确认"
+    example: "检测到 pyproject.toml + pdm.lock → 确定是 Python + PDM"
+    
+  medium:
+    threshold: 0.7
+    handling: "展示推断结果，建议用户确认"
+    example: "检测到 fastapi 依赖 → 推断是 FastAPI 项目（也可能是其他框架）"
+    
+  low:
+    threshold: 0.5
+    handling: "必须用户确认，提供多个候选"
+    example: "检测到多个框架依赖 → 无法确定主框架"
+
+  uncertain:
+    threshold: 0.3
+    handling: "询问用户，不进行推断"
+    example: "项目结构不清晰 → 询问用户项目类型"
+```
+
+#### 确认输出格式
+
+```
+📋 项目特征识别结果
+
+**语言和框架**
+- 主语言: Python (置信度: 高)
+- 框架: FastAPI (置信度: 高)
+- 包管理器: PDM (置信度: 高)
+
+**工具链**
+- Lint: ruff (置信度: 高)
+- 测试: pytest (置信度: 高)
+- CI 平台: GitHub Actions (置信度: 高)
+
+**项目模式**
+- 模式: API-Driven Development (置信度: 中)
+- 特征依据: 
+  • 存在 routers/ 目录
+  • 存在 Pydantic models
+  • 有 OpenAPI 文档生成
+
+**项目规模**
+- 源文件数: 1121
+- 目录结构: 标准 FastAPI 项目
+- 复杂度: 中等
+
+这些识别结果正确吗？有需要修正的吗？
+
+[✅ 全部正确] [✏️ 需要修正] [❓ 我也不确定]
+```
 
 ## 语言检测矩阵（v3.1 增强版）
 
