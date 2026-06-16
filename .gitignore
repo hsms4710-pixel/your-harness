@@ -1,0 +1,10 @@
+# Test projects (git submodules)
+es-test/
+k8s-test/
+laravel-test/
+prophet-test/
+pytorch-test/
+rust-test/
+terraform-test/
+ts-test/
+test-projects/
