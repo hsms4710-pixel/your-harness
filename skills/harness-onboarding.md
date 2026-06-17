@@ -3,10 +3,21 @@ name: harness-onboarding
 description: |
   Harness Onboarding — 给已有 Harness 的项目处理存量代码不合规问题。
   核心场景：项目已有 Harness，但存量代码不符合规范。通过现状锚定→兼容期→渐进收紧→豁免清单实现平滑过渡。
-  注意：如果是"从零生成 Harness"，应使用 harness-archaeology → harness-designer 流程。
-version: 2.2.0
+  
+  🎯 触发方式：
+  - "存量代码不达标怎么办" / "帮我处理存量代码"
+  - "渐进收紧" / "收紧规范"
+  - "生成豁免清单" / "管理豁免"
+  
+  🎯 状态查询命令（v3.7 新增）：
+  - `/onboarding-status` - 查看 Onboarding 状态
+  - `/onboarding-history` - 查看决策历史
+  
+  v3.7: 添加进度反馈、决策历史记录、状态查询命令。
+  v2.2: 明确与 harness-archaeology 的分工、增加核心场景说明。
+version: 3.7.0
 author: agent_created
-tags: [harness, onboarding, legacy, gradual-adoption]
+tags: [harness, onboarding, legacy, gradual-adoption, status, history, progress]
 ---
 
 # Harness Onboarding
@@ -15,20 +26,61 @@ tags: [harness, onboarding, legacy, gradual-adoption]
 
 ## 触发条件
 
-- 项目**已有 Harness**（`.agents/` 目录存在）
+- 项目**已有 Harness**（`.agents/` 或 `.harness/` 目录存在）
 - 存量代码不符合新 Harness 的要求
 - 团队希望逐步提升代码质量到规范水平
 
-## 核心场景说明（v2.2 新增）
+## 核心理念（v3.7 重构）
 
-**本 Skill 的适用场景**：
-- ✅ 项目已有 Harness，但存量代码不达标
-- ✅ 团队引入了新的质量标准，需要渐进式迁移
-- ✅ 需要对不合规代码进行豁免管理
+**智能协作，渐进收紧**。
 
-**本 Skill 不适用的场景**：
-- ❌ 项目没有 Harness，需要从零生成 → 使用 `harness-archaeology` → `harness-designer`
-- ❌ 新项目，从零开始 → 使用 `harness-designer` (Greenfield)
+```
+❌ 盲目收紧（常见问题）：
+  生成 Harness → 全量检查 → 大量失败 → 团队抵触 → 放弃
+  → 一次性要求太多，团队无法接受
+  → 没有渐进过程，失败率高
+
+✅ 智能协作（v3.7 的方式）：
+  现状锚定 → 兼容期 → 渐进收紧 → 豁免管理
+  → 实时反馈进度
+  → 记录所有决策
+  → 支持状态查询
+```
+
+### 进度反馈（v3.7 新增）
+
+Onboarding 过程中实时显示进度：
+
+```
+[1/5] 生成现状快照...
+[2/5] 分析不合规项...
+[3/5] 生成兼容 Harness...
+[4/5] 配置收紧计划...
+[5/5] 完成 Onboarding...
+```
+
+#### 进度阶段
+
+```yaml
+onboarding_progress:
+  format: "[{current}/{total}] {stage}..."
+  stages:
+    - id: 1
+      name: "生成现状快照"
+      description: "扫描现有代码，记录质量指标"
+    - id: 2
+      name: "分析不合规项"
+      description: "识别不符合规范的代码"
+    - id: 3
+      name: "生成兼容 Harness"
+      description: "生成与现状兼容的 Harness"
+    - id: 4
+      name: "配置收紧计划"
+      description: "制定渐进收紧时间表"
+    - id: 5
+      name: "完成 Onboarding"
+      description: "保存配置，开始兼容期"
+```
 
 ## 核心矛盾
 
@@ -238,10 +290,160 @@ exemptions:
 
 ---
 
+## 状态查询命令（v3.7 新增）
+
+### /onboarding-status 命令
+
+查看当前 Onboarding 状态：
+
+```
+用户输入: /onboarding-status
+
+输出:
+┌─────────────────────────────────────────────────────────────┐
+│ 📊 Onboarding 状态 - payment-service                        │
+├─────────────────────────────────────────────────────────────┤
+│ 阶段: 兼容期 (Week 3)                                        │
+│ 进度: ████████░░░░░░░░ 40%                                  │
+│                                                              │
+│ 📈 质量指标                                                  │
+│   测试覆盖率: 72% → 目标 85% (Month 4)                      │
+│   Lint 错误: 47 → 目标 0 (Month 3)                          │
+│   Type 错误: 12 → 目标 0 (Month 4)                          │
+│                                                              │
+│ 📋 豁免清单: 3 项（已使用 15% 配额）                         │
+│                                                              │
+│ ⏰ 下一步收紧: Month 4 - 测试覆盖率提升至 80%                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### /onboarding-history 命令
+
+查看 Onboarding 决策历史：
+
+```
+用户输入: /onboarding-history
+
+输出:
+┌─────────────────────────────────────────────────────────────┐
+│ 📜 Onboarding 决策历史                                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│ 📌 初始配置 (2026-06-17T10:00:00Z)                          │
+│   - 项目: payment-service                                   │
+│   - 团队: 中团队 (5-20人)                                    │
+│   - 质量要求: 标准                                           │
+│                                                              │
+│ 📌 现状快照 (2026-06-17T10:05:00Z)                          │
+│   - 扫描文件: 1247 个                                       │
+│   - 测试覆盖率: 72%                                         │
+│   - Lint 错误: 47 个                                        │
+│   - Type 错误: 12 个                                        │
+│                                                              │
+│ 📌 收紧计划 (2026-06-17T10:10:00Z)                          │
+│   - Month 2: Lint 错误 47 → 30                              │
+│   - Month 3: Lint 错误 30 → 15                              │
+│   - Month 4: 覆盖率 72% → 80%                               │
+│   - Month 5: 覆盖率 80% → 85%                               │
+│   - Month 6: 移除所有兼容期策略                              │
+│                                                              │
+│ 📌 豁免添加 (2026-06-17T10:15:00Z)                          │
+│   - src/legacy/v1/ - V1 API 即将废弃                        │
+│   - src/third-party-integrations/ - 第三方 SDK 代码         │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 决策历史记录（v3.7 新增）
+
+Onboarding 过程中的所有决策都会记录到 `.harness/onboarding-history.yaml`：
+
+```yaml
+# .harness/onboarding-history.yaml
+version: "1.0"
+created_at: "2026-06-17T10:00:00Z"
+
+initial_config:
+  project: "payment-service"
+  project_path: "/path/to/project"
+  team_size: "中团队 (5-20人)"
+  quality_level: "标准"
+  
+snapshot:
+  timestamp: "2026-06-17T10:05:00Z"
+  scanned_files: 1247
+  quality_metrics:
+    test_coverage: "72%"
+    lint_errors: 47
+    type_check_errors: 12
+    
+plan:
+  timestamp: "2026-06-17T10:10:00Z"
+  tighten_schedule:
+    - month: 2
+      target: lint_errors
+      from: 47
+      to: 30
+    - month: 3
+      target: lint_errors
+      from: 30
+      to: 15
+    - month: 4
+      target: coverage
+      from: "72%"
+      to: "80%"
+    - month: 5
+      target: coverage
+      from: "80%"
+      to: "85%"
+    - month: 6
+      target: all
+      action: "remove_compatibility"
+
+exemptions:
+  - timestamp: "2026-06-17T10:15:00Z"
+    path: "src/legacy/v1/"
+    reason: "V1 API 即将废弃"
+    until: "2026-09-30"
+    
+  - timestamp: "2026-06-17T10:15:00Z"
+    path: "src/third-party-integrations/"
+    reason: "第三方 SDK 代码"
+    until: null
+
+tighten_events:
+  - timestamp: "2026-07-17T00:00:00Z"
+    month: 2
+    action: "lint_errors_threshold_decreased"
+    from: 47
+    to: 30
+    status: "completed"
+    
+  - timestamp: "2026-08-17T00:00:00Z"
+    month: 3
+    action: "lint_errors_threshold_decreased"
+    from: 30
+    to: 15
+    status: "completed"
+
+summary:
+  total_decisions: 5
+  tighten_steps_completed: 2
+  tighten_steps_remaining: 3
+  exemptions_count: 2
+  last_updated: "2026-08-17T00:00:00Z"
+```
+
+---
+
 ## 维护命令
 
 | 命令 | 作用 |
 |------|------|
+| `/onboarding-status` | 查看 Onboarding 状态（v3.7 新增） |
+| `/onboarding-history` | 查看决策历史（v3.7 新增） |
 | `/harness-legacy-snapshot` | 生成/更新现状快照 |
 | `/harness-tighten` | 手动触发渐进收紧的下一步 |
 | `/harness-exemptions` | 查看/管理豁免清单 |
@@ -249,7 +451,7 @@ exemptions:
 
 ---
 
-## 与 harness-archaeology 的分工（v2.2 新增）
+## 与 harness-archaeology 的分工
 
 | 场景 | 使用 Skill | 说明 |
 |------|-----------|------|
@@ -259,7 +461,7 @@ exemptions:
 
 **判断流程**：
 ```
-项目是否有 .agents/ 目录？
+项目是否有 .harness/ 或 .agents/ 目录？
   → 否 → 使用 harness-archaeology 推断
   → 是 → 存量代码是否符合 Harness？
            → 是 → 无需 onboarding
@@ -270,7 +472,7 @@ exemptions:
 
 ## 注意事项
 
-1. **前置条件**：本 Skill 要求项目已有 Harness（`.agents/` 目录存在）
+1. **前置条件**：本 Skill 要求项目已有 Harness（`.harness/` 或 `.agents/` 目录存在）
 2. **不要一步到位**：兼容期 + 渐进收紧比一步到位的成功率高得多
 3. **先稳后快**：前 4 周是适应期，不要急于收紧
 4. **定期回顾**：每月回顾收紧进度，必要时调整计划
@@ -282,5 +484,6 @@ exemptions:
 
 ## 版本历史
 
+- v3.7.0 (2026-06-17): 添加进度反馈、决策历史记录、/onboarding-status 和 /onboarding-history 命令
 - v2.2.0 (2026-06-15): 明确与 harness-archaeology 的分工、增加核心场景说明、增加前置条件检查
 - v2.1.0: 初始版本

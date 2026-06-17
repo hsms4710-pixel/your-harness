@@ -3,10 +3,11 @@ name: harness-validator
 description: |
   Harness Validator — 5 层质量验证套件。
   确保生成的 Harness 可用、一致、可执行。
+  v3.7.2: 增强报告功能，支持多项目对比、自定义模板、自动发送、报告模板库。
   v3.6.1: 添加报告生成功能，支持 HTML/PDF 格式输出、质量评分、趋势分析、定期报告。
-version: 3.6.1
+version: 3.7.2
 author: agent_created
-tags: [harness, validator, quality, validation, report, html, pdf, score, trend]
+tags: [harness, validator, quality, validation, report, html, pdf, score, trend, comparison, template, auto-send]
 ---
 
 # Harness Validator
@@ -933,8 +934,239 @@ records:
 
 ---
 
+## 报告增强功能（v3.7.2 新增）
+
+### 多项目对比报告
+
+支持生成多个项目的对比分析报告：
+
+```bash
+/harness-report --compare project-a,project-b,project-c
+```
+
+#### 对比报告内容
+
+```markdown
+# 多项目对比报告
+
+## 项目概览
+
+| 项目 | 语言 | 框架 | 质量评分 | 趋势 |
+|------|------|------|----------|------|
+| project-a | Python | FastAPI | 92 | ↑ +5% |
+| project-b | Go | Gin | 88 | → 持平 |
+| project-c | TypeScript | Next.js | 95 | ↓ -2% |
+
+## 质量维度对比
+
+### 测试覆盖率
+
+| 项目 | 当前 | 目标 | 达成率 |
+|------|------|------|--------|
+| project-a | 85% | 80% | 106% |
+| project-b | 72% | 80% | 90% |
+| project-c | 92% | 85% | 108% |
+
+### 代码质量
+
+| 项目 | Lint 错误 | Type 错误 | 技术债 |
+|------|----------|----------|--------|
+| project-a | 0 | 0 | 12 |
+| project-b | 5 | 2 | 28 |
+| project-c | 0 | 1 | 8 |
+
+## 改进建议
+
+### project-b 需要关注
+
+1. **测试覆盖率不足**：当前 72%，目标 80%，建议补充核心模块测试
+2. **Lint 错误较多**：5 个错误需要修复
+
+### project-c 需要关注
+
+1. **Type 错误**：1 个 Type 错误需要修复
+2. **技术债上升**：较上周增加 3 个，需要关注
+```
+
+### 自定义报告模板
+
+支持使用自定义模板生成报告：
+
+```bash
+/harness-report --template custom-report
+```
+
+#### 内置模板库
+
+| 模板名称 | 用途 | 输出格式 |
+|----------|------|----------|
+| `default` | 默认综合报告 | HTML/PDF |
+| `quality-only` | 仅质量相关 | HTML |
+| `security-only` | 仅安全相关 | HTML/PDF |
+| `trend` | 趋势分析 | HTML |
+| `comparison` | 多项目对比 | HTML |
+| `executive` | 管理层摘要 | PDF |
+
+#### 自定义模板格式
+
+```yaml
+# .harness/report-templates/custom-report.yaml
+name: custom-report
+description: "自定义综合报告"
+version: "1.0"
+
+output:
+  format: html
+  filename: "custom-report-{date}.html"
+
+sections:
+  - type: header
+    title: "项目质量报告"
+    include: [project_name, timestamp]
+    
+  - type: score
+    include: [overall, by_category]
+    
+  - type: issues
+    include: [critical, warning]
+    limit: 10
+    
+  - type: suggestions
+    include: [all]
+    limit: 5
+    
+  - type: footer
+    include: [generated_by, contact_info]
+
+css:
+  theme: professional
+  colors:
+    primary: "#1a73e8"
+    success: "#34a853"
+    warning: "#fbbc04"
+    danger: "#ea4335"
+
+filters:
+  issues:
+    - severity: critical
+    - severity: warning
+  suggestions:
+    - priority: high
+```
+
+### 报告自动发送
+
+支持将报告自动发送到指定渠道：
+
+```bash
+/harness-report --auto-send email
+/harness-report --auto-send slack
+/harness-report --auto-send wechat
+```
+
+#### 配置自动发送
+
+```yaml
+# .harness/report-config.yaml
+auto_send:
+  enabled: true
+  
+  # 发送频率
+  schedule:
+    type: weekly
+    day: friday
+    time: "17:00"
+    
+  # 发送渠道
+  channels:
+    - type: email
+      recipients:
+        - "team@example.com"
+        - "manager@example.com"
+      subject: "项目质量周报 - {date}"
+      
+    - type: slack
+      webhook: "https://hooks.slack.com/services/xxx"
+      channel: "#quality-reports"
+      
+    - type: wechat
+      webhook: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx"
+      chat_id: "xxx"
+  
+  # 报告内容
+  report:
+    template: default
+    format: html
+    include_attachments: true
+```
+
+#### 定时报告
+
+```bash
+# 每周五 17:00 自动生成并发送报告
+/harness-report --schedule weekly --day friday --time 17:00
+
+# 每天 09:00 生成日报
+/harness-report --schedule daily --time 09:00
+
+# 每月 1 号生成月报
+/harness-report --schedule monthly --day 1 --time 09:00
+```
+
+### 报告存储和历史
+
+```yaml
+# .harness/reports/
+# ├── 2026-06/
+# │   ├── 2026-06-17/
+# │   │   ├── daily-report-2026-06-17.html
+# │   │   └── daily-report-2026-06-17.json
+# │   └── 2026-06-30/
+# │       ├── weekly-report-2026-06-30.html
+# │       └── weekly-report-2026-06-30.json
+# └── 2026-07/
+
+# 报告索引
+reports-index.yaml:
+  - id: "rpt-20260617-001"
+    type: daily
+    date: "2026-06-17"
+    filename: "daily-report-2026-06-17.html"
+    score: 92
+    issues_count: 3
+    
+  - id: "rpt-20260630-001"
+    type: weekly
+    date: "2026-06-30"
+    filename: "weekly-report-2026-06-30.html"
+    score: 90
+    issues_count: 5
+```
+
+### 完整命令语法
+
+```bash
+/harness-report [options]
+
+选项:
+  --format <format>       输出格式: html|pdf|markdown|json (默认: html)
+  --output <path>         输出路径
+  --template <name>       模板名称或路径
+  --compare <projects>    对比项目列表（逗号分隔）
+  --trend                 包含趋势分析
+  --auto-send <channel>   自动发送到指定渠道
+  --schedule <type>       设置定时报告: daily|weekly|monthly
+  --day <day>             定时报告日期（weekly: 1-7, monthly: 1-31）
+  --time <time>           定时报告时间（HH:MM）
+  --history               查看报告历史
+  --latest                生成最新报告（使用上次配置）
+```
+
+---
+
 ## 版本历史
 
+- v3.7.2 (2026-06-17): 增强报告功能，支持多项目对比、自定义模板、自动发送、报告模板库
 - v3.6.1 (2026-06-16): 添加报告生成功能（/harness-report、HTML/PDF 格式、质量评分、趋势分析、定期报告）
 - v2.2.0 (2026-06-15): 增加自动化检查脚本指引（Python/Node.js/Go）、与 SmartMate 验证协议集成
 - v2.1.0: 初始版本

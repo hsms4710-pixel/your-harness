@@ -17,17 +17,37 @@ description: |
   - `/harness-remove <检查项>` - 移除检查项
   - `/harness-update [scope]` - 更新到最新版本
   
-  🎯 历史追溯命令（v3.5.1 新增）：
+  🎯 历史追溯命令：
   - `/harness-history` - 查看决策历史
   - `/harness-why <配置项>` - 解释配置原因
   
+  🎯 完整流程命令：
+  - `/harness-full` - 触发完整流程（archaeology → designer → validator）
+  
+  🎯 快捷别名：
+  - `/hs` = `/harness-status`
+  - `/ha` = `/harness-adjust`
+  - `/hh` = `/harness-history`
+  - `/hr` = `/harness-report`
+  - `/hf` = `/harness-full`
+  
+  🎯 帮助命令：
+  - `/harness-help` - 显示命令帮助
+  - `/harness-help <command>` - 显示特定命令的帮助
+  
+  🎯 错误码查询（v3.7.4 新增）：
+  - `/harness-error <code>` - 查询错误码说明
+  
+  v3.7.4: 添加错误码体系、详细错误说明、修复建议。
+  v3.7.3: 添加快捷别名、帮助系统、命令历史。
+  v3.7.1: 添加统一上下文共享、/harness-full 命令、Skills 间状态同步。
   v3.5.1: 添加历史追溯功能，记录所有决策和调整。
   
   支持模式：Greenfield（新项目）、Guided Discovery（技术栈未知）、Archaeology（识别项目特征）、定制化系统生成。
-  核心：需求澄清 → 确认理解 → 识别特征 → 生成定制系统 → 支持迭代调整 → 记录决策历史。
-version: 3.5.1
+  核心：需求澄清 → 确认理解 → 识别特征 → 生成定制系统 → 支持迭代调整 → 记录决策历史 → 统一上下文。
+version: 3.7.4
 author: agent_created
-tags: [harness, architect, orchestrator, customization, ci-cd, smart-routing, clarification, confirmation, status, adjust, history, trace]
+tags: [harness, architect, orchestrator, customization, ci-cd, smart-routing, clarification, confirmation, status, adjust, history, trace, context, full-flow, cli, help, alias, error, error-code]
 ---
 
 # Harness Architect — Orchestrator
@@ -1202,8 +1222,524 @@ graph LR
   • pre-commit Hook (自动格式化)
 ```
 
+---
+
+## 统一上下文共享（v3.7.1 新增）
+
+### 上下文文件格式
+
+所有 Skills 共享统一的上下文文件 `.harness/context.yaml`：
+
+```yaml
+# .harness/context.yaml
+version: "1.0"
+created_at: "2026-06-17T10:00:00Z"
+last_updated: "2026-06-17T10:30:00Z"
+
+# 项目基本信息
+project_info:
+  name: "my-project"
+  path: "/path/to/project"
+  language: "Python"
+  framework: "FastAPI"
+  package_manager: "PDM"
+  
+# 用户决策（来自需求澄清）
+decisions:
+  clarification:
+    project_type: "已有项目"
+    team_size: "小团队 (<5人)"
+    quality_level: "标准"
+    ci_platform: "GitHub Actions"
+    security_requirements: "无特殊要求"
+  
+  confirmation:
+    project_features_confirmed: true
+    confirmation_time: "2026-06-17T10:05:00Z"
+    legacy_code_handling: "渐进式收紧（3个月）"
+    priority_adjusted: false
+    
+# 各阶段状态
+status:
+  archaeology:
+    phase: "completed"
+    completed_at: "2026-06-17T10:05:00Z"
+    confidence: "high"
+  
+  designer:
+    phase: "completed"
+    completed_at: "2026-06-17T10:15:00Z"
+    items_generated:
+      - constitution
+      - scripts
+      - hooks
+      - skills
+      - workflows
+  
+  validator:
+    phase: "completed"
+    completed_at: "2026-06-17T10:20:00Z"
+    score: 92
+    issues_found: 3
+  
+  onboarding:
+    phase: "not_started"
+    
+# 扫描结果（archaeology 输出）
+scan_results:
+  project_features:
+    language: "Python"
+    framework: "FastAPI"
+    package_manager: "PDM"
+    test_framework: "pytest"
+    ci_platform: "GitHub Actions"
+  
+  legacy_code:
+    total_files: 1121
+    non_compliant: 45
+    breakdown:
+      style_issues: 30
+      type_errors: 10
+      missing_tests: 5
+
+# 生成的配置摘要（designer 输出）
+generation_summary:
+  constitution_path: ".harness/constitution.md"
+  scripts_count: 3
+  hooks_count: 2
+  skills_count: 1
+  workflows_count: 2
+  ci_config_path: ".github/workflows/harness.yml"
+
+# 历史记录引用
+history_ref: ".harness/decision-history.yaml"
+
+# 最后操作
+last_operation:
+  skill: "harness-validator"
+  action: "validate_completed"
+  timestamp: "2026-06-17T10:20:00Z"
+  result: "success"
+```
+
+### Skills 间数据传递
+
+```yaml
+# 数据流向
+harness-architect:
+  输入: 用户请求
+  输出: 需求澄清结果 → 写入 context.yaml
+  
+  ↓
+  
+harness-archaeology:
+  输入: context.yaml (读取项目路径和用户决策)
+  输出: 扫描结果 → 更新 context.yaml (scan_results)
+  
+  ↓
+  
+harness-designer:
+  输入: context.yaml (读取扫描结果和用户决策)
+  输出: 生成的文件列表 → 更新 context.yaml (generation_summary)
+  
+  ↓
+  
+harness-validator:
+  输入: context.yaml (读取生成的文件列表)
+  输出: 验证结果 → 更新 context.yaml (status.validator)
+  
+  ↓
+  
+harness-onboarding (可选):
+  输入: context.yaml (读取扫描结果和收紧计划)
+  输出: 收紧进度 → 更新 context.yaml (status.onboarding)
+```
+
+---
+
+## /harness-full 命令（v3.7.1 新增）
+
+### 命令语法
+
+```bash
+/harness-full [options]
+
+选项:
+  --skip-clarification    跳过需求澄清，使用默认值
+  --skip-validation       跳过验证步骤
+  --skip-onboarding       跳过 Onboarding（如果需要）
+  --auto-confirm          自动确认所有决策（谨慎使用）
+  --output <dir>          输出目录（默认 .harness）
+```
+
+### 执行流程
+
+```
+用户输入: /harness-full
+
+Step 1: 需求澄清 [1/6]
+  → 展示问题库
+  → 收集用户答案
+  → 写入 context.yaml
+
+Step 2: 项目扫描 [2/6]
+  → 调用 harness-archaeology
+  → 实时进度反馈
+  → 更新 context.yaml
+
+Step 3: 结果确认 [3/6]
+  → 展示扫描结果
+  → 等待用户确认
+  → 记录决策到 context.yaml
+
+Step 4: 生成 Harness [4/6]
+  → 调用 harness-designer
+  → 实时进度反馈
+  → 更新 context.yaml
+
+Step 5: 质量验证 [5/6]
+  → 调用 harness-validator
+  → 生成验证报告
+  → 更新 context.yaml
+
+Step 6: 完成 [6/6]
+  → 展示生成摘要
+  → 提供后续操作建议
+  → 完成 context.yaml 更新
+```
+
+### 输出示例
+
+```
+🚀 开始完整 Harness 生成流程...
+
+[1/6] 需求澄清...
+  项目类型: 已有项目
+  团队规模: 小团队 (<5人)
+  质量要求: 标准
+  CI 平台: GitHub Actions
+
+[2/6] 项目扫描...
+  [1/5] 扫描项目结构...
+  [2/5] 识别语言和框架...
+  [3/5] 分析配置文件...
+  [4/5] 检测工具链...
+  [5/5] 生成特征报告...
+  
+  识别结果: Python + FastAPI + PDM
+
+[3/6] 结果确认...
+  项目特征: Python, FastAPI, PDM, pytest
+  存量代码: 1121 个文件，45 个不符合规范
+  处理方式: 渐进式收紧（3个月）
+  
+  ✅ 用户确认
+
+[4/6] 生成 Harness...
+  [1/6] 生成 Constitution...
+  [2/6] 生成 Scripts...
+  [3/6] 生成 Hooks...
+  [4/6] 生成 Skills...
+  [5/6] 生成 Workflows...
+  [6/6] 生成 CI Configuration...
+
+[5/6] 质量验证...
+  验证结果: 通过 (92分)
+  发现问题: 3 个建议项
+
+[6/6] 完成!
+  
+  📊 生成摘要
+  - Constitution: .harness/constitution.md
+  - Scripts: 3 个
+  - Hooks: 2 个
+  - Skills: 1 个
+  - Workflows: 2 个
+  - CI Config: .github/workflows/harness.yml
+  
+  📁 上下文文件: .harness/context.yaml
+  
+  💡 后续操作:
+  - 运行 `/harness-status` 查看状态
+  - 运行 `/harness-history` 查看决策历史
+  - 运行 `/harness-adjust` 调整配置
+  - 运行 `/onboarding-status` 查看 Onboarding 状态（如需要）
+```
+
+---
+
+## CLI 体验优化（v3.7.3 新增）
+
+### 快捷别名
+
+常用命令的快捷别名：
+
+| 别名 | 完整命令 | 说明 |
+|------|----------|------|
+| `/hs` | `/harness-status` | 查看状态 |
+| `/ha` | `/harness-adjust` | 调整配置 |
+| `/hh` | `/harness-history` | 查看历史 |
+| `/hr` | `/harness-report` | 生成报告 |
+| `/hf` | `/harness-full` | 完整流程 |
+| `/h` | `/harness-help` | 显示帮助 |
+
+### 帮助系统
+
+#### /harness-help 命令
+
+显示所有可用命令的帮助：
+
+```
+用户输入: /harness-help
+
+输出:
+┌─────────────────────────────────────────────────────────────┐
+│ 📖 Harness Skills 命令帮助                                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│ 🎯 生成相关                                                   │
+│   /harness-full     触发完整生成流程                         │
+│   /hf              (快捷)                                    │
+│                                                              │
+│ 📊 状态查询                                                   │
+│   /harness-status   查看当前状态                             │
+│   /harness-history  查看决策历史                             │
+│   /harness-why      解释配置原因                             │
+│   /hs              (快捷)                                    │
+│   /hh              (快捷)                                    │
+│                                                              │
+│ ⚙️ 迭代优化                                                   │
+│   /harness-adjust   调整配置                                 │
+│   /harness-add      添加检查项                               │
+│   /harness-remove   移除检查项                               │
+│   /harness-update   更新到最新版本                           │
+│   /ha              (快捷)                                    │
+│                                                              │
+│ 📈 报告相关                                                   │
+│   /harness-report   生成质量报告                             │
+│   /hr              (快捷)                                    │
+│                                                              │
+│ 📚 其他                                                       │
+│   /harness-help     显示此帮助                               │
+│   /h               (快捷)                                    │
+│                                                              │
+│ 💡 使用 /harness-help <command> 查看命令详细用法              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### /harness-help <command> 命令
+
+显示特定命令的详细帮助：
+
+```
+用户输入: /harness-help harness-adjust
+
+输出:
+┌─────────────────────────────────────────────────────────────┐
+│ 📖 /harness-adjust 详细帮助                                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│ 语法:                                                        │
+│   /harness-adjust <配置项> <新值>                            │
+│   /ha <配置项> <新值>                                        │
+│                                                              │
+│ 描述:                                                        │
+│   调整 Harness 的配置项，如测试覆盖率、代码审查要求等          │
+│                                                              │
+│ 示例:                                                        │
+│   /harness-adjust 测试覆盖率 70%                            │
+│   /harness-adjust 代码审查 必须                             │
+│   /harness-adjust 文档要求 可选                             │
+│   /ha test_coverage 70%                                     │
+│                                                              │
+│ 可调整的配置项:                                              │
+│   - 测试覆盖率 / test_coverage                              │
+│   - 代码审查 / code_review                                  │
+│   - 文档要求 / documentation                                │
+│   - 类型检查 / type_check                                   │
+│   - 安全扫描 / security_scan                                │
+│                                                              │
+│ 相关命令:                                                    │
+│   /harness-status   查看当前配置状态                         │
+│   /harness-history  查看配置变更历史                         │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 命令历史
+
+记录用户最近使用的命令：
+
+```yaml
+# .harness/command-history.yaml
+version: "1.0"
+commands:
+  - timestamp: "2026-06-17T10:30:00Z"
+    command: "/harness-status"
+    
+  - timestamp: "2026-06-17T10:25:00Z"
+    command: "/harness-adjust 测试覆盖率 70%"
+    
+  - timestamp: "2026-06-17T10:20:00Z"
+    command: "/harness-full"
+```
+
+使用 `↑` 和 `↓` 可以浏览历史命令（如果终端支持）。
+
+### 命令自动补全
+
+支持命令和参数的自动补全：
+
+```
+用户输入: /ha<Tab>
+自动补全: /harness-adjust
+
+用户输入: /harness-adjust 测试<Tab>
+自动补全: /harness-adjust 测试覆盖率
+
+用户输入: /hr --<Tab>
+自动补全: --format  --output  --template  --compare  --trend
+```
+
+---
+
+## 错误处理（v3.7.4 新增）
+
+### 错误码体系
+
+所有错误都有统一的错误码，格式为 `HXXX`：
+
+| 错误码 | 错误类型 | 说明 | 严重程度 |
+|--------|----------|------|----------|
+| H001 | PROJECT_NOT_FOUND | 项目路径不存在 | 高 |
+| H002 | HARNESS_NOT_INITIALIZED | 项目未初始化 Harness | 高 |
+| H003 | CONFIG_FORMAT_ERROR | 配置文件格式不正确 | 高 |
+| H004 | COMMAND_SYNTAX_ERROR | 命令参数不正确 | 中 |
+| H005 | INSUFFICIENT_PERMISSIONS | 没有执行操作的权限 | 高 |
+| H006 | RESOURCE_NOT_FOUND | 指定的资源不存在 | 中 |
+| H007 | VERSION_INCOMPATIBLE | Harness 版本不兼容 | 中 |
+| H008 | SKILL_NOT_AVAILABLE | 指定的 Skill 不可用 | 中 |
+| H009 | CONTEXT_CORRUPTED | 上下文文件损坏 | 高 |
+| H010 | OPERATION_TIMEOUT | 操作超时 | 低 |
+
+### 错误输出格式
+
+```
+❌ 错误: H002 - HARNESS_NOT_INITIALIZED
+
+项目路径: /path/to/project
+原因: 未找到 .harness/ 目录或 config.yaml
+
+建议修复:
+  1. 运行 "帮我生成 Harness" 初始化项目
+  2. 或手动创建 .harness/config.yaml
+  3. 或从其他项目复制 .harness/ 目录
+
+详细信息:
+  查看文档: https://github.com/hsms4710-pixel/your-harness#error-codes
+  
+  如需帮助，请运行: /harness-help
+```
+
+### /harness-error 命令
+
+查询错误码的详细说明：
+
+```
+用户输入: /harness-error H002
+
+输出:
+┌─────────────────────────────────────────────────────────────┐
+│ ❌ 错误码: H002 - HARNESS_NOT_INITIALIZED                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│ 描述:                                                        │
+│   项目未初始化 Harness，缺少必要的配置文件                    │
+│                                                              │
+│ 原因:                                                        │
+│   - 项目从未运行过 Harness 生成流程                          │
+│   - .harness/ 目录被删除或移动                               │
+│   - config.yaml 配置文件被删除                               │
+│                                                              │
+│ 解决方案:                                                    │
+│   1. 如果是新项目，运行: "帮我生成 Harness"                  │
+│   2. 如果是已有项目，检查 .harness/ 目录是否存在              │
+│   3. 恢复 config.yaml 文件或重新生成                         │
+│                                                              │
+│ 相关命令:                                                    │
+│   /harness-full     - 完整生成流程                           │
+│   /harness-status   - 查看状态（需要先初始化）               │
+│                                                              │
+│ 查看所有错误码: /harness-error list                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 错误日志
+
+所有错误都会记录到日志文件：
+
+```yaml
+# .harness/error-log.yaml
+version: "1.0"
+errors:
+  - id: "err-20260617-001"
+    timestamp: "2026-06-17T10:30:00Z"
+    error_code: "H002"
+    error_type: "HARNESS_NOT_INITIALIZED"
+    message: "项目未初始化 Harness"
+    context:
+      project_path: "/path/to/project"
+      command: "/harness-status"
+    resolution: "运行 /harness-full 初始化"
+    
+  - id: "err-20260617-002"
+    timestamp: "2026-06-17T10:35:00Z"
+    error_code: "H004"
+    error_type: "COMMAND_SYNTAX_ERROR"
+    message: "命令参数不正确"
+    context:
+      command: "/harness-adjust"
+      expected: "<配置项> <新值>"
+      received: ""
+    resolution: "使用 /harness-help harness-adjust 查看用法"
+```
+
+### 错误恢复建议
+
+对于常见错误，系统会自动提供恢复建议：
+
+```yaml
+# 错误恢复建议库
+error_recovery:
+  H002: # HARNESS_NOT_INITIALIZED
+    quick_fix: "运行 /harness-full"
+    detailed_steps:
+      - "确认项目路径正确"
+      - "运行 /harness-full 初始化"
+      - "或手动创建 .harness/config.yaml"
+    
+  H003: # CONFIG_FORMAT_ERROR
+    quick_fix: "检查 config.yaml 格式"
+    detailed_steps:
+      - "运行 /harness-status 验证配置"
+      - "检查 YAML 语法是否正确"
+      - "参考示例配置文件修复"
+    
+  H004: # COMMAND_SYNTAX_ERROR
+    quick_fix: "查看命令帮助"
+    detailed_steps:
+      - "运行 /harness-help <command>"
+      - "检查参数是否正确"
+      - "使用 Tab 键自动补全"
+```
+
+---
+
 ## 版本历史
 
+- v3.7.4 (2026-06-17): 添加错误码体系、详细错误说明、修复建议、错误日志
+- v3.7.3 (2026-06-17): 添加快捷别名、帮助系统、命令历史、命令自动补全
+- v3.7.1 (2026-06-17): 添加统一上下文共享、/harness-full 命令、Skills 间状态同步
 - v3.5.1 (2026-06-16): 添加历史追溯功能（/harness-history、/harness-why）
 - v3.5.0 (2026-06-16): 添加迭代优化命令（/harness-status、/harness-adjust、/harness-add、/harness-remove、/harness-update）
 - v3.4.0 (2026-06-16): 增加需求澄清对话、确认环节，避免过度自动化
