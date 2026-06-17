@@ -5,10 +5,10 @@ description: |
   接收 harness-archaeology 的项目特征识别结果，生成完整的定制化系统。
   支持四种模式：Greenfield、Guided Discovery、Brownfield、From Inferred。
   输出：定制脚本 + Hook + Skill + 工作流 + Constitution 摘要 + CI 配置 + Specs + Tasks。
-  v3.2: 借鉴 Spec Kit/OpenSpec/Superpowers 最佳实践，添加 Constitution 生成、质量门禁、任务拆分、TDD 支持。
-version: 3.2.0
+  v3.5.1: 添加历史记录保存功能，支持 /harness-history 和 /harness-why 命令。
+version: 3.5.1
 author: agent_created
-tags: [harness, designer, customization, scripts, hooks, skills, ci-cd, sdd, constitution, specs, tasks]
+tags: [harness, designer, customization, scripts, hooks, skills, ci-cd, sdd, constitution, specs, tasks, adjust, status, history]
 ---
 
 # Harness Designer
@@ -1080,8 +1080,500 @@ jobs:
 
 ---
 
+---
+
+## 迭代优化命令（v3.5 新增）
+
+### 命令概览
+
+| 命令 | 功能 | 语法 |
+|------|------|------|
+| `/harness-status` | 查看当前状态 | `/harness-status` |
+| `/harness-adjust` | 调整配置 | `/harness-adjust <配置项> <新值>` |
+| `/harness-add` | 添加检查项 | `/harness-add <检查类型> [配置]` |
+| `/harness-remove` | 移除检查项 | `/harness-remove <检查项>` |
+| `/harness-update` | 更新到最新版本 | `/harness-update [scope]` |
+
+### 命令 1: /harness-status
+
+查看当前项目 Harness 的状态。
+
+#### 用法
+
+```bash
+/harness-status
+```
+
+#### 输出格式
+
+```
+📊 Harness 状态
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+项目: my-fastapi-app
+路径: /path/to/project
+生成时间: 2026-06-16 20:10:00
+版本: v3.5.0
+
+📋 项目配置
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+语言: Python
+框架: FastAPI
+包管理器: PDM
+测试框架: pytest
+CI 平台: GitHub Actions
+
+🎯 生成内容
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Scripts: 3 个
+  • check-api-sync.py
+  • check-quality.py
+  • check-tdd.py
+
+Hooks: 2 个
+  • pre-commit
+  • pre-push
+
+Skills: 1 个
+  • api-sync-check
+
+CI Config: 1 个
+  • .github/workflows/harness-ci.yml
+
+📋 配置项
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+测试覆盖率要求: >= 60%
+文档要求: 核心代码
+代码审查: 推荐
+安全检查: 无
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+### 命令 2: /harness-adjust
+
+调整已生成的配置。
+
+#### 用法
+
+```bash
+/harness-adjust <配置项> <新值>
+```
+
+#### 可调整的配置项
+
+| 配置项 | 可选值 | 说明 |
+|--------|--------|------|
+| 测试覆盖率 | 40% / 60% / 80% | 测试覆盖率要求 |
+| 文档要求 | 可选 / 核心代码 / 必须 | 文档编写要求 |
+| 代码审查 | 可选 / 推荐 / 必须 | 代码审查要求 |
+| 安全检查 | 无 / 基础 / 完整 | 安全检查级别 |
+
+#### 示例
+
+```bash
+# 调整测试覆盖率要求
+/harness-adjust 测试覆盖率 80%
+
+# 调整文档要求
+/harness-adjust 文档要求 必须
+
+# 调整代码审查要求
+/harness-adjust 代码审查 必须
+
+# 添加安全检查
+/harness-adjust 安全检查 基础
+```
+
+#### 执行流程
+
+1. 解析命令参数
+2. 验证配置项是否有效
+3. 验证新值是否在可选范围内
+4. 更新配置文件
+5. 重新生成受影响的输出
+6. 显示更新结果
+
+#### 输出格式
+
+```
+✅ 配置已更新
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+配置项: 测试覆盖率
+旧值: >= 60%
+新值: >= 80%
+
+🔄 重新生成的内容
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- .harness/gates/quality-gates.yaml
+- .github/workflows/harness-ci.yml
+
+✅ 更新完成
+```
+
+---
+
+### 命令 3: /harness-add
+
+添加新的检查项。
+
+#### 用法
+
+```bash
+/harness-add <检查类型> [--配置选项]
+```
+
+#### 可添加的检查类型
+
+| 检查类型 | 说明 | 包含的检查项 |
+|----------|------|-------------|
+| 安全扫描 | 安全相关检查 | sensitive-data, dependency-vulnerability, access-control |
+| 性能检查 | 性能相关检查 | bundle-size, query-optimization, memory-leak |
+| API版本检查 | API 版本兼容性 | api-compatibility, api-deprecation |
+| 文档完整性 | 文档检查 | docstring-coverage, readme-completeness |
+| 代码复杂度 | 代码质量 | cyclomatic-complexity, code-duplication |
+
+#### 示例
+
+```bash
+# 添加安全扫描
+/harness-add 安全扫描
+
+# 添加 API 版本检查（严格模式）
+/harness-add API版本检查 --strict
+
+# 添加性能检查
+/harness-add 性能检查
+```
+
+#### 执行流程
+
+1. 解析命令参数
+2. 验证检查类型是否有效
+3. 检查是否已存在相同检查
+4. 添加检查配置
+5. 生成检查脚本（如需要）
+6. 更新 Hook 配置
+7. 更新 CI 配置
+8. 显示添加结果
+
+#### 输出格式
+
+```
+✅ 检查项已添加
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+检查类型: 安全扫描
+添加的检查项:
+  • sensitive-data (敏感数据检测)
+  • dependency-vulnerability (依赖漏洞扫描)
+  • access-control (访问控制检查)
+
+📁 生成的文件
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- .harness/scripts/check-security.py (新增)
+- .harness/gates/quality-gates.yaml (更新)
+- .github/workflows/harness-ci.yml (更新)
+
+🎯 下次运行时将执行
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+pre-commit: 检查敏感数据
+pre-push: 扫描依赖漏洞
+CI: 完整安全检查
+
+✅ 添加完成
+```
+
+---
+
+### 命令 4: /harness-remove
+
+移除不需要的检查项。
+
+#### 用法
+
+```bash
+/harness-remove <检查项>
+```
+
+#### 可移除的检查项
+
+- 任何已添加的检查类型
+- 特定的检查脚本名称
+
+#### 示例
+
+```bash
+# 移除安全扫描
+/harness-remove 安全扫描
+
+# 移除特定脚本
+/harness-remove check-performance
+```
+
+#### 执行流程
+
+1. 解析命令参数
+2. 查找检查项
+3. 确认移除操作
+4. 删除相关配置
+5. 删除相关脚本（如存在）
+6. 更新 Hook 配置
+7. 更新 CI 配置
+8. 显示移除结果
+
+#### 输出格式
+
+```
+⚠️ 确认移除
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+将移除以下内容:
+  • 安全扫描
+  • check-security.py
+  • 相关 Hook 配置
+  • 相关 CI 配置
+
+确认移除吗？(y/n)
+```
+
+确认后：
+
+```
+✅ 检查项已移除
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+已移除:
+  • 安全扫描
+  • .harness/scripts/check-security.py
+  • .harness/gates/quality-gates.yaml 中的相关配置
+  • .github/workflows/harness-ci.yml 中的相关配置
+
+✅ 移除完成
+```
+
+---
+
+### 命令 5: /harness-update
+
+更新 Harness 到最新版本。
+
+#### 用法
+
+```bash
+/harness-update [scope]
+```
+
+#### Scope 选项
+
+| Scope | 说明 |
+|-------|------|
+| (无) | 更新所有内容 |
+| scripts | 只更新脚本 |
+| hooks | 只更新 Hook |
+| skills | 只更新 Skill |
+| ci | 只更新 CI 配置 |
+
+#### 示例
+
+```bash
+# 更新所有内容
+/harness-update
+
+# 只更新脚本
+/harness-update scripts
+
+# 只更新 CI 配置
+/harness-update ci
+```
+
+#### 执行流程
+
+1. 检查当前版本
+2. 获取最新模板
+3. 识别自定义内容
+4. 合并更新
+5. 保留自定义修改
+6. 显示更新结果
+
+#### 输出格式
+
+```
+🔄 正在更新 Harness
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+当前版本: v3.4.0
+目标版本: v3.5.0
+
+📦 更新内容
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Scripts:
+  • check-quality.py (更新)
+  • check-tdd.py (更新)
+  
+Hooks:
+  • pre-commit (更新)
+  • pre-push (更新)
+  
+CI Config:
+  • .github/workflows/harness-ci.yml (更新)
+
+💾 保留的自定义内容
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  • check-api-sync.py (自定义脚本)
+  • api-sync-check (自定义 Skill)
+
+✅ 更新完成
+版本: v3.4.0 → v3.5.0
+```
+
+---
+
+## 进度反馈（v3.5 新增）
+
+### 扫描进度反馈
+
+在 harness-archaeology 扫描项目时显示进度：
+
+```
+[1/5] 扫描项目结构...
+[2/5] 识别语言和框架...
+[3/5] 分析配置文件...
+[4/5] 检测工具链...
+[5/5] 生成特征报告...
+```
+
+### 生成进度反馈
+
+在生成 Harness 系统时显示进度：
+
+```
+[1/6] 生成 Constitution...
+[2/6] 生成 Scripts...
+[3/6] 生成 Hooks...
+[4/6] 生成 Skills...
+[5/6] 生成 Workflows...
+[6/6] 生成 CI Configuration...
+```
+
+### 进度阶段详解
+
+#### 扫描阶段（harness-archaeology）
+
+| 阶段 | 名称 | 描述 |
+|------|------|------|
+| 1 | 扫描项目结构 | 分析目录结构和文件分布 |
+| 2 | 识别语言和框架 | 检测编程语言、框架、包管理器 |
+| 3 | 分析配置文件 | 解析项目配置和依赖关系 |
+| 4 | 检测工具链 | 识别 Lint、测试、CI 工具 |
+| 5 | 生成特征报告 | 汇总分析结果 |
+
+#### 生成阶段（harness-designer）
+
+| 阶段 | 名称 | 描述 |
+|------|------|------|
+| 1 | Constitution | 生成项目治理原则 |
+| 2 | Scripts | 生成定制脚本 |
+| 3 | Hooks | 生成自动化 Hook |
+| 4 | Skills | 生成可调用 Skill |
+| 5 | Workflows | 生成工作流文档 |
+| 6 | CI Configuration | 生成 CI 配置 |
+
+---
+
+## 历史记录保存（v3.5.1 新增）
+
+每次执行调整命令时，自动保存决策历史到 `.harness/decision-history.yaml`。
+
+### 保存时机
+
+```yaml
+# 调整命令执行后自动保存
+
+/harness-adjust:
+  保存内容:
+    - 命令: "/harness-adjust 测试覆盖率 70%"
+    - 原值: ">= 60%"
+    - 新值: ">= 70%"
+    - 时间戳: "2026-06-16T11:00:00Z"
+    - 类别: "adjust"
+
+/harness-add:
+  保存内容:
+    - 命令: "/harness-add 安全扫描"
+    - 新增检查项: ["sensitive-data", "dependency-vulnerability"]
+    - 时间戳: "2026-06-16T11:30:00Z"
+    - 类别: "add"
+
+/harness-remove:
+  保存内容:
+    - 命令: "/harness-remove 类型检查"
+    - 移除检查项: "typecheck"
+    - 时间戳: "2026-06-16T12:00:00Z"
+    - 类别: "remove"
+
+/harness-update:
+  保存内容:
+    - 命令: "/harness-update scripts"
+    - 更新范围: "scripts"
+    - 时间戳: "2026-06-16T13:00:00Z"
+    - 类别: "update"
+```
+
+### 历史记录格式
+
+```yaml
+# .harness/decision-history.yaml
+
+adjustments:
+  - id: 1
+    timestamp: "2026-06-16T11:00:00Z"
+    command: "/harness-adjust 测试覆盖率 70%"
+    category: "adjust"
+    previous_value: ">= 60%"
+    new_value: ">= 70%"
+    
+  - id: 2
+    timestamp: "2026-06-16T11:30:00Z"
+    command: "/harness-add 安全扫描"
+    category: "add"
+    added_items:
+      - "sensitive-data"
+      - "dependency-vulnerability"
+      
+  - id: 3
+    timestamp: "2026-06-16T12:00:00Z"
+    command: "/harness-remove 类型检查"
+    category: "remove"
+    removed_item: "typecheck"
+
+summary:
+  total_adjustments: 3
+  last_updated: "2026-06-16T12:00:00Z"
+```
+
+### 自动更新摘要
+
+每次保存后，自动更新 `summary` 部分：
+
+```yaml
+summary:
+  total_decisions: 10
+  user_interactions: 8
+  auto_decisions: 2
+  adjustments_made: 3
+  last_updated: "2026-06-16T12:00:00Z"
+```
+
+---
+
 ## 版本历史
 
+- v3.5.1 (2026-06-16): 添加历史记录保存功能，支持 /harness-history 和 /harness-why
+- v3.5.0 (2026-06-16): 添加迭代优化命令（/harness-status、/harness-adjust、/harness-add、/harness-remove、/harness-update）和进度反馈
 - v3.2.0 (2026-06-16): 融合 SDD 工具最佳实践，添加 Constitution 生成、质量门禁、任务拆分、TDD 支持、内联自审、7 阶段工作流
 - v3.1.0 (2026-06-16): 增加 CI/CD 集成、可视化展示、批量操作支持
 - v3.0.0 (2026-06-15): 重构为定制化系统输出，生成脚本/Hook/Skill/工作流

@@ -2,10 +2,11 @@
 name: harness-registry
 description: |
   Harness Registry — 多项目 Harness 管理中心。
-  功能：项目注册、版本化、共享资源管理、Drift 检测、跨项目对齐、工蜂/GitHub 集成。
-version: 2.2.0
+  功能：项目注册、版本化、共享资源管理、Drift 检测、跨项目对齐、工蜂/GitHub 集成、团队协作。
+  v3.6.0: 添加团队协作功能，支持权限控制、评论审批、分享功能。
+version: 3.6.0
 author: agent_created
-tags: [harness, registry, multi-project, versioning, drift]
+tags: [harness, registry, multi-project, versioning, drift, collaboration, permissions, share]
 ---
 
 # Harness Registry
@@ -316,6 +317,265 @@ alignment_plan:
 | `/registry-drift` | 检测当前项目的 Drift |
 | `/registry-align <project>` | 与指定项目对齐 |
 | `/registry-diff <project>` | 与指定项目对比 |
+| `/registry-share <project>` | 分享项目 Harness（v3.6.0 新增）|
+| `/registry-permissions` | 管理权限（v3.6.0 新增）|
+| `/registry-approve <id>` | 审批待处理的变更（v3.6.0 新增）|
+
+---
+
+## 团队协作功能（v3.6.0 新增）
+
+### 权限模型
+
+```yaml
+# 权限角色定义
+
+roles:
+  owner:
+    description: "项目所有者"
+    permissions:
+      - read
+      - write
+      - delete
+      - share
+      - manage_members
+      - approve_changes
+      
+  admin:
+    description: "管理员"
+    permissions:
+      - read
+      - write
+      - share
+      - manage_members
+      - approve_changes
+      
+  member:
+    description: "普通成员"
+    permissions:
+      - read
+      - write
+      - comment
+      - request_approval
+      
+  viewer:
+    description: "只读成员"
+    permissions:
+      - read
+      - comment
+```
+
+### 项目权限配置
+
+```yaml
+# .harness/permissions.yaml
+
+project:
+  name: "my-fastapi-app"
+  owner: "user@example.com"
+  
+  members:
+    - email: "alice@example.com"
+      role: admin
+      joined_at: "2026-06-16T10:00:00Z"
+      
+    - email: "bob@example.com"
+      role: member
+      joined_at: "2026-06-16T11:00:00Z"
+      
+    - email: "charlie@example.com"
+      role: viewer
+      joined_at: "2026-06-16T12:00:00Z"
+
+  settings:
+    require_approval: true  # 修改需要审批
+    approval_required_roles: ["owner", "admin"]
+    allow_public_comments: true
+```
+
+### 分享功能
+
+#### /registry-share 命令
+
+```bash
+# 分享项目 Harness
+/registry-share my-fastapi-app
+
+# 分享到指定用户
+/registry-share my-fastapi-app --to alice@example.com
+
+# 生成分享链接
+/registry-share my-fastapi-app --link
+```
+
+#### 分享链接格式
+
+```
+https://harness.example.com/share/{project_id}/{token}
+```
+
+#### 分享权限控制
+
+```yaml
+# 分享配置
+share_settings:
+  # 谁可以访问分享链接
+  access:
+    - anyone_with_link  # 任何人（有链接）
+    - specific_users    # 指定用户
+    - organization      # 组织内成员
+    
+  # 访问者权限
+  viewer_permissions:
+    - read
+    - comment
+    
+  # 是否允许申请加入
+  allow_join_request: true
+```
+
+### 评论和审批
+
+#### 评论系统
+
+```yaml
+# .harness/comments.yaml
+
+comments:
+  - id: 1
+    author: "alice@example.com"
+    timestamp: "2026-06-16T10:30:00Z"
+    target: "config.yaml:quality.test_coverage"
+    content: "建议将覆盖率要求提升到 80%"
+    
+  - id: 2
+    author: "bob@example.com"
+    timestamp: "2026-06-16T11:00:00Z"
+    parent_id: 1
+    content: "同意，但需要分阶段提升"
+
+  - id: 3
+    author: "user@example.com"
+    timestamp: "2026-06-16T11:30:00Z"
+    parent_id: 1
+    content: "已采纳，将在下个版本提升到 80%"
+```
+
+#### 变更审批流程
+
+```yaml
+# .harness/pending-approvals.yaml
+
+pending_approvals:
+  - id: 1
+    requester: "alice@example.com"
+    timestamp: "2026-06-16T14:00:00Z"
+    type: "config_change"
+    
+    changes:
+      - file: "config.yaml"
+        field: "quality.test_coverage"
+        from: ">= 60%"
+        to: ">= 80%"
+        
+    reason: "提升代码质量标准"
+    
+    status: pending
+    approvers_notified:
+      - "user@example.com"
+      - "bob@example.com"
+      
+  - id: 2
+    requester: "bob@example.com"
+    timestamp: "2026-06-16T15:00:00Z"
+    type: "add_skill"
+    
+    changes:
+      - action: "add"
+        skill: "security-scan"
+        
+    reason: "添加安全扫描检查"
+    
+    status: approved
+    approved_by: "user@example.com"
+    approved_at: "2026-06-16T15:30:00Z"
+```
+
+#### /registry-approve 命令
+
+```bash
+# 审批待处理的变更
+/registry-approve 1  # 批准 ID 为 1 的变更
+/registry-reject 1   # 拒绝 ID 为 1 的变更
+/registry-approve 1 --comment "已确认，同意修改"  # 批准并添加评论
+```
+
+### 协作工作流
+
+#### 工作流 1：邀请成员
+
+```
+1. 项目所有者执行 /registry-share project-name
+2. 生成分享链接
+3. 将链接发送给邀请对象
+4. 邀请对象点击链接，申请加入
+5. 所有者审批申请
+6. 成员加入项目
+```
+
+#### 工作流 2：提交变更
+
+```
+1. 成员修改本地 Harness 配置
+2. 执行 /harness-status 查看变更
+3. 提交变更请求：/registry-share --request-approval
+4. 变更进入待审批队列
+5. 管理员收到通知
+6. 管理员审批或拒绝
+7. 审批通过后，变更同步到 Registry
+```
+
+#### 工作流 3：讨论和评论
+
+```
+1. 成员对某个配置项发表评论
+2. 其他成员收到通知
+3. 成员回复评论
+4. 达成共识后，执行变更
+```
+
+### 通知机制
+
+```yaml
+# 通知配置
+notifications:
+  # 通知方式
+  channels:
+    - email
+    - slack
+    - wecom
+    
+  # 通知事件
+  events:
+    - member_joined
+    - member_left
+    - approval_requested
+    - approval_decided
+    - config_changed
+    - drift_detected
+    
+  # 通知模板
+  templates:
+    approval_requested: |
+      【Harness 协作】您有一个待审批的变更
+      
+      项目: {project_name}
+      申请人: {requester}
+      变更类型: {change_type}
+      变更原因: {reason}
+      
+      点击审批: {approval_link}
+```
 
 ---
 
@@ -439,5 +699,6 @@ if __name__ == "__main__":
 
 ## 版本历史
 
+- v3.6.0 (2026-06-16): 添加团队协作功能（权限控制、评论审批、分享功能）
 - v2.2.0 (2026-06-15): 增加工蜂/GitHub 集成、自动同步机制、同步脚本模板
 - v2.1.0: 初始版本

@@ -10,13 +10,24 @@ description: |
   - "我有多个项目，怎么统一管理"
   - "新项目，用 Python + FastAPI"
   
-  v3.4: 增加需求澄清对话、确认环节，避免过度自动化。
+  🎯 迭代优化命令：
+  - `/harness-status` - 查看当前状态
+  - `/harness-adjust <配置项> <新值>` - 调整配置
+  - `/harness-add <检查类型>` - 添加检查项
+  - `/harness-remove <检查项>` - 移除检查项
+  - `/harness-update [scope]` - 更新到最新版本
+  
+  🎯 历史追溯命令（v3.5.1 新增）：
+  - `/harness-history` - 查看决策历史
+  - `/harness-why <配置项>` - 解释配置原因
+  
+  v3.5.1: 添加历史追溯功能，记录所有决策和调整。
   
   支持模式：Greenfield（新项目）、Guided Discovery（技术栈未知）、Archaeology（识别项目特征）、定制化系统生成。
-  核心：需求澄清 → 确认理解 → 识别特征 → 生成定制系统。
-version: 3.4.0
+  核心：需求澄清 → 确认理解 → 识别特征 → 生成定制系统 → 支持迭代调整 → 记录决策历史。
+version: 3.5.1
 author: agent_created
-tags: [harness, architect, orchestrator, customization, ci-cd, smart-routing, clarification, confirmation]
+tags: [harness, architect, orchestrator, customization, ci-cd, smart-routing, clarification, confirmation, status, adjust, history, trace]
 ---
 
 # Harness Architect — Orchestrator
@@ -281,6 +292,424 @@ skip_rules:
 
 ## 智能意图识别
 
+### 迭代优化命令处理（v3.5 新增）
+
+当用户输入以 `/harness-` 开头的命令时，直接路由到对应处理：
+
+#### 命令识别表
+
+| 命令 | 路由目标 | 说明 |
+|------|----------|------|
+| `/harness-status` | 本地处理 | 显示当前项目 Harness 状态 |
+| `/harness-adjust` | `harness-designer` | 调整配置 |
+| `/harness-add` | `harness-designer` | 添加检查项 |
+| `/harness-remove` | `harness-designer` | 移除检查项 |
+| `/harness-update` | `harness-designer` | 更新到最新版本 |
+
+#### /harness-status 实现
+
+当用户输入 `/harness-status` 时，执行以下操作：
+
+```
+1. 检查项目根目录是否存在 .harness/ 目录
+2. 如果存在，读取配置文件获取项目信息
+3. 统计已生成的内容（scripts、hooks、skills）
+4. 读取生成时间和版本信息
+5. 输出格式化的状态报告
+```
+
+**状态报告输出格式**：
+
+```
+📊 Harness 状态
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+项目: {project_name}
+路径: {project_path}
+生成时间: {generation_time}
+版本: {version}
+
+📋 项目配置
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+语言: {language}
+框架: {framework}
+包管理器: {package_manager}
+测试框架: {test_framework}
+CI 平台: {ci_platform}
+
+🎯 生成内容
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Scripts: {script_count} 个
+  • {script_list}
+
+Hooks: {hook_count} 个
+  • {hook_list}
+
+Skills: {skill_count} 个
+  • {skill_list}
+
+CI Config: {ci_config_count} 个
+  • {ci_config_list}
+
+📋 配置项
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+测试覆盖率要求: {coverage_requirement}
+文档要求: {documentation_requirement}
+代码审查: {code_review_requirement}
+安全检查: {security_requirement}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**配置文件位置**：
+
+```
+.harness/
+├── config.yaml          # 项目配置
+├── features.yaml        # 识别的项目特征
+├── scripts/             # 定制脚本
+├── hooks/               # 自动化 Hook
+├── skills/              # 可调用 Skill
+├── gates/               # 质量门禁配置
+└── workflows/           # 工作流文档
+```
+
+**config.yaml 示例**：
+
+```yaml
+# .harness/config.yaml
+version: "3.5.0"
+generated_at: "2026-06-16T20:10:00Z"
+project:
+  name: "my-fastapi-app"
+  path: "/path/to/project"
+  language: "Python"
+  framework: "FastAPI"
+  package_manager: "PDM"
+  test_framework: "pytest"
+  ci_platform: "GitHub Actions"
+  
+quality:
+  test_coverage: ">= 60%"
+  documentation: "core only"
+  code_review: "recommended"
+  security: "none"
+
+components:
+  scripts:
+    - check-api-sync.py
+    - check-quality.py
+    - check-tdd.py
+  hooks:
+    - pre-commit
+    - pre-push
+  skills:
+    - api-sync-check
+  ci_configs:
+    - ".github/workflows/harness-ci.yml"
+```
+
+#### /harness-adjust 路由
+
+当用户输入 `/harness-adjust` 时，路由到 harness-designer：
+
+```
+用户输入: /harness-adjust 测试覆盖率 80%
+
+Orchestrator 判断:
+- 迭代优化命令: 是
+- 命令类型: adjust
+- 路由: harness-designer
+
+动作: Skill(skill="harness-designer", args="command=adjust, item=测试覆盖率, value=80%")
+```
+
+#### /harness-add 路由
+
+当用户输入 `/harness-add` 时，路由到 harness-designer：
+
+```
+用户输入: /harness-add 安全扫描
+
+Orchestrator 判断:
+- 迭代优化命令: 是
+- 命令类型: add
+- 路由: harness-designer
+
+动作: Skill(skill="harness-designer", args="command=add, check_type=安全扫描")
+```
+
+#### /harness-remove 路由
+
+当用户输入 `/harness-remove` 时，路由到 harness-designer：
+
+```
+用户输入: /harness-remove 安全扫描
+
+Orchestrator 判断:
+- 迭代优化命令: 是
+- 命令类型: remove
+- 路由: harness-designer
+
+动作: Skill(skill="harness-designer", args="command=remove, item=安全扫描")
+```
+
+#### /harness-update 路由
+
+当用户输入 `/harness-update` 时，路由到 harness-designer：
+
+```
+用户输入: /harness-update scripts
+
+Orchestrator 判断:
+- 迭代优化命令: 是
+- 命令类型: update
+- 路由: harness-designer
+
+动作: Skill(skill="harness-designer", args="command=update, scope=scripts")
+```
+
+### 历史追溯命令处理（v3.5.1 新增）
+
+#### 决策历史记录机制
+
+每次用户做出决策或调整时，自动记录到 `.harness/decision-history.yaml`：
+
+```yaml
+# .harness/decision-history.yaml
+version: "1.0"
+created_at: "2026-06-16T10:00:00Z"
+
+initial_request:
+  user_input: "帮我给这个 FastAPI 项目生成 Harness"
+  detected_mode: "Brownfield"
+  timestamp: "2026-06-16T10:00:00Z"
+
+clarification_answers:
+  - id: "project_type"
+    question: "这是新项目还是已有项目？"
+    answer: "📁 已有项目"
+    impact: "使用 Brownfield 模式，扫描后生成定制规范"
+    timestamp: "2026-06-16T10:00:15Z"
+  
+  - id: "team_size"
+    question: "团队规模多大？"
+    answer: "👥 小团队 (<5人)"
+    impact: "生成标准规范，包含基础协作检查"
+    timestamp: "2026-06-16T10:00:22Z"
+    
+  - id: "quality_level"
+    question: "对代码质量的要求？"
+    answer: "✅ 标准"
+    impact: "测试覆盖率 > 60%，核心代码有文档"
+    timestamp: "2026-06-16T10:00:28Z"
+
+scan_results:
+  project_features:
+    language: "Python"
+    framework: "FastAPI"
+    package_manager: "PDM"
+    test_framework: "pytest"
+    ci_platform: "GitHub Actions"
+    
+  legacy_code:
+    total_files: 1121
+    non_compliant: 45
+    breakdown:
+      style_issues: 30
+      type_errors: 10
+      missing_tests: 5
+
+  user_decision:
+    choice: "渐进式收紧（3个月）"
+    reason: "不想一次性修复太多，慢慢来"
+    timestamp: "2026-06-16T10:01:00Z"
+
+generation_config:
+  priority_decisions:
+    high:
+      - item: "check-pydantic-sync"
+        reason: "FastAPI 项目核心检查 - Pydantic 模型同步"
+      - item: "check-router-params"
+        reason: "FastAPI 项目核心检查 - 路由参数一致性"
+    medium:
+      - item: "check-tdd"
+        reason: "用户选择了标准质量要求"
+      - item: "check-docstrings"
+        reason: "用户选择了标准质量要求"
+    low:
+      - item: "check-performance"
+        reason: "非核心功能"
+
+adjustments:
+  - id: 1
+    timestamp: "2026-06-16T11:00:00Z"
+    command: "/harness-adjust 测试覆盖率 70%"
+    previous_value: ">= 60%"
+    new_value: ">= 70%"
+    category: "adjust"
+    
+  - id: 2
+    timestamp: "2026-06-16T11:30:00Z"
+    command: "/harness-add 安全扫描"
+    added_items:
+      - "sensitive-data"
+      - "dependency-vulnerability"
+    category: "add"
+
+summary:
+  total_decisions: 10
+  user_interactions: 8
+  auto_decisions: 2
+  adjustments_made: 2
+  last_updated: "2026-06-16T11:30:00Z"
+```
+
+#### /harness-history 实现
+
+当用户输入 `/harness-history` 时，执行以下操作：
+
+```
+1. 检查项目根目录是否存在 .harness/decision-history.yaml
+2. 如果存在，读取并解析历史记录
+3. 格式化输出决策历史
+4. 如果不存在，提示用户尚未生成 Harness
+```
+
+**历史输出格式**：
+
+```
+📜 Harness 决策历史
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 初始请求: 2026-06-16T10:00:00Z
+💬 "帮我给这个 FastAPI 项目生成 Harness"
+🎯 检测模式: Brownfield
+
+📋 需求澄清 (3 个决策)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 项目类型: 📁 已有项目
+   影响: 使用 Brownfield 模式，扫描后生成定制规范
+
+2. 团队规模: 👥 小团队 (<5人)
+   影响: 生成标准规范，包含基础协作检查
+
+3. 质量要求: ✅ 标准
+   影响: 测试覆盖率 > 60%，核心代码有文档
+
+🔍 扫描结果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 语言: Python
+• 框架: FastAPI
+• 包管理器: PDM
+• 测试框架: pytest
+
+📊 存量代码问题: 45 个
+• 代码风格: 30 个
+• 类型错误: 10 个
+• 缺少测试: 5 个
+
+✅ 用户决策: 渐进式收紧（3个月）
+
+📝 生成配置优先级
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 高优先级:
+  • check-pydantic-sync - FastAPI 项目核心检查
+  • check-router-params - 路由参数一致性
+
+🟡 中优先级:
+  • check-tdd - 标准质量要求
+  • check-docstrings - 标准质量要求
+
+🟢 低优先级:
+  • check-performance - 非核心功能
+
+🔧 调整记录 (2 次)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 2026-06-16T11:00:00Z
+   命令: /harness-adjust 测试覆盖率 70%
+   变更: >= 60% → >= 70%
+
+2. 2026-06-16T11:30:00Z
+   命令: /harness-add 安全扫描
+   新增: sensitive-data, dependency-vulnerability
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 统计: 10 个决策, 8 次交互, 2 次调整
+🔄 最后更新: 2026-06-16T11:30:00Z
+```
+
+#### /harness-why 实现
+
+当用户输入 `/harness-why <配置项>` 时，执行以下操作：
+
+```
+1. 解析用户询问的配置项
+2. 读取 .harness/decision-history.yaml
+3. 在历史记录中搜索相关的决策
+4. 格式化输出解释
+```
+
+**解释输出格式**：
+
+```
+❓ 为什么测试覆盖率要求是 >= 70%？
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 决策来源
+当前值: >= 70%
+原始值: >= 60%
+
+📝 决策链
+1. 用户选择: "✅ 标准" 质量要求
+   → 初始设置: >= 60% (标准质量要求的默认值)
+   
+2. 用户执行: /harness-adjust 测试覆盖率 70%
+   → 调整为: >= 70% (2026-06-16T11:00:00Z)
+
+💡 建议
+如果您想恢复到原始值，可以执行：
+/harness-adjust 测试覆盖率 60%
+
+如果您想进一步提高，可以执行：
+/harness-adjust 测试覆盖率 80%
+```
+
+#### 决策记录自动保存
+
+在以下时机自动保存决策记录：
+
+```yaml
+# 触发点
+
+1. 需求澄清完成后:
+   - 记录所有用户回答
+   - 记录推断的默认值
+   
+2. 扫描完成后:
+   - 记录识别的项目特征
+   - 记录发现的存量代码问题
+   - 记录用户对问题处理的选择
+   
+3. 生成配置时:
+   - 记录优先级决策
+   - 记录每个配置项的选择原因
+   
+4. 执行调整命令后:
+   - 记录命令内容
+   - 记录变更前后值
+   - 记录时间戳
+```
+
+#### 历史记录查询命令
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `/harness-history` | 查看完整决策历史 | `/harness-history` |
+| `/harness-why <配置项>` | 解释特定配置的原因 | `/harness-why 测试覆盖率` |
+| `/harness-history --recent` | 只看最近的调整 | `/harness-history --recent` |
+| `/harness-history --decisions` | 只看决策，不看调整 | `/harness-history --decisions` |
+
 ### 触发词和意图模式
 
 用户不需要知道具体 Skill 名称，通过自然语言描述即可触发。
@@ -295,6 +724,7 @@ skip_rules:
 | **多项目管理** | 多项目、registry、统一管理、同步、drift | `harness-registry` |
 | **新项目** | 新项目、新建、create、from scratch | `harness-designer` (Greenfield) |
 | **技术栈未知** | 不知道用什么、帮我选、推荐技术栈 | `harness-designer` (Guided Discovery) |
+| **状态查询** | 状态、情况、进度、看看 | 本地处理 /harness-status |
 
 #### 模糊匹配规则
 
@@ -774,6 +1204,9 @@ graph LR
 
 ## 版本历史
 
+- v3.5.1 (2026-06-16): 添加历史追溯功能（/harness-history、/harness-why）
+- v3.5.0 (2026-06-16): 添加迭代优化命令（/harness-status、/harness-adjust、/harness-add、/harness-remove、/harness-update）
+- v3.4.0 (2026-06-16): 增加需求澄清对话、确认环节，避免过度自动化
 - v3.1.0 (2026-06-16): 智能意图识别、CI/CD 集成、快速开始、可视化展示
 - v3.0.0 (2026-06-15): 重构为定制化系统输出，输出脚本/Hook/Skill/工作流
 - v2.2.0 (2026-06-15): 增加两阶段流程
