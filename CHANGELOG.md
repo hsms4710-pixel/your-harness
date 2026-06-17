@@ -2,41 +2,140 @@
 
 All notable changes to the Your Harness Skills project.
 
+## [3.7.4] - 2026-06-17
+
+### Added
+
+- harness-architect: 错误码体系、详细错误说明、修复建议、错误日志
+- harness-architect: 快捷别名、帮助系统、命令历史、命令自动补全
+
+## [3.7.3] - 2026-06-17
+
+### Added
+
+- harness-architect: 快捷别名（/hs, /ha, /hh, /hr, /hf, /h）
+- harness-architect: 帮助系统（/harness-help, /harness-help <command>）
+- harness-architect: 错误码查询（/harness-error <code>）
+
+## [3.7.2] - 2026-06-17
+
+### Added
+
+- harness-validator: 多项目对比报告
+- harness-validator: 自定义报告模板
+- harness-validator: 报告自动发送（邮件/Slack/企业微信）
+- harness-validator: 报告模板库（6个模板）
+
+## [3.7.1] - 2026-06-17
+
+### Added
+
+- harness-architect: 统一上下文共享
+- harness-architect: /harness-full 命令
+- harness-architect: Skills 间状态同步
+
+## [3.7.0] - 2026-06-17
+
+### Added
+
+- harness-onboarding: 进度反馈
+- harness-onboarding: 决策历史记录
+- harness-onboarding: /onboarding-status, /onboarding-history 命令
+
+## [3.6.1] - 2026-06-16
+
+### Added
+
+- harness-validator: /harness-report 命令
+- harness-validator: HTML/PDF 格式输出
+- harness-validator: 质量评分、趋势分析、定期报告
+
+## [3.6.0] - 2026-06-16
+
+### Added
+
+- harness-registry: 团队协作功能
+- harness-registry: 权限控制（owner/admin/member/viewer）
+- harness-registry: 评论和审批功能
+- harness-registry: /harness-share 命令
+
+## [3.5.1] - 2026-06-16
+
+### Added
+
+- harness-architect: /harness-history 命令
+- harness-architect: /harness-why 命令
+- harness-archaeology: 历史记录保存
+- harness-designer: 历史记录保存
+
+## [3.5.0] - 2026-06-16
+
+### Added
+
+- harness-designer: /harness-status 命令
+- harness-designer: /harness-adjust 命令
+- harness-designer: /harness-add 命令
+- harness-designer: /harness-remove 命令
+- harness-designer: /harness-update 命令
+- harness-archaeology: 扫描进度反馈
+- harness-designer: 生成进度反馈
+
+## [3.4.0] - 2026-06-16
+
+### Added
+
+- harness-architect: 需求澄清对话
+- harness-architect: 6 问题库（项目类型、团队规模、质量要求、CI 平台、CI 触发、安全要求）
+- harness-archaeology: 确认环节
+- harness-archaeology: 项目特征确认
+- harness-archaeology: 存量代码处理选项
+- harness-archaeology: 优先级确认
+
+## [3.3.0] - 2026-06-16
+
+### Added
+
+- harness-archaeology: 融合 SDD 工具最佳实践
+- harness-designer: Constitution 生成
+- harness-designer: 质量门禁
+- harness-designer: 任务拆分
+- harness-designer: TDD 支持
+
+## [3.2.0] - 2026-06-16
+
+### Added
+
+- harness-archaeology: PDM 检测
+- harness-archaeology: golangci-lint v2 检测
+- harness-archaeology: Turborepo 检测
+
+## [3.1.0] - 2026-06-16
+
+### Added
+
+- harness-architect: 智能意图识别
+- harness-architect: CI/CD 集成
+- harness-architect: 快速开始
+- harness-architect: 可视化展示
+
+## [3.0.0] - 2026-06-15
+
+### Added
+
+- 重构为定制化系统输出
+- 生成脚本/Hook/Skill/工作流
+- 支持 Python/Go/TypeScript
+
 ## [2.2.0] - 2026-06-15
 
 ### Added
 
-#### harness-architect
-- 两阶段流程（archaeology → designer）
-- 明确 onboarding 与 archaeology 的分工
-- 新增示例 5（已有代码项目）和示例 6（存量代码不合规）
-- 更新路由逻辑和调用方式
-
-#### harness-designer
-- 新增模式：From Inferred（基于 Archaeology 推断结果）
-- AI/LLM 项目特殊处理（api-key-management, async-patterns 等）
-- 四种模式：Greenfield, Guided Discovery, Brownfield, From Inferred
-
-#### harness-validator
-- 自动化检查脚本指引（Python/Node.js/Go）
-- 与 SmartMate 验证协议集成
-- 提供 L3 Dry-run 验证的自动化实现模板
-
-#### harness-onboarding
-- 核心场景明确化：项目已有 Harness，存量代码不合规
-- 增加前置条件：要求项目已有 .agents/ 目录
-- 明确与 harness-archaeology 的分工
-- 增加判断流程图
-
-#### harness-registry
-- 工蜂/GitHub 集成（仓库自动发现、Webhook 同步、CI 集成）
-- 自动同步机制
-- 同步脚本模板（Python）
-
-### Changed
-
-- 所有 Skill 版本升级到 v2.2.0
-- 更新文档和示例
+- harness-architect: 两阶段流程
+- harness-designer: From Inferred 模式
+- harness-designer: AI/LLM 项目特殊处理
+- harness-validator: 自动化检查脚本指引
+- harness-onboarding: 核心场景明确化
+- harness-registry: 工蜂/GitHub 集成
 
 ## [2.1.0] - 2026-06-15
 
