@@ -1,0 +1,253 @@
+<!--
+元模板：Bug 修复模板
+版本：2.0.0
+
+变量说明：
+- {{bug_id}}: Bug ID（如 GitHub Issue 编号）
+- {{project_name}}: 项目名称
+- {{code_hosting}}: 代码托管平台
+- {{test_framework}}: 测试框架名称
+-->
+
+# TEMPLATE-bugfix.md
+
+> Bug 修复模板
+> 
+> 适用于 Bug 修复的标准流程
+
+---
+
+## 适用场景
+
+- Bug 修复
+- 线上问题修复
+- 功能缺陷修复
+
+---
+
+## 修复流程
+
+### 阶段 1: 问题分析
+
+#### Step 1.1: 理解问题
+
+**Input**
+- Bug 描述
+- 复现步骤
+- 期望行为
+
+**Process**
+1. 阅读 Bug 描述
+2. 尝试复现问题
+3. 分析问题原因
+4. 确定修复方案
+
+**Output**
+- 问题分析文档
+- 修复方案
+
+**Run**
+{{#if code_hosting != 'none'}}
+```bash
+# 获取 Bug 详情
+{{#if code_hosting == 'github'}}
+# mcp_call tool="mcp__github__get_issue" \
+#   arguments='{"owner": "<owner>", "repo": "<repo>", "issue_number": "<bug_id>"}'
+{{/if}}
+
+{{#if code_hosting == 'gitlab'}}
+# mcp_call tool="mcp__gitlab__get_issue" \
+#   arguments='{"project_id": "<project_id>", "issue_iid": "<bug_id>"}'
+{{/if}}
+
+{{#if code_hosting == 'gongfeng'}}
+# mcp_call tool="mcp__gongfeng-woa__get_issue_detail" \
+#   arguments='{"project_id": "<project_id>", "issue_iid": "<bug_id>"}'
+{{/if}}
+
+{{else}}
+```bash
+# 手动记录 Bug 信息
+mkdir -p docs/spec/bugfix
+cat > docs/spec/bugfix/{{bug_id}}.md << 'EOF'
+# Bug 修复
+
+## Bug 描述
+[待填充]
+
+## 复现步骤
+[待填充]
+
+## 期望行为
+[待填充]
+EOF
+{{/if}}
+```
+
+**Expected**
+- 问题已复现
+- 原因已分析
+- 修复方案已确定
+
+---
+
+### 阶段 2: 代码修复
+
+#### Step 2.1: 实现修复
+
+**Input**
+- 修复方案
+
+**Process**
+1. 定位问题代码
+2. 实现修复
+3. 编写测试用例
+4. 验证修复
+
+**Output**
+- 修复代码
+- 测试用例
+
+**Run**
+```bash
+# 编写测试用例
+{{#if test_framework == 'pytest'}}
+# 在 tests/ 目录下创建测试文件
+pytest tests/ -v
+{{/if}}
+
+{{#if test_framework == 'go test'}}
+go test ./... -v
+{{/if}}
+
+{{#if test_framework == 'jest'}}
+npm test
+{{/if}}
+
+{{#if test_framework == 'none'}}
+echo "请编写测试并运行"
+{{/if}}
+```
+
+**Expected**
+- 测试用例覆盖 Bug 场景
+- 测试通过
+- Bug 已修复
+
+---
+
+### 阶段 3: 验证
+
+#### Step 3.1: 回归测试
+
+**Input**
+- 修复代码
+
+**Process**
+1. 运行全量测试
+2. 验证修复有效
+3. 确认无副作用
+
+**Output**
+- 测试报告
+
+**Run**
+```bash
+# 运行全量测试
+{{#if test_framework == 'pytest'}}
+pytest tests/ -v
+{{/if}}
+
+{{#if test_framework == 'go test'}}
+go test ./... -v
+{{/if}}
+
+{{#if test_framework == 'jest'}}
+npm test
+{{/if}}
+```
+
+**Expected**
+- 所有测试通过
+- 无新增失败
+
+---
+
+### 阶段 4: 上线
+
+#### Step 4.1: 创建 MR/PR
+
+**Input**
+- 修复代码
+
+**Process**
+1. 关联 Bug
+2. 创建 MR/PR
+3. 填写描述
+
+**Output**
+- MR/PR 链接
+
+**Run**
+{{#if code_hosting != 'none'}}
+```bash
+# 创建 MR/PR 并关联 Bug
+{{#if code_hosting == 'github'}}
+# mcp_call tool="mcp__github__create_pull_request" \
+#   arguments='{"owner": "<owner>", "repo": "<repo>", "title": "Fix: <bug_title>", "head": "<branch>", "base": "main", "issue": <bug_id>}'
+{{/if}}
+
+{{#if code_hosting == 'gitlab'}}
+# mcp_call tool="mcp__gitlab__create_merge_request" \
+#   arguments='{"project_id": "<project_id>", "title": "Fix: <bug_title>", "source_branch": "<branch>", "target_branch": "main"}'
+{{/if}}
+
+{{#if code_hosting == 'gongfeng'}}
+# mcp_call tool="mcp__gongfeng-woa__create_merge_request" \
+#   arguments='{"project_id": "<project_id>", "title": "Fix: <bug_title>", "source_branch": "<branch>", "target_branch": "main"}'
+{{/if}}
+
+{{else}}
+```bash
+git push origin fix/{{bug_id}}
+echo "请手动创建 MR/PR 并关联 Bug"
+{{/if}}
+```
+
+**Expected**
+- MR/PR 创建成功
+- 已关联 Bug
+
+---
+
+## 闸门检查点
+
+| 闸门 | 阶段 | 检查项 | 通过标准 |
+|------|------|--------|----------|
+| G1_ANALYSIS | 阶段 1 | 问题分析完成 | 原因已定位，方案已确定 |
+| G2_FIX | 阶段 2 | 代码修复完成 | 测试通过 |
+| G3_VERIFY | 阶段 3 | 回归测试完成 | 全量测试通过 |
+| G4_READY | 阶段 4 | 准备上线 | MR/PR 已创建 |
+
+---
+
+## 附录
+
+### A. Bug 修复检查清单
+
+- [ ] 问题已复现
+- [ ] 原因已分析
+- [ ] 修复方案已确定
+- [ ] 修复代码已实现
+- [ ] 测试用例已编写
+- [ ] 测试已通过
+- [ ] 无副作用
+
+### B. 工具参考
+
+{{#if code_hosting != 'none'}}
+**{{code_hosting}} MCP 工具**
+- 获取 Issue 详情
+- 创建 MR/PR
+- 关联 Issue
+{{/if}}

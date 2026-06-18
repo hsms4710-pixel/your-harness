@@ -1,0 +1,299 @@
+# 脚本集成规则
+# 定义如何根据项目特征生成脚本内容
+
+version: 1.0.0
+
+scripts:
+  # 闸门检查脚本
+  check-gates:
+    description: "检查闸门状态"
+    
+    template:
+      file: "scripts/check-gates.py"
+      
+      # 脚本头部
+      header: |
+        #!/usr/bin/env python3
+        """
+        闸门状态检查脚本
+        
+        用法: python check-gates.py --feature <feature_name>
+        
+        功能:
+        - 检查各个闸门的状态
+        - 验证闸门通过条件
+        - 输出闸门检查报告
+        """
+      
+      # 脚本主体（根据项目特征动态生成）
+      body_templates:
+        # 基础版本
+        basic: |
+          import argparse
+          import json
+          import os
+          from pathlib import Path
+          
+          def check_gate(gate_id: str, feature: str) -> dict:
+              """检查单个闸门"""
+              gate_state_file = Path(f"docs/spec/{feature}/gates/{gate_id}.json")
+              if not gate_state_file.exists():
+                  return {"gate_id": gate_id, "status": "not_started"}
+              
+              with open(gate_state_file) as f:
+                  state = json.load(f)
+              
+              return {
+                  "gate_id": gate_id,
+                  "status": state.get("status", "unknown"),
+                  "artifacts": state.get("artifacts", []),
+                  "checks": state.get("checks", [])
+              }
+          
+          def main():
+              parser = argparse.ArgumentParser(description="检查闸门状态")
+              parser.add_argument("--feature", required=True, help="功能名称")
+              args = parser.parse_args()
+              
+              gates = [
+                  "G0_CLARIFICATION_REVIEW",
+                  "G1_PRD_REVIEW", 
+                  "G2_TASKS_REVIEW",
+                  "G3_SLICE_REVIEW",
+                  "G4_VERIFY_REVIEW",
+                  "G5_REVIEW_REMEDIATION",
+                  "G6_SHIP_APPROVAL"
+              ]
+              
+              results = {}
+              for gate_id in gates:
+                  results[gate_id] = check_gate(gate_id, args.feature)
+              
+              print(json.dumps(results, indent=2, ensure_ascii=False))
+          
+          if __name__ == "__main__":
+              main()
+        
+        # 增强版本（包含工蜂 MCP 集成）
+        with_gongfeng: |
+          import argparse
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+          
+          def call_gongfeng_mcp(tool: str, arguments: dict) -> dict:
+              """调用工蜂 MCP 工具"""
+              cmd = [
+                  "mcp_call",
+                  "tool", tool,
+                  "arguments", json.dumps(arguments)
+              ]
+              result = subprocess.run(cmd, capture_output=True, text=True)
+              return json.loads(result.stdout)
+          
+          def check_mr_exists(project_id: str, mr_iid: str) -> bool:
+              """检查 MR 是否存在"""
+              result = call_gongfeng_mcp(
+                  "mcp__gongfeng-woa__get_merge_request_info",
+                  {"project_id": project_id, "merge_request_iid": mr_iid}
+              )
+              return result.get("id") is not None
+          
+          def check_gate(gate_id: str, feature: str, project_id: str = None) -> dict:
+              """检查单个闸门"""
+              # 基础检查
+              gate_state_file = Path(f"docs/spec/{feature}/gates/{gate_id}.json")
+              if not gate_state_file.exists():
+                  return {"gate_id": gate_id, "status": "not_started"}
+              
+              with open(gate_state_file) as f:
+                  state = json.load(f)
+              
+              result = {
+                  "gate_id": gate_id,
+                  "status": state.get("status", "unknown"),
+                  "artifacts": state.get("artifacts", []),
+                  "checks": state.get("checks", [])
+              }
+              
+              # 如果有工蜂项目 ID，检查 MR 状态
+              if project_id and gate_id == "G6_SHIP_APPROVAL":
+                  mr_iid = state.get("mr_iid")
+                  if mr_iid:
+                      mr_exists = check_mr_exists(project_id, mr_iid)
+                      result["mr_check"] = {
+                          "mr_iid": mr_iid,
+                          "exists": mr_exists
+                      }
+              
+              return result
+          
+          def main():
+              parser = argparse.ArgumentParser(description="检查闸门状态")
+              parser.add_argument("--feature", required=True, help="功能名称")
+              parser.add_argument("--project-id", help="工蜂项目路径")
+              args = parser.parse_args()
+              
+              gates = [
+                  "G0_CLARIFICATION_REVIEW",
+                  "G1_PRD_REVIEW", 
+                  "G2_TASKS_REVIEW",
+                  "G3_SLICE_REVIEW",
+                  "G4_VERIFY_REVIEW",
+                  "G5_REVIEW_REMEDIATION",
+                  "G6_SHIP_APPROVAL"
+              ]
+              
+              results = {}
+              for gate_id in gates:
+                  results[gate_id] = check_gate(gate_id, args.feature, args.project_id)
+              
+              print(json.dumps(results, indent=2, ensure_ascii=False))
+          
+          if __name__ == "__main__":
+              main()
+    
+    selection_rules:
+      - if: "project_features.has_gongfeng_mcp == true"
+        use: "with_gongfeng"
+      - else:
+        use: "basic"
+
+  # 协议链路检查脚本
+  check-protocol-mapping:
+    description: "检查协议映射一致性"
+    
+    template:
+      file: "scripts/check-protocol-mapping.py"
+      
+      body_templates:
+        basic: |
+          import argparse
+          import json
+          import os
+          from pathlib import Path
+          
+          def find_proto_files(project_root: str) -> list:
+              """查找 proto 文件"""
+              proto_files = []
+              for root, dirs, files in os.walk(project_root):
+                  for file in files:
+                      if file.endswith('.proto'):
+                          proto_files.append(os.path.join(root, file))
+              return proto_files
+          
+          def check_proto_syntax(proto_file: str) -> dict:
+              """检查 proto 文件语法"""
+              # 基础语法检查
+              result = {
+                  "file": proto_file,
+                  "valid": True,
+                  "errors": []
+              }
+              
+              # TODO: 实现具体的 proto 语法检查
+              
+              return result
+          
+          def main():
+              parser = argparse.ArgumentParser(description="检查协议映射")
+              parser.add_argument("--project-root", required=True, help="项目根目录")
+              args = parser.parse_args()
+              
+              proto_files = find_proto_files(args.project_root)
+              print(f"找到 {len(proto_files)} 个 proto 文件")
+              
+              results = []
+              for proto_file in proto_files:
+                  results.append(check_proto_syntax(proto_file))
+              
+              print(json.dumps(results, indent=2, ensure_ascii=False))
+          
+          if __name__ == "__main__":
+              main()
+        
+        with_dbproxy: |
+          import argparse
+          import json
+          import os
+          import re
+          from pathlib import Path
+          
+          def find_proto_files(project_root: str) -> list:
+              """查找 proto 文件"""
+              proto_files = []
+              for root, dirs, files in os.walk(project_root):
+                  for file in files:
+                      if file.endswith('.proto'):
+                          proto_files.append(os.path.join(root, file))
+              return proto_files
+          
+          def find_dbproxy_mappings(project_root: str) -> list:
+              """查找 DBProxy 映射配置"""
+              mappings = []
+              dbproxy_dir = Path(project_root) / "dbproxy"
+              
+              if dbproxy_dir.exists():
+                  for root, dirs, files in os.walk(str(dbproxy_dir)):
+                      for file in files:
+                          if file.endswith(('.yaml', '.yml', '.json')):
+                              mappings.append(os.path.join(root, file))
+              
+              return mappings
+          
+          def check_proto_dbproxy_consistency(proto_file: str, dbproxy_mappings: list) -> dict:
+              """检查 proto 和 DBProxy 映射的一致性"""
+              result = {
+                  "proto_file": proto_file,
+                  "consistent": True,
+                  "mappings": [],
+                  "errors": []
+              }
+              
+              # 读取 proto 文件
+              with open(proto_file) as f:
+                  proto_content = f.read()
+              
+              # 提取 message 定义
+              messages = re.findall(r'message\s+(\w+)', proto_content)
+              
+              # 检查每个 mapping 文件
+              for mapping_file in dbproxy_mappings:
+                  with open(mapping_file) as f:
+                      mapping_content = f.read()
+                  
+                  for message in messages:
+                      if message in mapping_content:
+                          result["mappings"].append({
+                              "message": message,
+                              "mapping_file": mapping_file
+                          })
+              
+              return result
+          
+          def main():
+              parser = argparse.ArgumentParser(description="检查协议映射")
+              parser.add_argument("--project-root", required=True, help="项目根目录")
+              args = parser.parse_args()
+              
+              proto_files = find_proto_files(args.project_root)
+              dbproxy_mappings = find_dbproxy_mappings(args.project_root)
+              
+              print(f"找到 {len(proto_files)} 个 proto 文件")
+              print(f"找到 {len(dbproxy_mappings)} 个 DBProxy 映射")
+              
+              results = []
+              for proto_file in proto_files:
+                  results.append(check_proto_dbproxy_consistency(proto_file, dbproxy_mappings))
+              
+              print(json.dumps(results, indent=2, ensure_ascii=False))
+          
+          if __name__ == "__main__":
+              main()
+    
+    selection_rules:
+      - if: "project_features.has_dbproxy == true"
+        use: "with_dbproxy"
+      - else:
+        use: "basic"

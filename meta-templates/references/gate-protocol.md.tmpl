@@ -1,0 +1,198 @@
+# Gate Protocol
+
+## Purpose
+
+定义 {{project_name}} 的闸门协议，确保关键节点有人工确认。
+
+## 核心原则
+
+1. **Gate before next phase**: 每个阶段必须通过闸门才能进入下一阶段
+2. **Explicit approval**: 必须有显式的用户批准，不能自动跳过
+3. **Artifact first**: 必须有产物，才能通过闸门
+4. **Evidence required**: 每个声明都需要证据
+
+## 闸门定义
+
+基于项目特征，本项目需要以下闸门：
+
+{{#if has_protocol_chain}}
+### 协议链路专用闸门
+
+| Gate | 阶段 | 必须产物 | 继续条件 |
+|------|------|----------|----------|
+{{#each protocol_chain_gates}}
+| `{{this.id}}` | {{this.stage}} | {{this.artifacts}} | {{this.checks}} |
+{{/each}}
+
+{{/if}}
+
+{{#if has_ai_pipeline}}
+### AI Pipeline 专用闸门
+
+| Gate | 阶段 | 必须产物 | 继续条件 |
+|------|------|----------|----------|
+{{#each ai_pipeline_gates}}
+| `{{this.id}}` | {{this.stage}} | {{this.artifacts}} | {{this.checks}} |
+{{/each}}
+
+{{/if}}
+
+### 通用闸门
+
+| Gate | 阶段 | 必须产物 | 继续条件 |
+|------|------|----------|----------|
+| `G0_CLARIFICATION` | 需求澄清后 | {{#if has_spec_structure}}`docs/spec/<feature>/analyze/00-clarifications.md`{{else}}`docs/<feature>/clarifications.md`{{/if}} | 用户确认需求 |
+| `G1_PRD` | PRD 完成后 | {{#if has_spec_structure}}`docs/spec/<feature>/analyze/01-prd.md`{{else}}`docs/<feature>/prd.md`{{/if}} | 用户审批 PRD |
+| `G2_TASKS` | 任务拆解后 | {{#if has_spec_structure}}`docs/spec/<feature>/design/01-tasks.md`{{else}}`docs/<feature>/tasks.md`{{/if}} | 用户审批任务 |
+| `G3_SLICE` | 每个代码切片后 | 代码 + {{#if has_spec_structure}}`docs/spec/<feature>/develop/3X-*.md`{{else}}`docs/<feature>/slice-*.md`{{/if}} | 用户确认切片 |
+| `G4_VERIFY` | 验证完成后 | {{#if has_spec_structure}}`docs/spec/<feature>/test/02-test-report.md`{{else}}`docs/<feature>/test-report.md`{{/if}} | 测试通过 |
+| `G5_REVIEW` | 审查后 | {{#if has_spec_structure}}`docs/spec/<feature>/test/review/*.md`{{else}}`docs/<feature>/review/*.md`{{/if}} | 无阻塞问题 |
+| `G6_SHIP` | 上线前 | {{#if has_spec_structure}}`docs/spec/<feature>/develop/ship-checklist.md`{{else}}`docs/<feature>/ship-checklist.md`{{/if}} | 用户审批上线 |
+
+{{#if has_additional_gates}}
+### 项目特定闸门
+
+| Gate | 阶段 | 必须产物 | 继续条件 |
+|------|------|----------|----------|
+{{#each additional_gates}}
+| `{{this.id}}` | {{this.stage}} | {{this.artifacts}} | {{this.checks}} |
+{{/each}}
+
+{{/if}}
+## Universal Gate Output
+
+每个闸门必须使用以下格式：
+
+```markdown
+## Gate: <GATE_ID>
+
+**状态**：WAITING_USER_APPROVAL
+
+**本阶段产物**
+{{#each required_artifacts}}
+- {{this}}
+{{/each}}
+
+**通过标准**
+{{#each checks}}
+- [ ] {{this}}
+{{/each}}
+
+**需要用户确认**
+1. 通过，进入下一阶段
+2. 有问题，按反馈修改
+3. 暂停，不继续
+```
+
+## Stop Rules
+
+以下情况必须停止，不能继续：
+
+1. **未通过闸门**
+   - 不得在没有显式用户批准的情况下跨越阶段闸门
+   
+{{#if has_security_surface}}
+2. **安全敏感操作**
+   - 安全敏感操作必须经过安全审查
+   - 涉及认证/授权的变更必须有安全检查
+   
+{{/if}}
+{{#if has_multi_repo}}
+3. **跨仓库变更**
+   - 跨仓库变更必须同步所有相关仓库
+   - 依赖仓库的版本必须对齐
+   
+{{/if}}
+{{#if has_ai_pipeline}}
+4. **AI Pipeline 变更**
+   - API Key 变更必须有轮换计划
+   - 成本估算必须在部署前完成
+   - Prompt 变更必须有安全检查
+   
+{{/if}}
+5. **测试失败**
+   - 测试失败不能继续推进
+   - 必须修复后重新验证
+
+## Red Flags
+
+以下红旗表示流程可能有问题：
+
+- Agent 在 intent/surfaces/risk 分类前就开始编码
+- 跳过文档落盘直接进入下一阶段
+- 测试失败但继续推进
+{{#if has_multi_repo}}
+- 跨仓库变更但不检查依赖同步
+{{/if}}
+{{#if has_security_surface}}
+- 安全敏感变更但不检查安全影响
+{{/if}}
+{{#if has_ai_pipeline}}
+- AI Pipeline 变更但不检查 API Key 安全
+- 成本估算缺失但继续部署
+{{/if}}
+- AI 生成的代码跳过审查
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "这个变更很简单，不需要走流程" | 简单变更也走 `incremental-change` 流程 |
+| "先做完再补文档" | 文档落盘是流程的一部分，不是可选的 |
+| "测试不好写，跳过" | 写 contract/fixture/manual 验证并标记 |
+| "AI 生成的代码不需要审查" | AI 生成的代码同样需要审查 |
+| "先全部做完再给用户看" | 闸门要求在阶段边界停下来确认 |
+{{#if has_protocol_chain}}
+| "Proto 改了直接注册云 API" | 必须按协议链路顺序执行 |
+| "Tag 同步可以后面补" | Tag 必须在 Proto 变更后立即同步 |
+{{/if}}
+{{#if has_ai_pipeline}}
+| "API Key 直接硬编码" | API Key 必须通过环境变量或密钥管理 |
+| "成本估算太麻烦" | 成本估算是部署前的必须步骤 |
+{{/if}}
+
+## Script Integration
+
+使用以下脚本进行闸门检查：
+
+```bash
+# 检查是否可以进入下一阶段
+python .harness/scripts/check-gates.py can-advance --feature <name> --gate <gate-id>
+
+# 查看所有闸门状态
+python .harness/scripts/check-gates.py status --feature <name>
+
+# 批准闸门
+python .harness/scripts/check-gates.py approve --feature <name> --gate <gate-id> --by <user>
+```
+
+## Interaction Contract
+
+首次响应必须使用以下格式：
+
+```markdown
+## 需求入口识别
+- intent: <new-capability / incremental-change / bugfix / incident-hotfix / architecture-decision / consistency-check>
+- surfaces: <one or more surface packs>
+- risk: <low / medium / high / incident>
+{{#if has_multi_repo}}
+- affected_repos: <list of affected repositories>
+{{/if}}
+
+## 为什么这样分类
+- <reasoning based on user goal, affected areas, contracts, data/security/frontend/provider/protocol impact>
+
+## 需要澄清的问题
+{{#each clarification_questions}}
+- Q{{@index_plus_one}}: {{this.question}}
+  - A: {{this.options}}
+  - 我的建议: {{this.recommendation}}
+  - 风险: {{this.risk}}
+{{/each}}
+
+## 可选调整
+1. 改 intent
+2. 增删 surface
+3. 调整 risk
+4. 直接补充自由描述
+```

@@ -2,6 +2,83 @@
 
 All notable changes to the Your Harness Skills project.
 
+## [4.0.0] - 2026-06-18
+
+### Major Refactoring
+
+**从"配置生成器"转型为"开发流程体系生成器"**
+
+#### 核心变更
+
+- **harness-designer**：完全重写
+  - 新增 Workflow 生成能力（SKILL.md）
+  - 新增 Template 按需生成能力
+  - 新增闸门机制（7 个强制闸门）
+  - 新增宪法模型（constitution-profiles.json）
+  - 引入 intent + surfaces + risk 分类模型
+  - 支持三种生成深度（light/medium/full）
+
+- **harness-archaeology**：重大更新
+  - 新增 intent + surfaces + risk 分类模型
+  - 新增生成深度决策逻辑
+  - 新增特殊流程检测（protocol-chain 等）
+  - 输出格式更新，支持 harness-designer 决策
+
+- **harness-architect**：重构
+  - 作为总调度器协调 archaeology 和 designer
+  - 支持生成完整的开发流程体系
+
+#### 分类模型
+
+```yaml
+# Intents（开发意图）
+- new-capability
+- incremental-change
+- bugfix
+- incident-hotfix
+- architecture-decision
+- consistency-check
+
+# Surfaces（影响面，可组合）
+- api-contract
+- data-model
+- frontend-ui
+- backend-logic
+- protocol-chain
+- security-sensitive
+- performance-sensitive
+
+# Risk（风险等级）
+- low
+- medium
+- high
+- incident
+
+# Depth（生成深度）
+- light: 只生成 SKILL.md + 基础脚本
+- medium: 生成 SKILL.md + references + scripts
+- full: 生成完整的 Workflow + Templates + References + Scripts
+```
+
+#### 输出产物
+
+```
+.harness/
+├── SKILL.md                    # 主流程 Skill
+├── templates/                  # 开发模板（按需）
+├── references/                 # 流程参考文档
+├── scripts/                    # 流程检查脚本
+└── constitution-profiles.json  # 宪法模型
+```
+
+### Breaking Changes
+
+- 移除了 v3.x 的"生成 lint 规则"定位
+- 移除了 v3.x 的"生成 CI 配置"作为主要输出
+- 新的定位是"生成开发流程体系"
+
+---
+
 ## [3.7.4] - 2026-06-17
 
 ### Added

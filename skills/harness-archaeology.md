@@ -1,29 +1,310 @@
 ---
 name: harness-archaeology
 description: |
-  Harness Archaeology — 从项目代码中识别特征，生成定制化 Harness Engineering 系统。
-  不是输出推荐文档，而是生成可执行的定制化系统：脚本、Hook、Skill、工作流。
-  支持 Python/Go/TypeScript 项目、Monorepo、复杂构建系统。
+  Harness Archaeology — 从项目代码中识别特征，为 harness-designer 提供生成决策依据。
   
-  v3.5.1: 添加历史记录保存功能，记录需求澄清和确认决策。
-  v3.5: 增加扫描进度反馈，实时显示扫描进度。
-  v3.4: 增加确认环节，扫描后展示推断结果等待用户确认。
-version: 3.5.1
+  核心能力：
+  - 识别项目的技术栈（语言、框架、构建系统）
+  - 识别项目的业务特征（前后端分离、微服务、协议驱动等）
+  - 识别项目的特殊流程（协议链路、API 同步等）
+  - 判断生成深度（light/medium/full）
+  - 为 harness-designer 提供分类决策依据
+  
+  v4.0.0: 重大重构，支持 intent + surfaces + risk 分类模型，判断生成深度
+version: 4.0.0
 author: agent_created
-tags: [harness, archaeology, reverse-engineering, code-analysis, customization, confirmation, progress, history]
+tags: [harness, archaeology, code-analysis, intent, surfaces, risk, depth-decision]
 ---
 
 # Harness Archaeology
 
-从项目代码中识别特征，生成定制化 Harness Engineering 系统。
+从项目代码中识别特征，为 harness-designer 提供生成决策依据。
 
 ## 触发条件
 
-- 为项目生成定制化 Harness Engineering 系统
+- 为项目生成开发流程体系
 - 需要从现有代码库识别项目模式和特征
-- 需要生成可执行的脚本、Hook、Skill、工作流
+- 需要判断生成深度（light/medium/full）
 
-## 核心原则（v3.4 重构）
+## 核心职责（v4.0 重构）
+
+```
+输入: 项目源代码
+输出: 项目特征识别结果（供 harness-designer 决策）
+
+识别维度:
+  1. 技术栈特征（语言、框架、构建系统）
+  2. 业务特征（前后端分离、微服务、协议驱动等）
+  3. 特殊流程（协议链路、API 同步等）
+  4. 质量要求（测试、审查、文档）
+
+决策输出:
+  - intent: 开发意图类型
+  - surfaces: 影响面列表（可组合）
+  - risk: 风险等级
+  - depth: 生成深度（light/medium/full）
+```
+
+## 分类模型（v4.0 新增）
+
+### Intents（开发意图）
+
+```yaml
+intents:
+  - id: new-capability
+    description: 新功能开发
+    signals:
+      - 新增 API 端点
+      - 新增业务模块
+      - 新增 UI 页面
+      
+  - id: incremental-change
+    description: 增量变更
+    signals:
+      - 修改现有功能
+      - 优化性能
+      - 代码重构
+      
+  - id: bugfix
+    description: Bug 修复
+    signals:
+      - 修复已知问题
+      - 回归测试
+      
+  - id: incident-hotfix
+    description: 线上事故修复
+    signals:
+      - 紧急修复
+      - 灰度发布
+      
+  - id: architecture-decision
+    description: 架构决策
+    signals:
+      - 技术选型
+      - 模块划分
+      
+  - id: consistency-check
+    description: 一致性检查
+    signals:
+      - 契约验证
+      - 文档同步
+```
+
+### Surfaces（影响面，可组合）
+
+```yaml
+surfaces:
+  - id: api-contract
+    description: API 契约
+    signals:
+      - 存在 API 定义文件
+      - 有前端 API 调用
+      - 有 API 文档
+      
+  - id: data-model
+    description: 数据模型
+    signals:
+      - 存在数据库迁移
+      - 有 ORM 模型
+      - 有数据验证
+      
+  - id: frontend-ui
+    description: 前端 UI
+    signals:
+      - 存在前端组件
+      - 有 UI 框架
+      - 有样式系统
+      
+  - id: backend-logic
+    description: 后端逻辑
+    signals:
+      - 存在业务逻辑层
+      - 有服务层
+      
+  - id: protocol-chain
+    description: 协议链路（如 DBProxy/proto/cgi/YunAPI）
+    signals:
+      - 存在 proto 文件
+      - 有代码生成
+      - 有下游同步
+      
+  - id: security-sensitive
+    description: 安全敏感
+    signals:
+      - 存在认证逻辑
+      - 有加密处理
+      - 有权限控制
+      
+  - id: performance-sensitive
+    description: 性能敏感
+    signals:
+      - 存在性能监控
+      - 有缓存策略
+      - 有并发处理
+      
+  - id: deployment-config
+    description: 部署配置
+    signals:
+      - 存在部署脚本
+      - 有环境配置
+      
+  - id: docs-sync
+    description: 文档同步
+    signals:
+      - 存在文档目录
+      - 有文档生成
+```
+
+### Risk（风险等级）
+
+```yaml
+risks:
+  - id: low
+    description: 低风险
+    signals:
+      - 文档更新
+      - 样式调整
+      - 非核心功能
+      
+  - id: medium
+    description: 中风险
+    signals:
+      - API 修改
+      - 业务逻辑变更
+      - 依赖升级
+      
+  - id: high
+    description: 高风险
+    signals:
+      - 数据库迁移
+      - 认证变更
+      - 核心流程
+      
+  - id: incident
+    description: 线上事故
+    signals:
+      - 紧急修复
+      - 回滚操作
+```
+
+## 生成深度决策（v4.0 新增）
+
+```yaml
+# 基于识别结果判断生成深度
+depth_decision:
+  
+  # 特征信号收集
+  signals:
+    special_flows:
+      - name: protocol-chain
+        detected: true/false
+        description: DB → Proto → Tag → 下游同步
+        
+      - name: api-contract-sync
+        detected: true/false
+        description: 前后端 API 契约同步
+        
+    strict_gate_requirements:
+      detected: true/false
+      gates: [PRD审批, 代码审查, API兼容性检查]
+      
+    domain_specific_sop:
+      detected: true/false
+      sos: [DBProxy变更SOP, Proto同步SOP]
+      
+    general_skills_sufficient:
+      value: true/false
+      reason: "通用 Skill 能否覆盖"
+  
+  # 深度决策
+depth:
+  - id: full
+    condition:
+      - special_flows.detected == true
+      OR strict_gate_requirements.detected == true
+      OR domain_specific_sop.detected == true
+    generate:
+      - workflow (SKILL.md)
+      - templates
+      - references
+      - scripts
+      - constitution
+    
+  - id: medium
+    condition:
+      - general_skills_sufficient == false
+      AND (special_flows OR strict_gate_requirements OR domain_specific_sop) == false
+    generate:
+      - workflow (SKILL.md)
+      - references
+      - scripts
+      - constitution
+    
+  - id: light
+    condition:
+      - general_skills_sufficient == true
+    generate:
+      - workflow (SKILL.md)
+      - scripts (基础闸门检查)
+```
+
+## 输出格式（v4.0 更新）
+
+```yaml
+# harness-archaeology 输出结果
+project_features:
+  project_name: smartmate
+  
+  # 技术栈
+  languages: [Go, Python, TypeScript]
+  frameworks: [tRPC, FastAPI, React]
+  
+  # 业务特征
+  patterns:
+    - 前后端分离
+    - 微服务架构
+    - 协议驱动开发
+    
+  # 特殊流程检测
+  special_flows:
+    - name: protocol-chain
+      detected: true
+      stages: 6
+      description: DB → Proto → Tag → 下游同步 → 云 API 注册
+      
+    - name: api-contract-sync
+      detected: true
+      stages: 4
+      
+  # 质量要求
+  quality_requirements:
+    - 严格的 API 契约管理
+    - 多阶段闸门控制
+    - 完整的文档落盘
+    
+  # 分类结果
+  classification:
+    intent: new-capability
+    surfaces:
+      - api-contract
+      - data-model
+      - protocol-chain
+      - security-sensitive
+    risk: high
+    
+  # 生成深度决策
+  depth_decision:
+    depth: full
+    reason: "项目有特殊的协议驱动开发流程，需要完整的 Workflow + Templates"
+    generate:
+      - workflow
+      - templates
+      - references
+      - scripts
+      - constitution
+```
+
+## 核心原则
 
 **智能协作，而非盲目自动化**。
 
@@ -1623,35 +1904,15 @@ Constitution 不再是详细的规范文档，而是项目特征摘要：
 
 ## 版本历史
 
-- v3.5.1 (2026-06-16): 添加历史记录保存功能，记录需求澄清和确认决策
-- v3.4.0 (2026-06-16): 增加确认环节，扫描后展示推断结果等待用户确认
+- v4.0.0 (2026-06-18): 重大重构
+  - 新增 intent + surfaces + risk 分类模型
+  - 新增生成深度决策逻辑（light/medium/full）
+  - 新增特殊流程检测（protocol-chain 等）
+  - 输出格式更新，支持 harness-designer 决策
+- v3.5.1 (2026-06-16): 添加历史记录保存功能
+- v3.5.0 (2026-06-16): 增加扫描进度反馈
+- v3.4.0 (2026-06-16): 增加确认环节
 - v3.3.0 (2026-06-16): 融合 SDD 工具最佳实践
-  - 添加 Constitution 生成支持（借鉴 Spec Kit）
-  - 添加 Specs 识别支持（借鉴 OpenSpec）
-  - 添加 TDD 实践检测（借鉴 Superpowers）
-  - 添加 7 阶段工作流识别
-  - 添加质量门禁配置识别
-- v3.2.0 (2026-06-16): 基于 FastAPI/Gin/Next.js 测试优化
-  - 添加 PDM 包管理器检测
-  - 添加 golangci-lint v2 配置解析
-  - 添加 Turborepo/Lerna Monorepo 检测
-  - 添加 ty 类型检查器检测
-  - 添加 ast-grep AST 检查检测
-  - 添加 Trivy/CodeQL 安全扫描检测
-  - 添加 goreleaser 发布工具检测
-  - 添加 Makefile 构建系统检测
-  - 识别准确度提升: FastAPI 79% → 95%, Gin 67% → 92%, Next.js 72% → 95%
-- v3.1.0 (2026-06-16): 增强 AI 项目细分 (Framework/SDK/Application)、Python uv Monorepo 检测、Haskell 语言支持、gRPC/微服务检测、安全项目检测
-- v3.0.0 (2026-06-15): 重构为定制化系统输出，生成脚本/Hook/Skill/工作流
-- v2.12.0 (2026-06-15): 增加 CI Workflow 深度分析、CONTRIBUTING.md 解析等
-- v2.11.0 (2026-06-15): 增加工蜂项目测试、Seeker Agent 架构识别等
-- v2.10.0 (2026-06-15): 增加 HuggingFace 生态识别等
-- v2.9.0 (2026-06-15): 增加 vLLM AI 贡献政策检测等
-- v2.8.0 (2026-06-15): 增加 HF Transformers 代码复制机制等
-- v2.7.0 (2026-06-15): 增加 AI/LLM 项目识别等
-- v2.6.0 (2026-06-15): 增加源文件计数检测等
-- v2.5.0 (2026-06-15): 修复 Next.js 误判为 Rust 等
-- v2.4.0 (2026-06-15): 增加 PHP 项目特殊处理等
-- v2.3.0 (2026-06-15): 增加语言检测矩阵等
-- v2.2.0 (2026-06-15): 增强信号源扫描等
-- v2.1.0: 初始版本
+- v3.2.0 (2026-06-16): 增强语言和构建系统检测
+- v3.1.0 (2026-06-16): 增强 AI 项目细分
+- v3.0.0 (2026-06-15): 重构为定制化系统输出

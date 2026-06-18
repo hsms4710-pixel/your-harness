@@ -1,0 +1,651 @@
+---
+description: LLM 集成开发模板
+version: 1.0.0
+---
+
+# LLM 集成开发模板
+
+本模板用于开发 LLM 集成功能，包括：
+- 模型集成
+- Prompt 管理
+- RAG 实现
+- 输出处理
+
+---
+
+## 阶段 1: 需求分析
+
+### 1.1 明确集成目标
+
+**Input**
+- 功能需求
+- 目标模型
+
+**Process**
+1. 分析需要集成的 LLM 能力
+2. 确定目标模型（GPT/Claude/本地模型）
+3. 评估集成方式（API/SDK/本地）
+4. 确定性能要求
+
+**Output**
+- 集成目标
+- 模型选择
+- 集成方案
+
+### 1.2 依赖分析
+
+**Input**
+- 目标模型
+- 现有技术栈
+
+**Process**
+1. 确定需要的依赖库
+2. 检查版本兼容性
+3. 评估许可证
+4. 测试依赖安装
+
+**Output**
+- 依赖清单
+- 安装命令
+
+---
+
+## 阶段 2: 设计
+
+### 2.1 模型抽象设计
+
+**Input**
+- 集成目标
+
+**Process**
+1. 设计统一的模型接口
+2. 定义请求/响应格式
+3. 规划错误处理
+4. 设计重试机制
+
+**Output**
+- 接口定义
+- 数据结构
+- 错误码定义
+
+### 2.2 Prompt 管理设计
+
+**Input**
+- 功能需求
+
+**Process**
+1. 设计 Prompt 模板
+2. 规划变量替换
+3. 确定版本策略
+4. 设计存储方式
+
+**Output**
+- Prompt 模板
+- 变量定义
+- 版本策略
+
+### 2.3 RAG 设计（如需要）
+
+**Input**
+- 知识库需求
+
+**Process**
+1. 选择 Embedding 模型
+2. 设计向量存储
+3. 规划检索策略
+4. 设计上下文窗口
+
+**Output**
+- RAG 架构
+- 存储方案
+- 检索策略
+
+---
+
+## 阶段 3: 实现
+
+### 3.1 模型客户端实现
+
+**Input**
+- 设计文档
+
+**Process**
+1. 实现模型客户端类
+2. 实现请求方法
+3. 添加错误处理
+4. 实现流式输出（如需要）
+
+**Run**
+```bash
+{{#if has_python}}
+# 创建模型客户端
+touch llm/client.py
+
+# 实现客户端
+cat > llm/client.py << 'EOF'
+from abc import ABC, abstractmethod
+from typing import AsyncIterator, Dict, Any
+from dataclasses import dataclass
+
+@dataclass
+class LLMResponse:
+    content: str
+    usage: Dict[str, int]
+    model: str
+
+class BaseLLMClient(ABC):
+    """LLM 客户端基类"""
+    
+    @abstractmethod
+    async def chat(
+        self,
+        messages: list[Dict[str, str]],
+        **kwargs
+    ) -> LLMResponse:
+        """发送聊天请求"""
+        pass
+    
+    @abstractmethod
+    async def chat_stream(
+        self,
+        messages: list[Dict[str, str]],
+        **kwargs
+    ) -> AsyncIterator[str]:
+        """流式聊天"""
+        pass
+
+class {{ModelName}}Client(BaseLLMClient):
+    """{{model_description}}"""
+    
+    def __init__(self, api_key: str, base_url: str = None):
+        self.api_key = api_key
+        self.base_url = base_url or "{{default_base_url}}"
+        
+    async def chat(self, messages, **kwargs) -> LLMResponse:
+        # 实现聊天逻辑
+        pass
+        
+    async def chat_stream(self, messages, **kwargs):
+        # 实现流式输出
+        pass
+EOF
+
+# 安装依赖
+pip install {{llm_dependencies}}
+{{else_if has_typescript}}
+# 创建模型客户端
+touch src/llm/client.ts
+
+# 实现客户端
+cat > src/llm/client.ts << 'EOF'
+import { BaseLLMClient } from './base';
+
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+interface LLMResponse {
+  content: string;
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+  };
+  model: string;
+}
+
+class {{ModelName}}Client extends BaseLLMClient {
+  private apiKey: string;
+  private baseUrl: string;
+  
+  constructor(apiKey: string, baseUrl?: string) {
+    super();
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl || '{{default_base_url}}';
+  }
+  
+  async chat(
+    messages: ChatMessage[],
+    options?: ChatOptions
+  ): Promise<LLMResponse> {
+    // 实现聊天逻辑
+  }
+  
+  async *chatStream(
+    messages: ChatMessage[],
+    options?: ChatOptions
+  ): AsyncGenerator<string> {
+    // 实现流式输出
+  }
+}
+EOF
+
+# 安装依赖
+npm install {{llm_dependencies}}
+{{/if}}
+```
+
+**Expected**
+- 客户端文件创建成功
+- 依赖安装成功
+- 代码符合规范
+
+### 3.2 Prompt 管理实现
+
+**Input**
+- Prompt 设计
+
+**Process**
+1. 实现 Prompt 模板类
+2. 实现变量替换
+3. 实现版本管理
+4. 添加缓存（可选）
+
+**Run**
+```bash
+{{#if has_python}}
+# 创建 Prompt 管理器
+touch llm/prompt_manager.py
+
+# 实现管理器
+cat > llm/prompt_manager.py << 'EOF'
+import json
+import hashlib
+from typing import Dict, Any
+from pathlib import Path
+from dataclasses import dataclass
+
+@dataclass
+class PromptTemplate:
+    """Prompt 模板"""
+    name: str
+    template: str
+    variables: list[str]
+    version: str
+    
+class PromptManager:
+    """Prompt 管理器"""
+    
+    def __init__(self, templates_dir: str = "prompts"):
+        self.templates_dir = Path(templates_dir)
+        self._cache: Dict[str, PromptTemplate] = {}
+        
+    def load_template(self, name: str) -> PromptTemplate:
+        """加载模板"""
+        if name in self._cache:
+            return self._cache[name]
+            
+        template_path = self.templates_dir / f"{name}.j2"
+        meta_path = self.templates_dir / f"{name}.json"
+        
+        with open(template_path) as f:
+            template = f.read()
+            
+        with open(meta_path) as f:
+            meta = json.load(f)
+            
+        prompt = PromptTemplate(
+            name=name,
+            template=template,
+            variables=meta["variables"],
+            version=meta["version"]
+        )
+        
+        self._cache[name] = prompt
+        return prompt
+        
+    def render(self, name: str, variables: Dict[str, Any]) -> str:
+        """渲染 Prompt"""
+        from jinja2 import Template
+        
+        template = self.load_template(name)
+        j2_template = Template(template.template)
+        return j2_template.render(**variables)
+        
+    def get_hash(self, name: str, variables: Dict[str, Any]) -> str:
+        """获取 Prompt 哈希"""
+        rendered = self.render(name, variables)
+        return hashlib.md5(rendered.encode()).hexdigest()
+EOF
+{{else_if has_typescript}}
+# 创建 Prompt 管理器
+touch src/llm/promptManager.ts
+
+# 实现管理器
+cat > src/llm/promptManager.ts << 'EOF'
+import * as fs from 'fs';
+import * as path from 'path';
+
+interface PromptMeta {
+  name: string;
+  variables: string[];
+  version: string;
+}
+
+interface PromptTemplate {
+  name: string;
+  template: string;
+  variables: string[];
+  version: string;
+}
+
+class PromptManager {
+  private templatesDir: string;
+  private cache: Map<string, PromptTemplate> = new Map();
+  
+  constructor(templatesDir: string = 'prompts') {
+    this.templatesDir = templatesDir;
+  }
+  
+  loadTemplate(name: string): PromptTemplate {
+    if (this.cache.has(name)) {
+      return this.cache.get(name)!;
+    }
+    
+    const templatePath = path.join(this.templatesDir, `${name}.j2`);
+    const metaPath = path.join(this.templatesDir, `${name}.json`);
+    
+    const template = fs.readFileSync(templatePath, 'utf-8');
+    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8')) as PromptMeta;
+    
+    const prompt: PromptTemplate = {
+      name,
+      template,
+      variables: meta.variables,
+      version: meta.version
+    };
+    
+    this.cache.set(name, prompt);
+    return prompt;
+  }
+  
+  render(name: string, variables: Record<string, any>): string {
+    const template = this.loadTemplate(name);
+    return template.template.replace(/\{\{(.+?)\}\}/g, (match, key) => {
+      return variables[key.trim()] ?? match;
+    });
+  }
+}
+EOF
+{{/if}}
+```
+
+**Expected**
+- Prompt 管理器创建成功
+- 模板加载功能正常
+- 变量替换功能正常
+
+### 3.3 RAG 实现（如需要）
+
+**Input**
+- RAG 设计
+
+**Process**
+1. 实现 Embedding 模型
+2. 实现向量存储
+3. 实现检索逻辑
+4. 实现上下文构建
+
+**Run**
+```bash
+{{#if has_python}}
+# 创建 RAG 模块
+touch llm/rag.py
+
+# 实现 RAG
+cat > llm/rag.py << 'EOF'
+from typing import List, Dict, Any
+from dataclasses import dataclass
+
+@dataclass
+class SearchResult:
+    """搜索结果"""
+    content: str
+    score: float
+    metadata: Dict[str, Any]
+    
+class VectorStore:
+    """向量存储基类"""
+    
+    @abstractmethod
+    def add(self, documents: List[dict]) -> None:
+        """添加文档"""
+        pass
+    
+    @abstractmethod
+    def search(self, query: str, top_k: int = 5) -> List[SearchResult]:
+        """搜索"""
+        pass
+    
+    @abstractmethod
+    def delete(self, ids: List[str]) -> None:
+        """删除"""
+        pass
+
+class RAGPipeline:
+    """RAG 管道"""
+    
+    def __init__(self, embedding_model, vector_store: VectorStore):
+        self.embedding = embedding_model
+        self.vector_store = vector_store
+        
+    def index_document(self, text: str, metadata: Dict[str, Any] = None):
+        """索引文档"""
+        embedding = self.embedding.encode(text)
+        self.vector_store.add([{
+            "content": text,
+            "embedding": embedding,
+            "metadata": metadata or {}
+        }])
+        
+    def retrieve(self, query: str, top_k: int = 5) -> List[SearchResult]:
+        """检索"""
+        query_embedding = self.embedding.encode(query)
+        return self.vector_store.search(query_embedding, top_k)
+        
+    def build_context(self, query: str, top_k: int = 5) -> str:
+        """构建上下文"""
+        results = self.retrieve(query, top_k)
+        return "\n\n".join([r.content for r in results])
+EOF
+{{else_if has_typescript}}
+# 创建 RAG 模块
+touch src/llm/rag.ts
+
+# 实现 RAG
+cat > src/llm/rag.ts << 'EOF'
+interface SearchResult {
+  content: string;
+  score: number;
+  metadata: Record<string, any>;
+}
+
+interface VectorStore {
+  add(documents: Array<{content: string; metadata?: Record<string, any>}>): void;
+  search(query: string, topK?: number): SearchResult[];
+  delete(ids: string[]): void;
+}
+
+class RAGPipeline {
+  private embedding: EmbeddingModel;
+  private vectorStore: VectorStore;
+  
+  constructor(embedding: EmbeddingModel, vectorStore: VectorStore) {
+    this.embedding = embedding;
+    this.vectorStore = vectorStore;
+  }
+  
+  indexDocument(text: string, metadata?: Record<string, any>): void {
+    const embedding = this.embedding.encode(text);
+    this.vectorStore.add([{content: text, embedding, metadata}]);
+  }
+  
+  retrieve(query: string, topK: number = 5): SearchResult[] {
+    const queryEmbedding = this.embedding.encode(query);
+    return this.vectorStore.search(queryEmbedding, topK);
+  }
+  
+  buildContext(query: string, topK: number = 5): string {
+    const results = this.retrieve(query, topK);
+    return results.map(r => r.content).join('\n\n');
+  }
+}
+EOF
+{{/if}}
+```
+
+**Expected**
+- RAG 模块创建成功
+- 索引功能正常
+- 检索功能正常
+
+---
+
+## 阶段 4: 测试
+
+### 4.1 单元测试
+
+**Input**
+- 实现代码
+
+**Process**
+1. 编写客户端测试
+2. 编写 Prompt 管理器测试
+3. 编写 RAG 测试
+4. 运行测试
+
+**Run**
+```bash
+{{#if has_python}}
+# 运行测试
+pytest tests/test_llm/ -v
+
+# 覆盖率
+pytest --cov=llm tests/test_llm/
+{{else_if has_typescript}}
+# 运行测试
+npm test -- --grep="llm"
+
+# 覆盖率
+npm run test:coverage
+{{/if}}
+```
+
+**Expected**
+- 所有测试通过
+- 覆盖率 > 80%
+
+### 4.2 集成测试
+
+**Input**
+- 实现代码
+- API Key
+
+**Process**
+1. 配置测试环境
+2. 执行真实 API 调用
+3. 验证响应格式
+4. 测试错误处理
+
+**Run**
+```bash
+{{#if has_python}}
+# 集成测试
+pytest tests/integration/test_llm.py -v
+{{else_if has_typescript}}
+# 集成测试
+npm test -- --grep="integration.*llm"
+{{/if}}
+```
+
+**Expected**
+- API 调用成功
+- 响应格式正确
+- 错误处理正确
+
+---
+
+## 阶段 5: 文档
+
+### 5.1 API 文档
+
+**Input**
+- 实现代码
+
+**Process**
+1. 编写客户端 API 文档
+2. 添加使用示例
+3. 记录错误码
+4. 说明配置项
+
+**Output**
+- API 文档
+- 使用示例
+
+### 5.2 配置文档
+
+**Input**
+- 配置项
+
+**Process**
+1. 列出所有配置项
+2. 说明默认值
+3. 说明环境变量
+4. 提供配置示例
+
+**Output**
+- 配置文档
+- 环境变量说明
+
+---
+
+## 闸门检查点
+
+### G0: 需求确认
+- [ ] 集成目标明确
+- [ ] 模型选择确认
+- [ ] 依赖分析完成
+
+### G1: 设计确认
+- [ ] 接口设计完成
+- [ ] Prompt 设计完成
+- [ ] RAG 设计完成（如需要）
+
+### G2: 实现确认
+- [ ] 客户端实现完成
+- [ ] Prompt 管理器实现完成
+- [ ] RAG 实现完成（如需要）
+
+### G3: 测试确认
+- [ ] 单元测试通过
+- [ ] 集成测试通过
+- [ ] 覆盖率达标
+
+### G4: 文档确认
+- [ ] API 文档完成
+- [ ] 配置文档完成
+- [ ] 示例代码完成
+
+---
+
+## 注意事项
+
+1. **API Key 安全**:
+   - 使用环境变量
+   - 不提交到代码仓库
+   - 定期轮换
+
+2. **成本控制**:
+   - 监控 API 调用
+   - 设置用量告警
+   - 优化 Prompt 减少 token
+
+3. **错误处理**:
+   - 处理 API 限流
+   - 实现重试机制
+   - 记录错误日志
+
+4. **版本兼容**:
+   - 锁定依赖版本
+   - 测试模型更新
+   - 提供降级方案

@@ -1,0 +1,536 @@
+# 特征-产物映射规则
+# 定义"什么样的项目特征应该生成什么样的产物"
+# 
+# 这是 project-patterns.yaml 的补充，提供更细粒度的映射规则
+
+version: 1.0.0
+
+# ============================================================
+# 技术栈特征映射
+# ============================================================
+tech_stack_mapping:
+  
+  python:
+    signals:
+      files:
+        - "*.py"
+        - "requirements.txt"
+        - "pyproject.toml"
+        - "setup.py"
+      configs:
+        - "pytest.ini"
+        - "pyproject.toml"
+    generates:
+      references:
+        - name: python-development-standards.md
+          when: always
+        - name: python-testing-guide.md
+          when:
+            has_pytest: true
+      scripts:
+        - name: check-python-quality.py
+          when: always
+        - name: check-python-testing.py
+          when:
+            has_pytest: true
+      constitution:
+        - rule: python-type-hints-required
+          description: "Python 代码必须使用类型注解"
+          severity: medium
+          when:
+            python_version: ">=3.10"
+            
+  go:
+    signals:
+      files:
+        - "*.go"
+        - "go.mod"
+        - "go.sum"
+      configs:
+        - ".golangci.yml"
+        - "Makefile"
+    generates:
+      references:
+        - name: go-development-standards.md
+          when: always
+        - name: go-error-handling.md
+          when: always
+      scripts:
+        - name: check-go-quality.py
+          when: always
+        - name: check-go-testing.py
+          when:
+            has_test_files: true
+      constitution:
+        - rule: go-error-must-be-checked
+          description: "Go 代码必须检查 error 返回值"
+          severity: critical
+          
+  typescript:
+    signals:
+      files:
+        - "*.ts"
+        - "*.tsx"
+        - "tsconfig.json"
+      configs:
+        - "package.json"
+        - "eslint.config.*"
+    generates:
+      references:
+        - name: typescript-development-standards.md
+          when: always
+        - name: typescript-react-guide.md
+          when:
+            has_react: true
+      scripts:
+        - name: check-typescript-quality.py
+          when: always
+        - name: check-typescript-testing.py
+          when:
+            has_test_files: true
+      constitution:
+        - rule: typescript-no-any
+          description: "TypeScript 禁止使用 any 类型"
+          severity: high
+          when:
+            strict_mode: true
+            
+  rust:
+    signals:
+      files:
+        - "*.rs"
+        - "Cargo.toml"
+      configs:
+        - ".rustfmt.toml"
+    generates:
+      references:
+        - name: rust-development-standards.md
+          when: always
+      scripts:
+        - name: check-rust-quality.py
+          when: always
+      constitution:
+        - rule: rust-no-unsafe
+          description: "Rust 代码尽量避免使用 unsafe"
+          severity: high
+          
+  java:
+    signals:
+      files:
+        - "*.java"
+        - "*.kt"
+        - "pom.xml"
+        - "build.gradle"
+      configs:
+        - ".checkstyle.xml"
+    generates:
+      references:
+        - name: java-development-standards.md
+          when: always
+      scripts:
+        - name: check-java-quality.py
+          when: always
+
+# ============================================================
+# 框架特征映射
+# ============================================================
+framework_mapping:
+  
+  fastapi:
+    signals:
+      files:
+        - "main.py"
+      code_patterns:
+        - "FastAPI"
+        - "from fastapi"
+    generates:
+      references:
+        - name: fastapi-api-design.md
+          when: always
+        - name: fastapi-security.md
+          when:
+            has_auth: true
+      templates:
+        - name: TEMPLATE-fastapi-api.md
+          when: always
+      constitution:
+        - rule: fastapi-dependency-injection
+          description: "FastAPI 应使用依赖注入"
+          severity: medium
+          
+  nextjs:
+    signals:
+      files:
+        - "next.config.*"
+        - "app/"  # or "pages/"
+      code_patterns:
+        - "nextjs"
+        - "next/"
+    generates:
+      references:
+        - name: nextjs-development-standards.md
+          when: always
+        - name: nextjs-ssr-guide.md
+          when:
+            has_server_components: true
+      templates:
+        - name: TEMPLATE-nextjs-feature.md
+          when: always
+      constitution:
+        - rule: nextjs-no-relative-imports
+          description: "Next.js 应避免相对导入，使用 @/ 别名"
+          severity: medium
+          
+  gin:
+    signals:
+      files:
+        - "main.go"
+      code_patterns:
+        - "gin-gonic/gin"
+        - "gin.Engine"
+    generates:
+      references:
+        - name: gin-api-design.md
+          when: always
+      templates:
+        - name: TEMPLATE-gin-api.md
+          when: always
+          
+  spring:
+    signals:
+      files:
+        - "pom.xml"
+        - "build.gradle"
+      code_patterns:
+        - "@SpringBootApplication"
+        - "spring-boot"
+    generates:
+      references:
+        - name: spring-development-standards.md
+          when: always
+      templates:
+        - name: TEMPLATE-spring-api.md
+          when: always
+
+# ============================================================
+# 特殊流程特征映射
+# ============================================================
+special_flow_mapping:
+  
+  protocol_chain:
+    signals:
+      files:
+        - "*.proto"
+        - ".tad/build/dbsql-*"
+      directories:
+        - "cgi"
+        - "dbproxy"
+        - "protocol"
+    generates:
+      templates:
+        - TEMPLATE-protocol-change.md
+        - TEMPLATE-dbproxy-sync.md
+      references:
+        - gate-protocol.md (with protocol_chain_gates)
+        - protocol-chain-contract.md
+      scripts:
+        - check-dbproxy-mapping.py
+        - check-protocol-chain-order.py
+      constitution:
+        - protocol-chain-must-follow-order
+        - tag-sync-after-proto-change
+        
+  ai_pipeline:
+    signals:
+      files:
+        - "*.env.example"
+        - "prompts/**/*"
+      code_patterns:
+        - "openai"
+        - "anthropic"
+        - "langchain"
+    generates:
+      templates:
+        - TEMPLATE-model-integration.md
+        - TEMPLATE-prompt-engineering.md
+      references:
+        - gate-protocol.md (with ai_pipeline_gates)
+        - ai-safety-checklist.md
+      scripts:
+        - check-api-key-rotation.py
+        - check-prompt-safety.py
+      constitution:
+        - api-key-must-be-encrypted
+        - prompt-must-have-safety-guards
+        
+  cross_repo:
+    signals:
+      structure:
+        - "多个 .git 目录"
+    generates:
+      templates:
+        - TEMPLATE-cross-repo-change.md
+      references:
+        - gate-protocol.md (with multi_repo_gates)
+        - cross-repo-coordination.md
+      scripts:
+        - check-cross-repo-dependency.py
+      constitution:
+        - cross-repo-change-must-sync
+        
+  api_contract:
+    signals:
+      files:
+        - "openapi.yaml"
+        - "swagger.json"
+    generates:
+      templates:
+        - TEMPLATE-api-sync.md
+      references:
+        - gate-protocol.md (with api_contract_gates)
+      scripts:
+        - check-api-compatibility.py
+      constitution:
+        - api-contract-must-be-synced
+        
+  microservice:
+    signals:
+      files:
+        - "docker-compose.*"
+        - "Chart.yaml"
+      directories:
+        - "services"
+        - "deploy"
+    generates:
+      templates:
+        - TEMPLATE-service-deployment.md
+        - TEMPLATE-service-communication.md
+      references:
+        - gate-protocol.md (with microservice_gates)
+      scripts:
+        - check-service-health.py
+        - check-deployment-order.py
+      constitution:
+        - service-dependency-must-be-resolved
+        
+  data_pipeline:
+    signals:
+      files:
+        - "*.sql"
+        - "dbt_project.yml"
+      code_patterns:
+        - "pandas"
+        - "spark"
+        - "dbt"
+    generates:
+      templates:
+        - TEMPLATE-data-pipeline.md
+        - TEMPLATE-data-model-change.md
+      references:
+        - gate-protocol.md (with data_pipeline_gates)
+      scripts:
+        - check-data-schema-compatibility.py
+        - check-data-quality.py
+      constitution:
+        - data-schema-change-must-be-backward-compatible
+        
+  security_sensitive:
+    signals:
+      files:
+        - "*.pem"
+        - "*.key"
+      code_patterns:
+        - "encryption"
+        - "oauth"
+        - "jwt"
+    generates:
+      templates:
+        - TEMPLATE-security-check.md
+        - TEMPLATE-key-management.md
+      references:
+        - gate-protocol.md (with security_gates)
+        - security-checklist.md
+      scripts:
+        - check-security-vulnerabilities.py
+        - check-encryption-standards.py
+      constitution:
+        - security-design-must-be-reviewed
+        - no-hardcoded-secrets
+
+# ============================================================
+# 质量要求映射
+# ============================================================
+quality_requirement_mapping:
+  
+  high_test_coverage:
+    signals:
+      configs:
+        - "coverage>=80" in pytest.ini
+        - "coverage>=80" in .golangci.yml
+    generates:
+      constitution:
+        - rule: test-coverage-must-be-high
+          description: "测试覆盖率必须达到 80% 以上"
+          severity: high
+          
+  strict_linting:
+    signals:
+      configs:
+        - "strict=true" in pyproject.toml
+        - "strictMode=true" in eslint.config
+    generates:
+      constitution:
+        - rule: strict-linting-required
+          description: "必须使用严格模式的 linter"
+          severity: medium
+          
+  security_scanning:
+    signals:
+      configs:
+        - "snyk.yml"
+        - "dependabot.yml"
+        - ".github/workflows/scan.yml"
+    generates:
+      scripts:
+        - check-security-scanning.py
+      constitution:
+        - rule: security-scanning-must-pass
+          description: "安全扫描必须通过才能上线"
+          severity: critical
+
+# ============================================================
+# 团队规模映射
+# ============================================================
+team_size_mapping:
+  
+  small:
+    signals:
+      indicators:
+        - "contributors < 5" in git stats
+        - "no CODEOWNERS file"
+    generates:
+      constitution:
+        - rule: lightweight-review
+          description: "小团队可以简化代码审查流程"
+          severity: low
+          
+  medium:
+    signals:
+      indicators:
+        - "5 <= contributors <= 20"
+        - "has CODEOWNERS"
+    generates:
+      constitution:
+        - rule: standard-review
+          description: "中等团队使用标准代码审查流程"
+          severity: medium
+          
+  large:
+    signals:
+      indicators:
+        - "contributors > 20"
+        - "has multiple teams"
+    generates:
+      constitution:
+        - rule: mandatory-review
+          description: "大团队必须严格执行代码审查"
+          severity: critical
+          
+  has_interns:
+    signals:
+      indicators:
+        - "has intern in contributors"
+        - "has onboarding guide"
+    generates:
+      constitution:
+        - rule: detailed-documentation
+          description: "有实习生的团队需要更详细的文档"
+          severity: high
+
+# ============================================================
+# 部署环境映射
+# ============================================================
+deployment_mapping:
+  
+  kubernetes:
+    signals:
+      files:
+        - "Chart.yaml"
+        - "values.yaml"
+        - "k8s/**/*"
+    generates:
+      references:
+        - kubernetes-deployment-guide.md
+      scripts:
+        - check-k8s-deployment.py
+        
+  docker:
+    signals:
+      files:
+        - "Dockerfile"
+        - "docker-compose.*"
+    generates:
+      references:
+        - docker-deployment-guide.md
+      scripts:
+        - check-docker-build.py
+        
+  serverless:
+    signals:
+      files:
+        - "serverless.yml"
+        - "template.yml"
+    generates:
+      references:
+        - serverless-deployment-guide.md
+      scripts:
+        - check-serverless-deployment.py
+        
+  traditional:
+    signals:
+      files:
+        - "deploy.sh"
+        - "ansible/**/*"
+    generates:
+      references:
+        - traditional-deployment-guide.md
+
+# ============================================================
+# 使用示例
+# ============================================================
+examples:
+  - name: "SmartMate Protocol 项目"
+    features:
+      - protocol_chain
+      - cross_repo
+      - ai_pipeline
+    matched_patterns:
+      - protocol-driven
+      - multi-repo
+      - ai-llm-project
+    generated_products:
+      templates:
+        - TEMPLATE-protocol-change.md
+        - TEMPLATE-cross-repo-change.md
+        - TEMPLATE-model-integration.md
+      references:
+        - gate-protocol.md (with 15+ gates)
+        - cross-repo-coordination.md
+        - ai-safety-checklist.md
+      scripts:
+        - check-dbproxy-mapping.py
+        - check-cross-repo-dependency.py
+        - check-prompt-safety.py
+        
+  - name: "普通 React 前端项目"
+    features:
+      - frontend_only
+    matched_patterns:
+      - frontend-only
+    generated_products:
+      templates:
+        - TEMPLATE-feature.md
+      references:
+        - gate-protocol.md (simplified)
+      scripts:
+        - check-gates.py

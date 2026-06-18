@@ -1,0 +1,350 @@
+<!--
+元模板：功能开发模板
+版本：2.0.0
+
+重要：这是一个通用的元模板，不包含任何项目特定内容
+所有项目特定的内容都通过变量填充
+
+变量说明：
+- {{feature_name}}: 功能名称
+- {{project_name}}: 项目名称
+- {{code_hosting}}: 代码托管平台（github/gitlab/gongfeng/none）
+- {{has_frontend}}: 是否有前端（true/false）
+- {{has_backend}}: 是否有后端（true/false）
+- {{has_api}}: 是否有 API（true/false）
+- {{has_database}}: 是否有数据库（true/false）
+- {{test_framework}}: 测试框架名称
+-->
+
+# TEMPLATE-feature.md
+
+> 功能开发模板
+> 
+> 适用于新功能开发的标准流程
+
+---
+
+## 适用场景
+
+- 新增功能模块
+- 新增 API 接口
+- 新增页面/组件
+- 功能增强
+
+---
+
+## 开发流程
+
+### 阶段 1: 需求分析
+
+#### Step 1.1: 理解需求
+
+**Input**
+- PRD 文档
+- 变更描述
+- 相关业务背景
+
+**Process**
+1. 阅读 PRD，提取功能点
+2. 识别涉及的模块
+3. 确定影响范围
+4. 评估复杂度
+
+**Output**
+- 需求分析文档
+- 功能点清单
+- 影响范围分析
+
+**Run**
+{{#if code_hosting != 'none'}}
+```bash
+# 创建需求分析目录
+mkdir -p docs/spec/{{feature_name}}/analyze
+
+# 使用 {{code_hosting}} MCP 获取需求文档
+{{#if code_hosting == 'github'}}
+# mcp_call tool="mcp__github__get_issue" \
+#   arguments='{"owner": "<owner>", "repo": "<repo>", "issue_number": "<issue_number>"}'
+{{/if}}
+
+{{#if code_hosting == 'gitlab'}}
+# mcp_call tool="mcp__gitlab__get_issue" \
+#   arguments='{"project_id": "<project_id>", "issue_iid": "<issue_iid>"}'
+{{/if}}
+
+{{#if code_hosting == 'gongfeng'}}
+# mcp_call tool="mcp__gongfeng-woa__get_issue_detail" \
+#   arguments='{"project_id": "<project_id>", "issue_iid": "<issue_iid>"}'
+{{/if}}
+
+{{else}}
+```bash
+# 创建需求分析目录
+mkdir -p docs/spec/{{feature_name}}/analyze
+
+# 手动记录需求
+cat > docs/spec/{{feature_name}}/analyze/01-requirements.md << 'EOF'
+# 需求分析
+
+## 功能描述
+[待填充]
+
+## 功能点
+[待填充]
+EOF
+{{/if}}
+```
+
+**Expected**
+- 需求分析文档创建成功
+- 文档位于 `docs/spec/{{feature_name}}/analyze/`
+
+---
+
+### 阶段 2: 任务拆解
+
+#### Step 2.1: 拆解任务
+
+**Input**
+- 需求分析文档
+
+**Process**
+1. 将功能拆解为小任务
+2. 估算每个任务的工作量
+3. 确定任务依赖关系
+4. 排定任务优先级
+
+**Output**
+- 任务列表
+
+**Run**
+```bash
+# 创建任务列表
+mkdir -p docs/spec/{{feature_name}}/design
+cat > docs/spec/{{feature_name}}/design/01-tasks.md << 'EOF'
+# 任务列表
+
+## 任务
+| ID | 任务描述 | 预估时间 | 依赖 | 状态 |
+|----|---------|---------|------|------|
+| T1 | [待填充] | [待填充] | - | 待开始 |
+EOF
+```
+
+**Expected**
+- 任务粒度 ≤ 1 天
+- 依赖关系明确
+- 优先级清晰
+
+---
+
+### 阶段 3: 代码实现
+
+{{#if has_backend}}
+#### Step 3.1: 后端实现
+
+**Input**
+- 任务列表
+
+**Process**
+1. 按任务顺序实现
+2. 编写单元测试
+3. 运行测试确保通过
+4. 提交代码
+
+**Output**
+- 后端代码
+- 单元测试
+
+**Run**
+```bash
+# 运行测试
+{{#if test_framework == 'pytest'}}
+pytest tests/ -v
+{{/if}}
+
+{{#if test_framework == 'go test'}}
+go test ./... -v
+{{/if}}
+
+{{#if test_framework == 'jest'}}
+npm test
+{{/if}}
+
+{{#if test_framework == 'none'}}
+echo "请运行项目对应的测试命令"
+{{/if}}
+```
+
+**Expected**
+- 所有测试通过
+- 代码覆盖率达标
+
+{{/if}}
+
+{{#if has_frontend}}
+#### Step 3.2: 前端实现
+
+**Input**
+- 后端 API（如果有）
+- 任务列表
+
+**Process**
+1. 按任务顺序实现
+2. 编写组件测试
+3. 运行测试确保通过
+4. 提交代码
+
+**Output**
+- 前端代码
+- 组件测试
+
+**Run**
+```bash
+# 运行前端测试
+{{#if test_framework == 'jest'}}
+npm test
+{{/if}}
+
+{{#if test_framework == 'vitest'}}
+npm run test
+{{/if}}
+
+{{#if test_framework == 'none'}}
+echo "请运行项目对应的测试命令"
+{{/if}}
+```
+
+**Expected**
+- 所有测试通过
+- UI 与设计稿一致
+
+{{/if}}
+
+---
+
+### 阶段 4: 验证
+
+#### Step 4.1: 集成测试
+
+**Input**
+- 前后端代码
+
+**Process**
+1. 启动服务
+2. 执行集成测试
+3. 验证完整流程
+
+**Output**
+- 测试报告
+
+**Run**
+```bash
+# 启动服务（根据项目实际情况调整）
+echo "请启动服务并运行集成测试"
+
+# 运行端到端测试（如果有）
+{{#if test_framework == 'cypress'}}
+npm run e2e
+{{/if}}
+
+{{#if test_framework == 'playwright'}}
+npm run test:e2e
+{{/if}}
+```
+
+**Expected**
+- 集成测试通过
+- 端到端流程正常
+
+---
+
+### 阶段 5: 上线
+
+#### Step 5.1: 创建 MR/PR
+
+**Input**
+- 代码变更
+- 测试报告
+
+**Process**
+1. 推送代码
+2. 创建 MR/PR
+3. 填写描述
+4. 指定审查者
+
+**Output**
+- MR/PR 链接
+
+**Run**
+{{#if code_hosting != 'none'}}
+```bash
+# 创建 MR/PR
+{{#if code_hosting == 'github'}}
+# mcp_call tool="mcp__github__create_pull_request" \
+#   arguments='{"owner": "<owner>", "repo": "<repo>", "title": "<title>", "head": "<branch>", "base": "main"}'
+{{/if}}
+
+{{#if code_hosting == 'gitlab'}}
+# mcp_call tool="mcp__gitlab__create_merge_request" \
+#   arguments='{"project_id": "<project_id>", "title": "<title>", "source_branch": "<branch>", "target_branch": "main"}'
+{{/if}}
+
+{{#if code_hosting == 'gongfeng'}}
+# mcp_call tool="mcp__gongfeng-woa__create_merge_request" \
+#   arguments='{"project_id": "<project_id>", "title": "<title>", "source_branch": "<branch>", "target_branch": "main"}'
+{{/if}}
+
+{{else}}
+```bash
+# 手动创建 MR/PR
+git push origin feature/{{feature_name}}
+echo "请手动创建 MR/PR"
+{{/if}}
+```
+
+**Expected**
+- MR/PR 创建成功
+- 描述完整
+- 审查者已指定
+
+---
+
+## 闸门检查点
+
+| 闸门 | 阶段 | 检查项 | 通过标准 |
+|------|------|--------|----------|
+| G1_REQUIREMENTS | 阶段 1 | 需求分析完成 | 需求文档已创建 |
+| G2_TASKS | 阶段 2 | 任务拆解完成 | 任务列表已创建，粒度合理 |
+| G3_CODE | 阶段 3 | 代码实现完成 | 测试全绿 |
+| G4_VERIFY | 阶段 4 | 验证完成 | 集成测试通过 |
+| G5_READY | 阶段 5 | 准备上线 | MR/PR 已创建 |
+
+---
+
+## 附录
+
+### A. 常见问题
+
+1. **测试失败**
+   - 检查测试环境配置
+   - 检查依赖是否安装
+   - 查看测试日志
+
+2. **MR/PR 审查不通过**
+   - 根据审查意见修改
+   - 更新代码
+   - 重新提交
+
+### B. 工具参考
+
+{{#if code_hosting != 'none'}}
+**{{code_hosting}} MCP 工具**
+- 创建 MR/PR
+- 获取审查状态
+- 更新 MR/PR
+{{/if}}
+
+{{#if test_framework != 'none'}}
+**测试框架**: {{test_framework}}
+{{/if}}

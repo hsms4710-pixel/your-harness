@@ -1,0 +1,423 @@
+#!/usr/bin/env python3
+"""
+闸门状态检查脚本
+项目: {{project_name}}
+检查特定闸门是否可以通过
+
+使用方法:
+    python check-gates.py can-advance --feature <name> --gate <gate-id>
+    python check-gates.py status --feature <name>
+    python check-gates.py approve --feature <name> --gate <gate-id>
+"""
+import json
+import sys
+from pathlib import Path
+from datetime import datetime
+
+# ============================================================
+# 项目特定配置
+# ============================================================
+
+PROJECT_NAME = "{{project_name}}"
+
+# 闸门定义 - 根据项目特征动态生成
+GATES = {
+    "G0_CLARIFICATION": {
+        "stage": "需求澄清",
+        "description": "需求澄清后",
+        "artifacts": [
+            {{#if has_spec_structure}}
+            "docs/spec/<feature>/analyze/00-clarifications.md",
+            {{else}}
+            "docs/<feature>/clarifications.md",
+            {{/if}}
+        ],
+        "checks": [
+            "需求已澄清",
+            "歧义已解决",
+            {{#if has_security_surface}}
+            "安全影响已评估",
+            {{/if}}
+            {{#if has_performance_surface}}
+            "性能影响已评估",
+            {{/if}}
+        ],
+        "required": {{is_clarification_required}}
+    },
+    "G1_PRD": {
+        "stage": "PRD 完成",
+        "description": "PRD 完成后",
+        "artifacts": [
+            {{#if has_spec_structure}}
+            "docs/spec/<feature>/analyze/01-prd.md",
+            {{else}}
+            "docs/<feature>/prd.md",
+            {{/if}}
+        ],
+        "checks": [
+            "PRD 包含完整的 User Stories",
+            "Acceptance Criteria 可测",
+            {{#if has_api_change}}
+            "API 契约已定义",
+            {{/if}}
+        ],
+        "required": {{is_prd_required}}
+    },
+    "G2_TASKS": {
+        "stage": "任务拆解",
+        "description": "任务拆解后",
+        "artifacts": [
+            {{#if has_spec_structure}}
+            "docs/spec/<feature>/design/01-tasks.md",
+            {{else}}
+            "docs/<feature>/tasks.md",
+            {{/if}}
+        ],
+        "checks": [
+            "任务粒度合理",
+            "依赖关系明确",
+            {{#if has_multi_repo}}
+            "跨仓库依赖已识别",
+            {{/if}}
+        ],
+        "required": {{is_tasks_required}}
+    },
+    "G3_SLICE": {
+        "stage": "代码切片",
+        "description": "每个代码切片后",
+        "artifacts": [
+            "代码变更",
+            {{#if has_spec_structure}}
+            "docs/spec/<feature>/develop/3X-*.md",
+            {{else}}
+            "docs/<feature>/slice-*.md",
+            {{/if}}
+        ],
+        "checks": [
+            "测试通过",
+            "代码审查通过",
+            "切片实现纪要已写",
+        ],
+        "required": True
+    },
+    "G4_VERIFY": {
+        "stage": "验证完成",
+        "description": "验证完成后",
+        "artifacts": [
+            {{#if has_spec_structure}}
+            "docs/spec/<feature>/test/02-test-report.md",
+            {{else}}
+            "docs/<feature>/test-report.md",
+            {{/if}}
+        ],
+        "checks": [
+            "覆盖率达标",
+            "关键路径有集成测试",
+            "无 P0/P1 Bug",
+        ],
+        "required": {{is_verify_required}}
+    },
+    "G5_REVIEW": {
+        "stage": "审查完成",
+        "description": "审查完成后",
+        "artifacts": [
+            {{#if has_spec_structure}}
+            "docs/spec/<feature>/test/review/*.md",
+            {{else}}
+            "docs/<feature>/review/*.md",
+            {{/if}}
+        ],
+        "checks": [
+            "代码审查通过",
+            "安全检查通过",
+            "无阻塞问题",
+        ],
+        "required": {{is_review_required}}
+    },
+    "G6_SHIP": {
+        "stage": "上线准备",
+        "description": "上线前",
+        "artifacts": [
+            {{#if has_spec_structure}}
+            "docs/spec/<feature>/develop/ship-checklist.md",
+            {{else}}
+            "docs/<feature>/ship-checklist.md",
+            {{/if}}
+        ],
+        "checks": [
+            "灰度方案已确认",
+            "回滚预案已准备",
+            "监控告警已配置",
+        ],
+        "required": {{is_ship_required}}
+    },
+    {{#each additional_gates}}
+    "{{this.id}}": {
+        "stage": "{{this.stage}}",
+        "description": "{{this.description}}",
+        "artifacts": {{this.artifacts}},
+        "checks": {{this.checks}},
+        "required": {{this.required}}
+    },
+    {{/each}}
+}
+
+# 闸门顺序
+GATE_ORDER = [
+    "G0_CLARIFICATION",
+    "G1_PRD",
+    "G2_TASKS",
+    {{#each slice_gates}}
+    "G3_SLICE_{{this}}",
+    {{/each}}
+    "G4_VERIFY",
+    "G5_REVIEW",
+    "G6_SHIP",
+    {{#each additional_gate_order}}
+    "{{this}}",
+    {{/each}}
+]
+
+
+def get_gate_file(feature: str) -> Path:
+    """获取闸门状态文件路径"""
+    return Path(f".harness/workflow-gates/{feature}.json")
+
+
+def load_gate_state(feature: str) -> dict:
+    """加载闸门状态"""
+    gate_file = get_gate_file(feature)
+    if not gate_file.exists():
+        return {"feature": feature, "gates": {}, "created_at": datetime.now().isoformat()}
+    
+    with open(gate_file) as f:
+        return json.load(f)
+
+
+def save_gate_state(feature: str, state: dict):
+    """保存闸门状态"""
+    gate_file = get_gate_file(feature)
+    gate_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(gate_file, "w") as f:
+        json.dump(state, f, indent=2, ensure_ascii=False)
+
+
+def check_gate(feature: str, gate_id: str) -> dict:
+    """检查闸门状态"""
+    state = load_gate_state(feature)
+    
+    if gate_id not in GATES:
+        return {
+            "status": "BLOCKED",
+            "reason": f"Unknown gate: {gate_id}",
+            "available_gates": list(GATES.keys())
+        }
+    
+    gate_def = GATES[gate_id]
+    if not gate_def.get("required", True):
+        return {
+            "status": "SKIPPABLE",
+            "reason": f"Gate {gate_id} is optional for this project",
+            "gate_info": gate_def
+        }
+    
+    gate_state = state.get("gates", {}).get(gate_id)
+    if not gate_state:
+        return {
+            "status": "BLOCKED",
+            "reason": f"Gate {gate_id} has not been initialized",
+            "gate_info": gate_def,
+            "required_artifacts": gate_def["artifacts"]
+        }
+    
+    if gate_state.get("status") != "approved":
+        return {
+            "status": "BLOCKED",
+            "reason": f"Gate {gate_id} is not approved",
+            "current_status": gate_state.get("status"),
+            "gate_info": gate_def,
+            "checks": [
+                {"name": c, "status": gate_state.get("checks", {}).get(c, "not_checked")}
+                for c in gate_def["checks"]
+            ]
+        }
+    
+    return {
+        "status": "PASS",
+        "reason": f"Gate {gate_id} passed",
+        "approved_by": gate_state.get("approved_by"),
+        "approved_at": gate_state.get("approved_at")
+    }
+
+
+def can_advance(feature: str, gate_id: str) -> dict:
+    """检查是否可以进入下一阶段"""
+    result = check_gate(feature, gate_id)
+    
+    if result["status"] == "BLOCKED":
+        # 检查是否是第一个闸门
+        if gate_id == GATE_ORDER[0]:
+            return {
+                "can_advance": False,
+                "reason": "First gate not passed",
+                "details": result
+            }
+        
+        # 检查前一个闸门
+        current_index = GATE_ORDER.index(gate_id) if gate_id in GATE_ORDER else -1
+        if current_index > 0:
+            prev_gate = GATE_ORDER[current_index - 1]
+            prev_result = check_gate(feature, prev_gate)
+            
+            if prev_result["status"] != "PASS":
+                return {
+                    "can_advance": False,
+                    "reason": f"Previous gate {prev_gate} not passed",
+                    "blocked_by": prev_gate,
+                    "details": prev_result
+                }
+    
+    return {
+        "can_advance": result["status"] in ["PASS", "SKIPPABLE"],
+        "reason": result["reason"],
+        "details": result
+    }
+
+
+def get_status(feature: str) -> dict:
+    """获取所有闸门状态"""
+    state = load_gate_state(feature)
+    
+    result = {
+        "feature": feature,
+        "project": PROJECT_NAME,
+        "gates": {},
+        "summary": {
+            "total": len(GATES),
+            "passed": 0,
+            "blocked": 0,
+            "skippable": 0,
+            "not_started": 0
+        }
+    }
+    
+    for gate_id, gate_def in GATES.items():
+        check_result = check_gate(feature, gate_id)
+        result["gates"][gate_id] = {
+            "status": check_result["status"],
+            "stage": gate_def["stage"],
+            "required": gate_def.get("required", True)
+        }
+        
+        if check_result["status"] == "PASS":
+            result["summary"]["passed"] += 1
+        elif check_result["status"] == "BLOCKED":
+            result["summary"]["blocked"] += 1
+        elif check_result["status"] == "SKIPPABLE":
+            result["summary"]["skippable"] += 1
+        else:
+            result["summary"]["not_started"] += 1
+    
+    return result
+
+
+def approve_gate(feature: str, gate_id: str, approved_by: str = "user") -> dict:
+    """批准闸门"""
+    if gate_id not in GATES:
+        return {"status": "error", "reason": f"Unknown gate: {gate_id}"}
+    
+    state = load_gate_state(feature)
+    
+    # 初始化闸门状态（如果不存在）
+    if gate_id not in state.get("gates", {}):
+        state.setdefault("gates", {})[gate_id] = {
+            "status": "pending",
+            "checks": {},
+            "artifacts": []
+        }
+    
+    # 标记为已批准
+    state["gates"][gate_id]["status"] = "approved"
+    state["gates"][gate_id]["approved_by"] = approved_by
+    state["gates"][gate_id]["approved_at"] = datetime.now().isoformat()
+    
+    save_gate_state(feature, state)
+    
+    return {
+        "status": "success",
+        "gate_id": gate_id,
+        "approved_by": approved_by,
+        "approved_at": state["gates"][gate_id]["approved_at"]
+    }
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Gate status checker for {{project_name}}")
+    subparsers = parser.add_subparsers(dest="action", required=True)
+    
+    # can-advance action
+    can_advance_parser = subparsers.add_parser("can-advance", help="Check if can advance to next phase")
+    can_advance_parser.add_argument("--feature", required=True, help="Feature name")
+    can_advance_parser.add_argument("--gate", required=True, help="Gate ID")
+    
+    # status action
+    status_parser = subparsers.add_parser("status", help="Get all gates status")
+    status_parser.add_argument("--feature", required=True, help="Feature name")
+    
+    # approve action
+    approve_parser = subparsers.add_parser("approve", help="Approve a gate")
+    approve_parser.add_argument("--feature", required=True, help="Feature name")
+    approve_parser.add_argument("--gate", required=True, help="Gate ID")
+    approve_parser.add_argument("--by", default="user", help="Approved by")
+    
+    args = parser.parse_args()
+    
+    if args.action == "can-advance":
+        result = can_advance(args.feature, args.gate)
+        
+        if result["can_advance"]:
+            print(f"✅ Can advance: {result['reason']}")
+            sys.exit(0)
+        else:
+            print(f"❌ Cannot advance: {result['reason']}")
+            if "blocked_by" in result:
+                print(f"   Blocked by: {result['blocked_by']}")
+            sys.exit(1)
+    
+    elif args.action == "status":
+        result = get_status(args.feature)
+        
+        print(f"\n📊 Gate Status for {result['feature']} ({PROJECT_NAME})\n")
+        print("=" * 50)
+        
+        for gate_id, gate_info in result["gates"].items():
+            status_icon = {
+                "PASS": "✅",
+                "BLOCKED": "❌",
+                "SKIPPABLE": "⏭️",
+                "not_started": "⬜"
+            }.get(gate_info["status"], "❓")
+            
+            required_mark = "*" if gate_info["required"] else "o"
+            print(f"{status_icon} {gate_id} ({gate_info['stage']}) [{required_mark}]")
+        
+        print("=" * 50)
+        print(f"\nSummary: {result['summary']['passed']}/{result['summary']['total']} passed")
+        
+        sys.exit(0 if result["summary"]["blocked"] == 0 else 1)
+    
+    elif args.action == "approve":
+        result = approve_gate(args.feature, args.gate, args.by)
+        
+        if result["status"] == "success":
+            print(f"✅ Gate {args.gate} approved by {args.by}")
+            sys.exit(0)
+        else:
+            print(f"❌ {result['reason']}")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

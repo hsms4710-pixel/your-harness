@@ -1,0 +1,350 @@
+# MCP 工具集成规则
+# 定义常见的 MCP 工具及其使用场景
+# 
+# 重要：这是通用的工具集成规则，不针对特定项目
+# harness-designer 根据项目特征自动选择适用的工具
+
+version: 2.0.0
+
+mcp_tools:
+  # ============================================================
+  # 代码托管平台
+  # ============================================================
+  
+  # 工蜂（腾讯内部）
+  gongfeng:
+    description: "腾讯工蜂代码托管平台 MCP"
+    
+    detection_rules:
+      - "项目根目录有 .git 远程指向 git.woa.com"
+      - "项目中引用了 mcp__gongfeng-woa 工具"
+      - "项目文档中提到工蜂"
+    
+    common_use_cases:
+      - name: "获取 MR 变更"
+        tool: "mcp__gongfeng-woa__get_merge_request_changes"
+        description: "获取 MR 的代码变更详情"
+        
+      - name: "获取 MR 详情"
+        tool: "mcp__gongfeng-woa__get_merge_request_info"
+        description: "获取 MR 的基本信息"
+        
+      - name: "创建 MR"
+        tool: "mcp__gongfeng-woa__create_merge_request"
+        description: "创建新的 MR"
+        
+      - name: "获取文件内容"
+        tool: "mcp__gongfeng-woa__get_blob_content"
+        description: "获取仓库中指定文件的内容"
+        
+      - name: "获取提交列表"
+        tool: "mcp__gongfeng-woa__get_commits_list"
+        description: "获取提交历史列表"
+        
+      - name: "合并 MR"
+        tool: "mcp__gongfeng-woa__merge_merge_request"
+        description: "合并 MR"
+        
+      - name: "获取审查状态"
+        tool: "mcp__gongfeng-woa__get_review_by_merge_request_iid"
+        description: "获取 MR 的审查状态"
+
+  # GitHub
+  github:
+    description: "GitHub 平台 MCP"
+    
+    detection_rules:
+      - "项目根目录有 .git 远程指向 github.com"
+      - "项目中引用了 mcp__github 工具"
+      - "项目文档中提到 GitHub"
+    
+    common_use_cases:
+      - name: "获取 PR 变更"
+        tool: "mcp__github__get_pull_request_files"
+        description: "获取 PR 的文件变更"
+        
+      - name: "获取 PR 详情"
+        tool: "mcp__github__get_pull_request"
+        description: "获取 PR 的基本信息"
+        
+      - name: "创建 PR"
+        tool: "mcp__github__create_pull_request"
+        description: "创建新的 PR"
+        
+      - name: "获取 Issue"
+        tool: "mcp__github__get_issue"
+        description: "获取 Issue 详情"
+
+  # GitLab
+  gitlab:
+    description: "GitLab 平台 MCP"
+    
+    detection_rules:
+      - "项目根目录有 .git 远程指向 gitlab.com 或 gitlab.*"
+      - "项目中引用了 mcp__gitlab 工具"
+      - "项目文档中提到 GitLab"
+    
+    common_use_cases:
+      - name: "获取 MR 变更"
+        tool: "mcp__gitlab__get_merge_request_changes"
+        description: "获取 MR 的代码变更"
+        
+      - name: "获取 MR 详情"
+        tool: "mcp__gitlab__get_merge_request"
+        description: "获取 MR 的基本信息"
+        
+      - name: "创建 MR"
+        tool: "mcp__gitlab__create_merge_request"
+        description: "创建新的 MR"
+
+  # ============================================================
+  # CI/CD 平台
+  # ============================================================
+  
+  # GitHub Actions
+  github-actions:
+    description: "GitHub Actions CI/CD MCP"
+    
+    detection_rules:
+      - "项目中有 .github/workflows 目录"
+      - "项目中引用了 mcp__github_actions 工具"
+    
+    common_use_cases:
+      - name: "触发工作流"
+        tool: "mcp__github_actions__create_workflow_dispatch"
+        description: "手动触发工作流"
+        
+      - name: "获取工作流状态"
+        tool: "mcp__github_actions__get_workflow_run"
+        description: "获取工作流运行状态"
+
+  # GitLab CI
+  gitlab-ci:
+    description: "GitLab CI MCP"
+    
+    detection_rules:
+      - "项目中有 .gitlab-ci.yml 文件"
+      - "项目中引用了 mcp__gitlab_ci 工具"
+    
+    common_use_cases:
+      - name: "触发流水线"
+        tool: "mcp__gitlab_ci__trigger_pipeline"
+        description: "手动触发流水线"
+        
+      - name: "获取流水线状态"
+        tool: "mcp__gitlab_ci__get_pipeline"
+        description: "获取流水线运行状态"
+
+  # Jenkins
+  jenkins:
+    description: "Jenkins CI MCP"
+    
+    detection_rules:
+      - "项目中有 Jenkinsfile 文件"
+      - "项目中引用了 mcp__jenkins 工具"
+    
+    common_use_cases:
+      - name: "触发构建"
+        tool: "mcp__jenkins__build_job"
+        description: "触发 Jenkins Job"
+        
+      - name: "获取构建状态"
+        tool: "mcp__jenkins__get_build_status"
+        description: "获取构建状态"
+
+  # ============================================================
+  # 云平台
+  # ============================================================
+  
+  # 腾讯云
+  tencent-cloud:
+    description: "腾讯云 MCP"
+    
+    detection_rules:
+      - "项目中有 tencent 相关配置"
+      - "项目中引用了 mcp__tencent_cloud 工具"
+    
+    common_use_cases:
+      - name: "获取资源状态"
+        tool: "mcp__tencent_cloud__describe_resources"
+        description: "获取云资源状态"
+
+  # AWS
+  aws:
+    description: "AWS MCP"
+    
+    detection_rules:
+      - "项目中有 aws 相关配置"
+      - "项目中引用了 mcp__aws 工具"
+    
+    common_use_cases:
+      - name: "获取资源状态"
+        tool: "mcp__aws__describe_resources"
+        description: "获取 AWS 资源状态"
+
+  # ============================================================
+  # 协作工具
+  # ============================================================
+  
+  # 企业微信
+  wecom:
+    description: "企业微信 MCP"
+    
+    detection_rules:
+      - "项目中引用了 mcp__wecom 工具"
+      - "项目文档中提到企业微信通知"
+    
+    common_use_cases:
+      - name: "发送消息"
+        tool: "mcp__wecom__send_message"
+        description: "发送企业微信消息"
+        
+      - name: "创建待办"
+        tool: "mcp__wecom__create_todo"
+        description: "创建待办事项"
+
+  # 飞书
+  feishu:
+    description: "飞书 MCP"
+    
+    detection_rules:
+      - "项目中引用了 mcp__feishu 工具"
+      - "项目文档中提到飞书通知"
+    
+    common_use_cases:
+      - name: "发送消息"
+        tool: "mcp__feishu__send_message"
+        description: "发送飞书消息"
+
+  # 乐享知识库
+  lexiang:
+    description: "乐享知识库 MCP"
+    
+    detection_rules:
+      - "项目中引用了 mcp__lexiang 工具"
+      - "项目文档中提到乐享"
+    
+    common_use_cases:
+      - name: "搜索文档"
+        tool: "mcp__lexiang__search_kb_search"
+        description: "搜索乐享知识库"
+        
+      - name: "获取文档"
+        tool: "mcp__lexiang__get_doc_content"
+        description: "获取文档内容"
+
+  # ============================================================
+  # 监控工具
+  # ============================================================
+  
+  # Prometheus
+  prometheus:
+    description: "Prometheus 监控 MCP"
+    
+    detection_rules:
+      - "项目中有 prometheus 配置"
+      - "项目中引用了 mcp__prometheus 工具"
+    
+    common_use_cases:
+      - name: "查询指标"
+        tool: "mcp__prometheus__query"
+        description: "查询 Prometheus 指标"
+        
+      - name: "获取告警"
+        tool: "mcp__prometheus__get_alerts"
+        description: "获取告警信息"
+
+  # Grafana
+  grafana:
+    description: "Grafana MCP"
+    
+    detection_rules:
+      - "项目中有 grafana 配置"
+      - "项目中引用了 mcp__grafana 工具"
+    
+    common_use_cases:
+      - name: "获取仪表板"
+        tool: "mcp__grafana__get_dashboard"
+        description: "获取仪表板数据"
+
+# ============================================================
+# 模板填充模式
+# 定义如何将工具调用填充到 Template 中
+# ============================================================
+
+template_patterns:
+  # Run 部分的填充模式
+  run_patterns:
+    mcp_call: |
+      # 调用 {{tool_provider}} MCP {{tool_name}}
+      mcp_call tool="{{tool_name}}" \
+        arguments='{{arguments_json}}'
+        
+    local_script: |
+      # 运行本地脚本
+      python scripts/{{script_name}}.py {{parameters}}
+      
+    manual: |
+      # 手动操作
+      echo "请手动执行: {{manual_instruction}}"
+      
+  # Expected 部分的填充模式
+  expected_patterns:
+    mcp_response: |
+      - 返回 {{return_type}}
+      - 包含 {{fields}}
+      
+    script_output: |
+      - 退出码 0 表示成功
+      - 输出 JSON 格式的检查结果
+      
+    manual_result: |
+      - {{manual_result}}
+
+# ============================================================
+# 工具选择逻辑
+# harness-designer 根据项目特征选择适用的工具
+# ============================================================
+
+selection_logic:
+  # 根据 git 远程地址选择代码托管平台
+  code_hosting:
+    - if: "git_remote contains 'github.com'"
+      select: "github"
+      
+    - if: "git_remote contains 'gitlab'"
+      select: "gitlab"
+      
+    - if: "git_remote contains 'git.woa.com'"
+      select: "gongfeng"
+      
+    - else:
+      select: "none"
+      
+  # 根据 CI 配置文件选择 CI/CD 平台
+  ci_cd:
+    - if: ".github/workflows exists"
+      select: "github-actions"
+      
+    - if: ".gitlab-ci.yml exists"
+      select: "gitlab-ci"
+      
+    - if: "Jenkinsfile exists"
+      select: "jenkins"
+      
+    - else:
+      select: "none"
+      
+  # 根据项目中引用的 MCP 工具选择
+  mcp_tools:
+    - if: "project_references contains 'mcp__gongfeng-woa'"
+      select: "gongfeng"
+      
+    - if: "project_references contains 'mcp__github'"
+      select: "github"
+      
+    - if: "project_references contains 'mcp__wecom'"
+      select: "wecom"
+      
+    - else:
+      select: "none"

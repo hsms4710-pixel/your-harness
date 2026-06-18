@@ -1,25 +1,29 @@
 # Your Harness
 
-定制化 Harness Engineering 系统生成器
+为项目生成完整的开发流程体系（Dev Workflow + Templates），类似 SmartMate 的深度流程规范。
 
-[![Version](https://img.shields.io/badge/version-v3.7.4-blue)](https://github.com/hsms4710-pixel/your-harness)
+[![Version](https://img.shields.io/badge/version-v4.0.0-blue)](https://github.com/hsms4710-pixel/your-harness)
 
 ## 核心价值
 
-为项目量身定制 Harness Engineering 系统，生成可执行的定制化工具，而非通用推荐文档。
+**Your Harness 为任何项目生成一套完整的开发流程体系**，包括：
+- **Workflow（SKILL.md）**：主流程定义，类似 SmartMate 的 dev-workflow
+- **Templates**：领域特定的开发模板（如协议变更、数据库变更）
+- **Gates**：强制闸门机制，确保关键节点有人工确认
+- **Scripts**：流程检查脚本，确保流程合规
 
 **与通用工具的区别：**
 - **Spec Kit / OpenSpec / Superpowers**：输出推荐文档 + 通用 Skill
-- **Your Harness**：输出可执行脚本 + 自动触发 Hook + 定制 Skill + 完整工作流
+- **Your Harness**：输出完整的开发流程体系，可直接用于项目开发
 
 ## 快速开始
 
 ### 方式一：自然语言（推荐）
 
 ```
-"帮我给这个项目生成工程规范"
-"检查一下代码规范"
-"我有个老项目，存量代码不达标怎么办"
+"帮我给这个项目生成开发流程"
+"分析一下这个项目，生成规范"
+"/harness-full"
 ```
 
 ### 方式二：命令行
@@ -32,90 +36,129 @@
 
 详见 [用户指南](./HARNESS-USER-GUIDE.md)
 
-## 架构 (v3.7.4)
+## 架构 (v4.0.0)
 
 ```
 用户输入
     ↓
-harness-architect (v3.7.4) → 智能路由
+harness-architect (v4.0.0) → 总调度
     ↓
-┌─────────────────────────────────────────┐
-│  harness-archaeology (v3.5.1)           │
-│  → 识别项目特征，输出项目模式            │
-│  → 扫描进度反馈，历史记录保存            │
-└─────────────────────────────────────────┘
-    ↓
-┌─────────────────────────────────────────┐
-│  harness-designer (v3.5.1)              │
-│  → 生成定制脚本/Hook/Skill/工作流       │
-│  → 迭代优化命令，历史记录保存            │
-└─────────────────────────────────────────┘
-    ↓
-┌─────────────────────────────────────────┐
-│  harness-validator (v3.7.2)             │
-│  → 5 层质量验证                         │
-│  → 报告生成，质量评分，趋势分析          │
-└─────────────────────────────────────────┘
+harness-archaeology (v4.0.0) → 识别项目特征
+    ↓ 输出：intent + surfaces + risk + depth
+harness-designer (v4.0.0) → 生成开发流程体系
+    ↓ 输出：Workflow + Templates + References + Scripts
+完成
 ```
 
 ## 核心组件
 
 | 组件 | 版本 | 职责 |
 |------|------|------|
-| harness-architect | v3.7.4 | 总调度，智能路由，命令处理，错误处理 |
-| harness-archaeology | v3.5.1 | 代码扫描 + 规范推断 + 进度反馈 + 历史记录 |
-| harness-designer | v3.5.1 | 生成定制脚本/Hook/Skill/工作流，迭代优化 |
-| harness-validator | v3.7.2 | 5 层质量验证，报告生成，质量评分 |
-| harness-onboarding | v3.7.0 | Legacy 项目渐进接入，进度反馈 |
-| harness-registry | v3.6.0 | 多项目管理，团队协作 |
+| harness-architect | v4.0.0 | 总调度，协调 archaeology 和 designer |
+| harness-archaeology | v4.0.0 | 识别项目特征，判断生成深度（light/medium/full） |
+| harness-designer | v4.0.0 | 生成 Workflow + Templates + References + Scripts |
+| harness-validator | v3.7.2 | 5 层质量验证，报告生成 |
+| harness-onboarding | v3.7.0 | Legacy 项目渐进接入 |
+| harness-registry | v3.6.0 | 多项目管理 |
 
-## 支持的语言和框架
+## 分类模型
 
-| 语言 | 框架/工具 |
-|------|----------|
-| **Python** | FastAPI, Flask, Django, PDM, Poetry, pip |
-| **Go** | Gin, Echo, Fiber, golangci-lint v2 |
-| **TypeScript** | Next.js, React, Nest.js, pnpm, yarn, npm, Turborepo |
+### Intents（开发意图）
 
-## 主要功能
+- `new-capability` - 新功能开发
+- `incremental-change` - 增量变更
+- `bugfix` - Bug 修复
+- `incident-hotfix` - 线上事故修复
+- `architecture-decision` - 架构决策
+- `consistency-check` - 一致性检查
 
-### 状态查询
-- `/harness-status` - 查看当前状态
-- `/harness-history` - 查看决策历史
-- `/harness-why <item>` - 解释配置原因
+### Surfaces（影响面，可组合）
 
-### 迭代优化
-- `/harness-adjust <key> <value>` - 调整配置
-- `/harness-add <type>` - 添加检查项
-- `/harness-remove <item>` - 移除检查项
-- `/harness-update [scope]` - 更新版本
+- `api-contract` - API 契约
+- `data-model` - 数据模型
+- `frontend-ui` - 前端 UI
+- `backend-logic` - 后端逻辑
+- `protocol-chain` - 协议链路
+- `security-sensitive` - 安全敏感
+- `performance-sensitive` - 性能敏感
 
-### 报告功能
-- `/harness-report` - 生成报告（HTML/PDF）
-- 质量评分、趋势分析、多项目对比
+### Risk（风险等级）
 
-### 快捷别名
-- `/hs` = `/harness-status`
-- `/ha` = `/harness-adjust`
-- `/hh` = `/harness-history`
-- `/hr` = `/harness-report`
-- `/hf` = `/harness-full`
-- `/h` = `/harness-help`
+- `low` - 低风险
+- `medium` - 中风险
+- `high` - 高风险
+- `incident` - 线上事故
+
+## 生成深度
+
+### Full（完整）
+
+```
+适用：有特殊流程的项目（如协议驱动开发）
+
+生成产物：
+├── SKILL.md                    # 主流程 Skill
+├── templates/                  # 开发模板
+├── references/                 # 流程参考文档
+├── scripts/                    # 流程检查脚本
+└── constitution-profiles.json  # 宪法模型
+```
+
+### Medium（中等）
+
+```
+适用：有闸门要求但无特殊流程
+
+生成产物：
+├── SKILL.md
+├── references/
+├── scripts/
+└── constitution-profiles.json
+```
+
+### Light（轻量）
+
+```
+适用：流程简单
+
+生成产物：
+├── SKILL.md
+└── scripts/gate-check.py
+```
 
 ## 输出结构
 
 ```
 .harness/
-├── config.yaml          # 主配置
-├── context.yaml         # 上下文（Skills 间共享）
-├── decision-history.yaml # 决策历史
-├── constitution.md      # 项目特征摘要
-├── scripts/             # 定制脚本
-├── hooks/               # 自动化 Hook
-├── skills/              # 定制 Skill
-├── gates/               # 质量门禁
-└── workflows/           # 定制工作流
+├── SKILL.md                    # 主流程 Skill（类似 smartmate-dev-workflow）
+├── README.md                   # 使用说明
+├── constitution-profiles.json  # 宪法模型（机器可读）
+├── constitution-profiles.md    # 宪法模型（人类可读）
+├── templates/                  # 开发模板（按需生成）
+│   ├── TEMPLATE-feature.md
+│   ├── TEMPLATE-bugfix.md
+│   └── TEMPLATE-db-change.md
+├── references/                 # 流程参考文档
+│   ├── gate-protocol.md        # 闸门协议
+│   ├── clarification-loop.md   # 需求澄清协议
+│   └── task-execution-protocol.md
+└── scripts/                    # 流程检查脚本
+    ├── workflow-preflight.py   # 流程预检
+    ├── check-gates.py          # 闸门检查
+    ├── gate-status.py          # 闸门状态管理
+    └── check-artifacts.py      # 产物检查
 ```
+
+## 主要命令
+
+| 命令 | 说明 |
+|------|------|
+| `/harness-full` | 触发完整流程 |
+| `/harness-status` | 查看当前状态 |
+| `/harness-adjust` | 调整配置 |
+| `/harness-add-template` | 添加 Template |
+| `/harness-remove-template` | 移除 Template |
+| `/harness-help` | 查看帮助 |
 
 ## 文档
 

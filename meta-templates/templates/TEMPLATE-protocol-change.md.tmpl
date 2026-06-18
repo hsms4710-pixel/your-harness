@@ -1,0 +1,495 @@
+<!--
+元模板：协议链路变更模板
+版本：2.0.0
+
+变量说明：
+- {{feature_name}}: 功能名称
+- {{project_path}}: 项目路径
+- {{protocol_chain}}: 协议链路阶段列表
+- {{has_gongfeng_mcp}}: 是否有工蜂 MCP（true/false）
+- {{has_dbproxy}}: 是否有 DBProxy（true/false）
+- {{has_cgi}}: 是否有 CGI（true/false）
+-->
+
+# TEMPLATE-protocol-change.md
+
+> 协议链路变更模板
+> 
+> 适用于涉及 DB → Proto → Tag → 下游同步 → 云 API 的协议链路变更
+
+---
+
+## 适用场景
+
+- 新增协议定义（proto 文件）
+- 修改现有协议
+- DBProxy 映射变更
+- CGI 接口变更
+- 云 API 同步
+
+---
+
+## 变更流程
+
+### 阶段 1: 需求分析
+
+#### Step 1.1: 理解变更需求
+
+**Input**
+- PRD 文档
+- 变更描述
+- 相关业务背景
+
+**Process**
+1. 阅读 PRD，提取协议变更点
+2. 识别涉及的数据表和字段
+3. 确定影响的下游服务
+4. 评估变更风险等级
+
+**Output**
+- 变更需求清单
+- 影响范围分析
+- 风险评估报告
+
+**Run**
+```bash
+# 创建需求分析文档
+mkdir -p docs/spec/{{feature_name}}/analyze
+
+# 使用工蜂 MCP 获取 PRD 链接的 MR 内容
+{{#if has_gongfeng_mcp}}
+# 如果 PRD 在工蜂上
+echo "请提供 PRD 文档的工蜂链接或内容"
+# mcp_call tool="mcp__gongfeng-woa__get_blob_content" \
+#   arguments='{"project_id": "<project>", "file_path": "<prd_file>", "ref": "main"}'
+{{else}}
+# 本地文档
+cat > docs/spec/{{feature_name}}/analyze/01-requirements.md << 'EOF'
+# 协议变更需求分析
+
+## 变更背景
+[待填充]
+
+## 变更点
+[待填充]
+
+## 影响范围
+[待填充]
+EOF
+{{/if}}
+```
+
+**Expected**
+- 需求分析文档创建成功
+- 包含变更背景、变更点、影响范围
+
+---
+
+### 阶段 2: 协议定义
+
+#### Step 2.1: 定义 Proto 文件
+
+**Input**
+- 需求分析文档
+- 现有 proto 文件参考
+
+**Process**
+1. 分析现有 proto 结构
+2. 设计新增/修改的 message
+3. 定义 field 编号和类型
+4. 添加注释和文档
+
+**Output**
+- 更新后的 proto 文件
+- Proto 变更说明
+
+**Run**
+```bash
+# 查找现有 proto 文件
+find . -name "*.proto" -type f | head -20
+
+# 检查 proto 语法
+{{#if has_gongfeng_mcp}}
+# 可以使用工蜂 MCP 查看远程 proto 文件
+echo "检查远程 proto 文件..."
+# mcp_call tool="mcp__gongfeng-woa__get_repository_tree" \
+#   arguments='{"project_id": "{{project_path}}", "path": "proto", "ref": "main"}'
+{{/if}}
+
+# 本地语法检查
+if command -v protoc &> /dev/null; then
+    protoc --syntax=proto3 --cpp_out=/dev/null path/to/*.proto 2>&1 || echo "Proto 语法检查失败"
+fi
+```
+
+**Expected**
+- Proto 文件语法正确
+- Field 编号无冲突
+- 类型定义完整
+
+---
+
+#### Step 2.2: 检查 Proto-DBProxy 映射
+
+**Input**
+- Proto 文件
+- DBProxy 配置文件
+
+**Process**
+1. 读取 DBProxy 映射配置
+2. 检查 proto message 是否有对应映射
+3. 验证字段映射关系
+4. 确保类型兼容
+
+**Output**
+- 映射检查报告
+- 需要更新的映射配置
+
+**Run**
+{{#if has_dbproxy}}
+```bash
+# 查找 DBProxy 配置
+find . -path "*/dbproxy/*" -name "*.yaml" -o -name "*.yml" -o -name "*.json" | head -10
+
+# 检查映射一致性
+python scripts/check-protocol-mapping.py --project-root .
+```
+{{else}}
+```bash
+# 没有 DBProxy，跳过此步骤
+echo "未检测到 DBProxy 配置，跳过映射检查"
+```
+{{/if}}
+
+**Expected**
+{{#if has_dbproxy}}
+- 所有 proto message 都有对应的 DBProxy 映射
+- 字段映射关系正确
+- 类型兼容无冲突
+{{else}}
+- 此步骤已跳过
+{{/if}}
+
+---
+
+### 阶段 3: 代码实现
+
+#### Step 3.1: 后端实现
+
+**Input**
+- Proto 定义
+- 业务逻辑需求
+
+**Process**
+1. 生成代码桩
+2. 实现业务逻辑
+3. 编写单元测试
+4. 集成测试
+
+**Output**
+- 后端代码实现
+- 单元测试
+- 集成测试
+
+**Run**
+```bash
+# 生成代码桩
+{{#if has_gongfeng_mcp}}
+# 可以参考工蜂上其他服务的实现
+echo "查看参考实现..."
+# mcp_call tool="mcp__gongfeng-woa__get_blob_content" \
+#   arguments='{"project_id": "{{project_path}}", "file_path": "path/to/reference_impl.py", "ref": "main"}'
+{{/if}}
+
+# 运行测试
+pytest tests/ -v || go test ./... || npm test
+```
+
+**Expected**
+- 所有测试通过
+- 代码覆盖率达标
+- 无 lint 错误
+
+---
+
+#### Step 3.2: 前端实现
+
+**Input**
+- Proto 定义
+- 后端 API 文档
+
+**Process**
+1. 生成 TypeScript 类型
+2. 实现 API 调用
+3. 实现 UI 组件
+4. 端到端测试
+
+**Output**
+- 前端代码实现
+- TypeScript 类型定义
+- UI 组件
+
+**Run**
+```bash
+# 生成 TypeScript 类型
+{{#if has_cgi}}
+# 从 CGI 文档生成类型
+npx protoc-gen-ts_proto --ts_proto_out=src/types proto/*.proto
+{{/if}}
+
+# 运行前端测试
+npm run test
+```
+
+**Expected**
+- TypeScript 编译无错误
+- 前端测试通过
+- UI 与设计稿一致
+
+---
+
+### 阶段 4: 验证
+
+#### Step 4.1: API 兼容性检查
+
+**Input**
+- 新旧 Proto 定义
+
+**Process**
+1. 比较新旧 Proto
+2. 检查破坏性变更
+3. 验证兼容性
+
+**Output**
+- 兼容性报告
+
+**Run**
+```bash
+# API 兼容性检查
+{{#if has_gongfeng_mcp}}
+# 可以使用工蜂 MCP 比较两个分支的 proto 差异
+echo "检查 API 兼容性..."
+# mcp_call tool="mcp__gongfeng-woa__compare" \
+#   arguments='{"project_id": "{{project_path}}", "from": "main", "to": "feature/{{feature_name}}"}'
+{{/if}}
+
+# 本地检查
+python scripts/check-api-compatibility.py --proto-dir proto/
+```
+
+**Expected**
+- 无破坏性变更
+- 向后兼容
+- 版本号正确递增
+
+---
+
+#### Step 4.2: 端到端测试
+
+**Input**
+- 后端服务
+- 前端应用
+
+**Process**
+1. 启动后端服务
+2. 启动前端应用
+3. 执行端到端测试
+4. 验证完整流程
+
+**Output**
+- 测试报告
+
+**Run**
+```bash
+# 启动服务
+cd backend && python -m app.server &
+cd frontend && npm run dev &
+
+# 等待服务启动
+sleep 10
+
+# 执行端到端测试
+{{#if has_gongfeng_mcp}}
+# 可以将测试结果同步到工蜂 Issue
+echo "执行端到端测试..."
+# npm run e2e
+{{/if}}
+```
+
+**Expected**
+- 所有端到端测试通过
+- 无控制台错误
+- 用户流程完整
+
+---
+
+### 阶段 5: 上线
+
+#### Step 5.1: 创建 MR
+
+**Input**
+- 代码变更
+- 测试报告
+
+**Process**
+1. 推送代码到远程
+2. 创建 MR
+3. 填写 MR 描述
+4. 指定审查者
+
+**Output**
+- MR 链接
+
+**Run**
+{{#if has_gongfeng_mcp}}
+```bash
+# 创建 MR
+echo "请提供以下信息："
+echo "- MR 标题:"
+read mr_title
+echo "- MR 描述:"
+read mr_description
+echo "- 目标分支 (默认 main):"
+read target_branch
+
+# mcp_call tool="mcp__gongfeng-woa__create_merge_request" \
+#   arguments='{"project_id": "{{project_path}}", "title": "'$mr_title'", "description": "'$mr_description'", "source_branch": "feature/{{feature_name}}", "target_branch": "${target_branch:-main}"}'
+{{else}}
+```bash
+# 手动创建 MR
+git push origin feature/{{feature_name}}
+echo "请手动创建 MR: https://git.example.com/{{project_path}}/-/merge_requests/new"
+{{/if}}
+```
+
+**Expected**
+- MR 创建成功
+- MR 描述完整
+- 审查者已指定
+
+---
+
+#### Step 5.2: 代码审查
+
+**Input**
+- MR 链接
+
+**Process**
+1. 等待审查者审查
+2. 处理审查意见
+3. 更新代码
+4. 确认审查通过
+
+**Output**
+- 审查通过的 MR
+
+**Run**
+{{#if has_gongfeng_mcp}}
+```bash
+# 检查 MR 状态
+echo "MR 状态检查..."
+# mcp_call tool="mcp__gongfeng-woa__get_merge_request_info" \
+#   arguments='{"project_id": "{{project_path}}", "merge_request_iid": "<mr_iid>"}'
+
+echo "等待审查完成..."
+echo "提示: 可以使用以下命令获取审查进度"
+# mcp_call tool="mcp__gongfeng-woa__get_review_by_merge_request_iid" \
+#   arguments='{"project_id": "{{project_path}}", "merge_request_iid": "<mr_iid>"}'
+{{else}}
+```bash
+# 手动审查
+echo "请在 MR 页面进行代码审查"
+echo "确保以下检查项通过："
+echo "- [ ] 代码风格检查"
+echo "- [ ] 单元测试通过"
+echo "- [ ] 集成测试通过"
+echo "- [ ] 代码审查通过"
+{{/if}}
+```
+
+**Expected**
+- 所有审查意见已处理
+- 审查者已批准
+- MR 可以合并
+
+---
+
+#### Step 5.3: 合并上线
+
+**Input**
+- 审查通过的 MR
+
+**Process**
+1. 确认所有检查通过
+2. 合并 MR
+3. 触发部署
+4. 验证线上环境
+
+**Output**
+- 线上环境验证报告
+
+**Run**
+{{#if has_gongfeng_mcp}}
+```bash
+# 合并 MR（需要有合并权限）
+echo "确认合并 MR..."
+# mcp_call tool="mcp__gongfeng-woa__merge_merge_request" \
+#   arguments='{"project_id": "{{project_path}}", "merge_request_iid": "<mr_iid>"}'
+{{else}}
+```bash
+# 手动合并
+echo "请在 MR 页面点击合并按钮"
+echo "合并后请验证线上环境"
+{{/if}}
+```
+
+**Expected**
+- MR 合并成功
+- 部署无错误
+- 线上环境功能正常
+
+---
+
+## 闸门检查点
+
+| 闸门 | 阶段 | 检查项 | 通过标准 |
+|------|------|--------|----------|
+| G1_REQUIREMENTS | 阶段 1 | 需求分析完成 | 需求文档已创建并 review |
+| G2_PROTO_DEFINED | 阶段 2 | Proto 定义完成 | Proto 文件语法正确，映射一致 |
+| G3_CODE_IMPLEMENTED | 阶段 3 | 代码实现完成 | 所有测试通过，代码审查通过 |
+| G4_VERIFIED | 阶段 4 | 验证完成 | 兼容性检查通过，端到端测试通过 |
+| G5_READY_TO_SHIP | 阶段 5 | 准备上线 | MR 已创建，审查已通过 |
+
+---
+
+## 附录
+
+### A. 常见问题
+
+1. **Proto 字段编号冲突**
+   - 检查现有 proto 文件的最大字段编号
+   - 新增字段使用递增的编号
+
+2. **DBProxy 映射不一致**
+   - 确保 proto message 名称与 DBProxy 配置一致
+   - 检查字段类型映射关系
+
+3. **API 不兼容**
+   - 避免修改现有字段的类型
+   - 避免删除现有字段
+   - 使用废弃标记而非直接删除
+
+### B. 工具参考
+
+{{#if has_gongfeng_mcp}}
+**工蜂 MCP 工具**
+- `mcp__gongfeng-woa__get_merge_request_changes`: 获取 MR 变更
+- `mcp__gongfeng-woa__get_blob_content`: 获取文件内容
+- `mcp__gongfeng-woa__create_merge_request`: 创建 MR
+- `mcp__gongfeng-woa__merge_merge_request`: 合并 MR
+{{/if}}
+
+{{#if has_dbproxy}}
+**DBProxy 检查脚本**
+- `scripts/check-protocol-mapping.py`: 检查 proto-DBProxy 映射
+{{/if}}

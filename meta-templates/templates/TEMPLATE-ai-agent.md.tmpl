@@ -1,0 +1,489 @@
+---
+description: AI Agent 功能开发模板
+version: 1.0.0
+---
+
+# AI Agent 功能开发模板
+
+本模板用于开发 AI Agent 相关功能，包括：
+- Agent 逻辑实现
+- 工具集成
+- Prompt 设计
+- 多 Agent 协作
+
+---
+
+## 阶段 1: 需求分析
+
+### 1.1 明确 Agent 目标
+
+**Input**
+- 用户需求描述
+- 现有 Agent 能力
+
+**Process**
+1. 分析用户需求，确定 Agent 需要完成的任务
+2. 识别任务的输入、输出、约束条件
+3. 评估任务复杂度（单步/多步、简单/复杂）
+4. 确定是否需要工具调用
+
+**Output**
+- Agent 目标描述
+- 任务分解清单
+- 工具需求清单
+
+### 1.2 确定安全约束
+
+**Input**
+- 任务描述
+- 安全策略
+
+**Process**
+1. 评估任务的安全风险
+2. 确定需要的安全检查点
+3. 定义权限边界
+4. 规划日志和审计
+
+**Output**
+- 安全约束清单
+- 权限边界定义
+- 检查点列表
+
+---
+
+## 阶段 2: 设计
+
+### 2.1 Agent 架构设计
+
+**Input**
+- Agent 目标
+- 现有架构
+
+**Process**
+1. 确定 Agent 类型（单 Agent/多 Agent）
+2. 设计 Agent 状态管理
+3. 规划工具集成方式
+4. 定义 Agent 间通信机制
+
+**Output**
+- Agent 架构图
+- 状态管理方案
+- 工具集成设计
+
+### 2.2 Prompt 设计
+
+**Input**
+- Agent 目标
+- 模型能力
+
+**Process**
+1. 设计 System Prompt
+2. 编写示例对话
+3. 定义输出格式
+4. 测试和优化
+
+**Output**
+- System Prompt
+- 示例对话集
+- 输出格式定义
+
+### 2.3 工具定义
+
+**Input**
+- 工具需求
+- 现有能力
+
+**Process**
+1. 定义工具接口
+2. 实现工具逻辑
+3. 编写工具文档
+4. 测试工具功能
+
+**Output**
+- 工具实现
+- 工具文档
+- 测试用例
+
+---
+
+## 阶段 3: 实现
+
+### 3.1 Agent 逻辑实现
+
+**Input**
+- 设计文档
+- 代码规范
+
+**Process**
+1. 创建 Agent 类/模块
+2. 实现核心逻辑
+3. 集成工具调用
+4. 添加错误处理
+
+**Run**
+```bash
+# 创建 Agent 文件
+{{#if has_python}}
+touch agents/{{agent_name}}.py
+{{else_if has_typescript}}
+touch agents/{{agent_name}}.ts
+{{/if}}
+
+# 编写核心逻辑
+cat > agents/{{agent_name}}.{{extension}} << 'EOF'
+{{#if has_python}}
+class {{AgentName}}Agent:
+    """{{agent_description}}"""
+    
+    def __init__(self, llm_client):
+        self.llm = llm_client
+        self.tools = {}
+        
+    def register_tool(self, name, tool):
+        """注册工具"""
+        self.tools[name] = tool
+        
+    async def run(self, input_data):
+        """执行 Agent 逻辑"""
+        # 1. 分析输入
+        # 2. 生成计划
+        # 3. 执行工具
+        # 4. 生成输出
+        pass
+{{else_if has_typescript}}
+class {{AgentName}}Agent {
+  private llm: LLMClient;
+  private tools: Map<string, Tool> = new Map();
+  
+  constructor(llmClient: LLMClient) {
+    this.llm = llmClient;
+  }
+  
+  registerTool(name: string, tool: Tool): void {
+    this.tools.set(name, tool);
+  }
+  
+  async run(inputData: InputData): Promise<OutputData> {
+    // 1. 分析输入
+    // 2. 生成计划
+    // 3. 执行工具
+    // 4. 生成输出
+  }
+{{/if}}
+EOF
+```
+
+**Expected**
+- Agent 文件创建成功
+- 代码符合项目规范
+- 核心方法已定义
+
+### 3.2 工具实现
+
+**Input**
+- 工具设计
+
+**Process**
+1. 创建工具类/函数
+2. 实现工具逻辑
+3. 添加参数验证
+4. 编写错误处理
+
+**Run**
+```bash
+# 创建工具文件
+touch tools/{{tool_name}}.{{extension}}
+
+# 实现工具逻辑
+cat > tools/{{tool_name}}.{{extension}} << 'EOF'
+{{#if has_python}}
+class {{ToolName}}Tool:
+    """{{tool_description}}"""
+    
+    def __init__(self):
+        pass
+        
+    def execute(self, **kwargs):
+        """执行工具"""
+        # 参数验证
+        # 业务逻辑
+        # 返回结果
+        pass
+{{else_if has_typescript}}
+class {{ToolName}}Tool {
+  execute(params: ToolParams): ToolResult {
+    // 参数验证
+    // 业务逻辑
+    // 返回结果
+  }
+}
+{{/if}}
+EOF
+```
+
+**Expected**
+- 工具文件创建成功
+- 实现符合接口定义
+
+### 3.3 集成测试
+
+**Input**
+- Agent 实现
+- 测试用例
+
+**Process**
+1. 编写单元测试
+2. 编写集成测试
+3. 测试 Prompt 效果
+4. 验证工具调用
+
+**Run**
+```bash
+{{#if has_python}}
+# 运行测试
+pytest tests/test_{{agent_name}}.py -v
+
+# 测试覆盖率
+pytest --cov=agents/{{agent_name}} tests/test_{{agent_name}}.py
+{{else_if has_typescript}}
+# 运行测试
+npm test -- --grep="{{AgentName}}"
+
+# 测试覆盖率
+npm run test:coverage
+{{/if}}
+```
+
+**Expected**
+- 所有测试通过
+- 覆盖率达标（> 80%）
+
+---
+
+## 阶段 4: 验证
+
+### 4.1 功能验证
+
+**Input**
+- Agent 实现
+- 测试场景
+
+**Process**
+1. 执行端到端测试
+2. 验证输出正确性
+3. 测试边界条件
+4. 验证错误处理
+
+**Run**
+```bash
+# 端到端测试
+{{#if has_python}}
+python -m pytest tests/e2e/test_{{agent_name}}.py -v
+{{else_if has_typescript}}
+npm test -- --grep="e2e.*{{AgentName}}"
+{{/if}}
+```
+
+**Expected**
+- 所有场景通过
+- 输出符合预期格式
+
+### 4.2 性能验证
+
+**Input**
+- Agent 实现
+
+**Process**
+1. 测试响应时间
+2. 测试并发处理
+3. 验证资源使用
+4. 优化瓶颈
+
+**Run**
+```bash
+# 性能测试
+{{#if has_python}}
+python scripts/benchmark_{{agent_name}}.py
+{{else_if has_typescript}}
+npm run benchmark -- {{agent_name}}
+{{/if}}
+```
+
+**Expected**
+- 响应时间 < 阈值
+- 无内存泄漏
+
+### 4.3 安全验证
+
+**Input**
+- Agent 实现
+
+**Process**
+1. 检查权限边界
+2. 测试注入攻击
+3. 验证数据隔离
+4. 检查日志安全
+
+**Run**
+```bash
+# 安全扫描
+{{#if has_python}}
+safety check
+bandit -r agents/{{agent_name}}.py
+{{else_if has_typescript}}
+npm audit
+{{/if}}
+```
+
+**Expected**
+- 无高危漏洞
+- 权限边界正确
+
+---
+
+## 阶段 5: 文档
+
+### 5.1 API 文档
+
+**Input**
+- Agent 实现
+
+**Process**
+1. 编写接口文档
+2. 添加示例代码
+3. 说明参数和返回值
+4. 记录错误码
+
+**Output**
+- API 文档
+- 示例代码
+
+### 5.2 使用指南
+
+**Input**
+- Agent 功能
+
+**Process**
+1. 编写功能说明
+2. 添加使用示例
+3. 说明注意事项
+4. 记录常见问题
+
+**Output**
+- 使用指南
+- FAQ
+
+---
+
+## 阶段 6: 部署
+
+### 6.1 配置准备
+
+**Input**
+- 模型配置
+- API Key
+
+**Process**
+1. 准备模型配置
+2. 配置 API Key
+3. 设置环境变量
+4. 验证配置
+
+**Run**
+```bash
+# 验证配置
+{{#if has_python}}
+python scripts/validate_config.py
+{{else_if has_typescript}}
+npm run validate:config
+{{/if}}
+```
+
+**Expected**
+- 配置验证通过
+- API Key 有效
+
+### 6.2 部署
+
+**Input**
+- 配置文件
+
+**Process**
+1. 构建项目
+2. 部署到目标环境
+3. 验证部署
+4. 配置监控
+
+**Run**
+```bash
+{{#if has_python}}
+# 构建
+pip install -e .
+
+# 部署
+gunicorn -c config/gunicorn.py agents.{{agent_name}}:app
+{{else_if has_typescript}}
+# 构建
+npm run build
+
+# 部署
+npm start
+{{/if}}
+```
+
+**Expected**
+- 部署成功
+- 服务正常运行
+
+---
+
+## 闸门检查点
+
+### G0: 需求确认
+- [ ] Agent 目标明确
+- [ ] 任务分解完成
+- [ ] 工具需求确认
+
+### G1: 设计确认
+- [ ] 架构设计完成
+- [ ] Prompt 设计完成
+- [ ] 工具接口定义
+
+### G2: 实现确认
+- [ ] 核心逻辑实现
+- [ ] 工具实现完成
+- [ ] 测试通过
+
+### G3: 验证确认
+- [ ] 功能验证通过
+- [ ] 性能达标
+- [ ] 安全检查通过
+
+### G4: 部署确认
+- [ ] 配置准备完成
+- [ ] 部署成功
+- [ ] 监控配置完成
+
+---
+
+## 注意事项
+
+1. **API Key 管理**: 
+   - API Key 必须加密存储
+   - 不在代码中硬编码
+   - 定期轮换
+
+2. **成本控制**:
+   - 监控 API 调用成本
+   - 设置用量上限
+   - 优化 Prompt 减少 token 消耗
+
+3. **安全检查**:
+   - 检查用户输入
+   - 防止 Prompt 注入
+   - 限制工具权限
+
+4. **版本管理**:
+   - Prompt 版本控制
+   - 模型版本追踪
+   - 输出格式版本

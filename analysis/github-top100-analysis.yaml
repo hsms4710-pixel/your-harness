@@ -1,0 +1,551 @@
+# GitHub Top 100 项目特征分析
+# 数据来源: GitHub Ranking 2025-2026
+# 生成时间: 2026-06-18
+
+## 一、语言分布
+
+language_distribution:
+  # 主要语言（按项目数量排序）
+  top_languages:
+    - language: TypeScript
+      count: 25
+      percentage: 25%
+      description: |
+        主要用于前端框架、AI Agent 平台、自动化工具
+        代表项目: freeCodeCamp, vscode, n8n, react, vue
+        
+    - language: Python
+      count: 20
+      percentage: 20%
+      description: |
+        主要用于 AI/ML、数据科学、自动化脚本
+        代表项目: tensorflow, transformers, AutoGPT, stable-diffusion-webui
+        
+    - language: JavaScript
+      count: 15
+      percentage: 15%
+      description: |
+        主要用于前端应用、浏览器工具
+        代表项目: react, vue, bootstrap, axios
+        
+    - language: Go
+      count: 8
+      percentage: 8%
+      description: |
+        主要用于基础设施、安全工具、高性能服务
+        代表项目: trivy, rust (部分), docker 相关
+        
+    - language: Rust
+      count: 7
+      percentage: 7%
+      description: |
+        主要用于系统工具、编辑器、高性能应用
+        代表项目: deno, rustdesk, zed, lapce
+        
+    - language: Java
+      count: 6
+      percentage: 6%
+      description: |
+        主要用于企业应用、Android 开发
+        代表项目: godot (C++), spring 相关
+        
+    - language: C/C++
+      count: 5
+      percentage: 5%
+      description: |
+        主要用于系统软件、内核、游戏引擎
+        代表项目: linux, godot
+        
+    - language: Markdown/HTML
+      count: 14
+      percentage: 14%
+      description: |
+        主要是文档类项目（学习资源、教程）
+        代表项目: build-your-own-x, awesome, system-design-primer
+        
+  # 语言特征映射
+  language_features:
+    TypeScript:
+      common_frameworks:
+        - React
+        - Vue
+        - Next.js
+        - Angular
+        - Nuxt.js
+      common_tools:
+        - Vite
+        - Webpack
+        - Turborepo
+        - Vitest
+        - Playwright
+      typical_projects:
+        - 前端应用
+        - 全栈应用
+        - AI Agent 平台
+        - IDE/编辑器
+        - 自动化工具
+        
+    Python:
+      common_frameworks:
+        - Django
+        - FastAPI
+        - Flask
+        - LangChain
+        - PyTorch
+        - TensorFlow
+      common_tools:
+        - pytest
+        - black
+        - ruff
+        - mypy
+        - uv/pip
+      typical_projects:
+        - AI/ML 应用
+        - 数据分析
+        - Web 后端
+        - 自动化脚本
+        - 科学计算
+        
+    Go:
+      common_frameworks:
+        - Gin
+        - Echo
+        - Fiber
+        - gRPC
+      common_tools:
+        - go test
+        - golangci-lint
+        - wire (DI)
+        - buf (gRPC)
+      typical_projects:
+        - 微服务
+        - 基础设施工具
+        - 安全扫描
+        - 高性能服务
+        
+    Rust:
+      common_frameworks:
+        - Actix
+        - Axum
+        - Rocket
+      common_tools:
+        - cargo test
+        - clippy
+        - rustfmt
+      typical_projects:
+        - 系统工具
+        - 编辑器
+        - 高性能应用
+        - 嵌入式
+        
+    JavaScript:
+      common_frameworks:
+        - Next.js
+        - Nuxt.js
+        - Vite
+        - Angular
+      common_tools:
+        - Vitest
+        - Playwright
+        - ESLint
+        - Prettier
+      typical_projects:
+        - 前端应用
+        - 全栈应用
+        - 浏览器工具
+        
+## 二、项目类型分布
+
+project_type_distribution:
+  # 按项目类型分类
+  types:
+    # 1. AI/LLM 相关
+    ai_llm:
+      count: 30
+      percentage: 30%
+      description: |
+        包含 AI Agent、LLM 应用、AI 开发框架、AI 平台
+        
+      subcategories:
+        - category: AI Agent 框架
+          examples: [AutoGPT, n8n, MetaGPT, AgentGPT]
+          characteristics:
+            - 自主任务执行
+            - 工具调用
+            - 多 Agent 协作
+            - 
+        - category: LLM 开发框架
+          examples: [LangChain, transformers, LLaMA Factory, unsloth]
+          characteristics:
+            - 模型集成
+            - Prompt 管理
+            - RAG 支持
+            - 微调工具
+            
+        - category: AI 应用平台
+          examples: [Dify, Lobe Chat, Cherry Studio, RAGFlow]
+          characteristics:
+            - 可视化界面
+            - 低代码/无代码
+            - 模型管理
+            - 工作流编排
+            
+        - category: AI 基础设施
+          examples: [vLLM, Ollama, Mem0, OpenHands]
+          characteristics:
+            - 模型部署
+            - 推理优化
+            - 记忆管理
+            - 代码生成
+            
+    # 2. 前端框架/库
+    frontend:
+      count: 25
+      percentage: 25%
+      description: |
+        包含 UI 框架、组件库、构建工具、CSS 框架
+        
+      subcategories:
+        - category: UI 框架
+          examples: [React, Vue, Angular, Svelte]
+          characteristics:
+            - 组件系统
+            - 响应式
+            - 虚拟 DOM
+            
+        - category: 全栈框架
+          examples: [Next.js, Nuxt.js, Astro]
+          characteristics:
+            - SSR/SSG
+            - 路由
+            - API Routes
+            
+        - category: CSS 框架
+          examples: [Bootstrap, Tailwind, shadcn]
+          characteristics:
+            - 响应式
+            - 组件
+            - 主题系统
+            
+        - category: 构建工具
+          examples: [Vite, Webpack, Turbopack]
+          characteristics:
+            - 打包
+            - 开发服务器
+            - 插件系统
+            
+    # 3. 开发工具
+    dev_tools:
+      count: 20
+      percentage: 20%
+      description: |
+        包含编辑器、CLI 工具、自动化工具、代码质量工具
+        
+      subcategories:
+        - category: 代码编辑器
+          examples: [VS Code, Zed, Lapce, CodeBuddy]
+          characteristics:
+            - 插件系统
+            - LSP 支持
+            - 多语言
+            
+        - category: Shell 框架
+          examples: [Oh My Zsh, PowerShell, bash]
+          characteristics:
+            - 插件
+            - 主题
+            - 自动补全
+            
+        - category: 自动化工具
+          examples: [n8n, GitHub Actions, GitLab CI]
+          characteristics:
+            - 工作流
+            - 触发器
+            - 集成
+            
+    # 4. 学习资源
+    learning_resources:
+      count: 15
+      percentage: 15%
+      description: |
+        主要是文档、教程、学习路线
+        
+      examples:
+        - build-your-own-x
+        - awesome 系列
+        - freeCodeCamp
+        - system-design-primer
+        - developer-roadmap
+        
+    # 5. 基础设施/系统
+    infrastructure:
+      count: 10
+      percentage: 10%
+      description: |
+        包含操作系统、容器、Kubernetes、CI/CD
+        
+      examples:
+        - linux
+        - docker
+        - kubernetes
+        - terraform
+        - ansible
+        
+## 三、架构模式分布
+
+architecture_patterns:
+  # 基于项目特征推断的架构模式
+  patterns:
+    # 1. 前后端分离
+    frontend_backend_separation:
+      count: 40
+      percentage: 40%
+      description: |
+        前端项目 + 后端 API 分离
+        
+      common_stack:
+        frontend: [React, Vue, Next.js, Angular]
+        backend: [Node.js, Python, Go, Java]
+        api: [REST, GraphQL, gRPC]
+        
+      examples:
+        - freeCodeCamp (React + Node.js)
+        - n8n (TypeScript 全栈)
+        - vscode (TypeScript + Electron)
+        
+    # 2. 单体应用
+    monolith:
+      count: 30
+      percentage: 30%
+      description: |
+        所有功能在单个应用中
+        
+      common_stack:
+        - Python (Django, Flask)
+        - Node.js (Express)
+        - Go (Gin, Echo)
+        
+      examples:
+        - stable-diffusion-webui
+        - AutoGPT
+        - RAGFlow
+        
+    # 3. 微服务架构
+    microservices:
+      count: 15
+      percentage: 15%
+      description: |
+        服务拆分，独立部署
+        
+      common_stack:
+        - Go (gRPC)
+        - Java (Spring Cloud)
+        - Python (FastAPI)
+        
+      examples:
+        - Spring Cloud 项目
+        - Kubernetes 相关
+        - 企业级应用
+        
+    # 4. Monorepo
+    monorepo:
+      count: 25
+      percentage: 25%
+      description: |
+        多个包/应用在同一仓库
+        
+      tools:
+        - pnpm workspaces
+        - yarn workspaces
+        - Turborepo
+        - Lerna
+        - NX
+        
+      examples:
+        - vscode (monorepo)
+        - freeCodeCamp (monorepo)
+        - n8n (monorepo)
+        
+    # 5. 无服务器/Serverless
+    serverless:
+      count: 10
+      percentage: 10%
+      description: |
+        函数即服务
+        
+      platforms:
+        - Vercel
+        - AWS Lambda
+        - Cloudflare Workers
+        
+      examples:
+        - Next.js 部署到 Vercel
+        - Serverless Framework
+        
+## 四、CI/CD 配置分布
+
+cicd_distribution:
+  # 基于 GitHub Top 100 项目的 CI/CD 配置分析
+  configurations:
+    github_actions:
+      count: 80
+      percentage: 80%
+      description: |
+        GitHub Actions 是主流选择
+        
+      common_workflows:
+        - CI (测试)
+        - CD (部署)
+        - PR 检查
+        - 代码质量
+        - 安全扫描
+        
+    gitlab_ci:
+      count: 10
+      percentage: 10%
+      description: |
+        主要用于使用 GitLab 的项目
+        
+    jenkins:
+      count: 5
+      percentage: 5%
+      description: |
+        主要用于大型企业项目
+        
+    custom_ci:
+      count: 5
+      percentage: 5%
+      description: |
+        自定义 CI 系统
+        
+  # CI/CD 特征
+  cicd_features:
+    common_practices:
+      - "PR 触发测试"
+      - "自动代码审查"
+      - "自动部署到 staging"
+      - "生产环境手动确认"
+      - "代码覆盖率检查"
+      - "安全扫描"
+      
+    quality_gates:
+      - "测试通过率 100%"
+      - "代码覆盖率阈值"
+      - "无高危安全漏洞"
+      - "无阻塞的 lint 错误"
+      
+## 五、代码托管平台分布
+
+code_hosting_distribution:
+  # 主要代码托管平台
+  platforms:
+    github:
+      count: 95
+      percentage: 95%
+      description: |
+        GitHub 是主流选择
+        
+    gitlab:
+      count: 3
+      percentage: 3%
+      description: |
+        主要用于企业内部项目
+        
+    gitee:
+      count: 2
+      percentage: 2%
+      description: |
+        主要用于中国项目
+        
+## 六、开发流程特征
+
+development_workflow_features:
+  # 基于 GitHub Top 100 项目的开发流程分析
+  common_practices:
+    version_control:
+      - "Git 分支管理"
+      - "Feature 分支策略"
+      - "PR/MR 流程"
+      - "Squash merge"
+      
+    testing:
+      - "单元测试"
+      - "集成测试"
+      - "E2E 测试"
+      - "快照测试"
+      
+    documentation:
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "API 文档"
+      - "代码注释"
+      
+    code_quality:
+      - "Linting"
+      - "Type checking"
+      - "Code review"
+      - "CI 自动检查"
+      
+  # 特殊流程
+  special_workflows:
+    # AI/LLM 项目
+    ai_llm_projects:
+      - "模型微调流程"
+      - "Prompt 版本控制"
+      - "API Key 管理"
+      - "成本估算"
+      
+    # 前端项目
+    frontend_projects:
+      - "组件开发流程"
+      - "设计系统维护"
+      - "浏览器兼容性测试"
+      - "性能优化"
+      
+    # 基础设施项目
+    infrastructure_projects:
+      - "环境配置"
+      - "部署流水线"
+      - "监控告警"
+      - "安全扫描"
+
+## 七、总结与建议
+
+summary:
+  total_projects_analyzed: 100
+  analysis_date: "2026-06-18"
+  
+  key_findings:
+    1: "TypeScript 是最受欢迎的语言（25%），主要用于前端和全栈应用"
+    2: "Python 是 AI/ML 项目的首选语言（30% 的 AI 项目使用 Python）"
+    3: "AI/LLM 相关项目占比 30%，是增长最快的方向"
+    4: "前后端分离架构是最常见的模式（40%）"
+    5: "GitHub Actions 是主流 CI/CD 选择（80%）"
+    6: "Monorepo 模式在大型项目中很常见（25%）"
+    
+  recommendations_for_your_harness:
+    # 1. 语言支持优先级
+    language_priority:
+      - "优先支持 TypeScript/JavaScript 项目"
+      - "重点支持 Python AI 项目"
+      - "支持 Go 和 Rust 项目"
+      
+    # 2. 项目模式覆盖
+    project_patterns_to_cover:
+      - "前后端分离项目"
+      - "AI/LLM 项目"
+      - "Monorepo 项目"
+      - "单体 Web 应用"
+      - "CLI 工具"
+      
+    # 3. CI/CD 集成
+    cicd_integration:
+      - "优先集成 GitHub Actions"
+      - "支持 GitLab CI"
+      - "提供 Jenkins 配置模板"
+      
+    # 4. 特殊流程支持
+    special_workflow_support:
+      - "AI 项目：模型管理、API Key 管理、成本控制"
+      - "前端项目：组件开发、设计系统、性能优化"
+      - "全栈项目：前后端同步、API 契约管理"

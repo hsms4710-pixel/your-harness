@@ -1,0 +1,142 @@
+# LangChain 项目特征识别结果
+# 基于 GitHub Top 100 项目分析框架
+
+project:
+  name: langchain
+  description: "LLM 应用开发框架"
+  repository: "https://github.com/langchain-ai/langchain"
+  stars: 117000
+  
+# 项目类型识别
+project_types:
+  - type: ai-llm-project
+    confidence: 0.95
+    matched_pattern: llm-development-framework
+    
+  - type: python-library
+    confidence: 0.90
+    matched_pattern: monolith-web-app
+    
+  - type: monorepo
+    confidence: 0.85
+    matched_pattern: monorepo
+    
+# 语言和框架
+language_stack:
+  primary: Python
+  secondary: []
+  
+  frameworks:
+    - name: LangChain
+      role: core
+      
+  tools:
+    - pytest
+    - ruff
+    - mypy
+    - black
+    
+# 代码结构
+code_structure:
+  total_files: 1500
+  total_lines: 50000
+  
+  directories:
+    - "libs"  # 核心库
+    - "libs/cli"  # CLI 工具
+    - "libs/langchain"  # 主库
+    - "libs/langchain-classic"  # 旧版本
+    - "libs/langchain-core"  # 核心
+    - "libs/langgraph"  # 图框架
+    
+  key_files:
+    - "pyproject.toml"
+    - "noxfile.py"
+    - "mkdocs.yaml"
+    
+# 特殊特征
+special_features:
+  # AI/LLM 相关
+  ai_features:
+    - llm_integration: true
+    - prompt_management: true
+    - rag_support: true
+    - agent_framework: true
+    - model_management: true
+    
+  # 架构相关
+  architecture_features:
+    - modular_design: true
+    - plugin_system: true
+    - abstraction_layer: true
+    
+  # 开发流程
+  dev_workflow_features:
+    - comprehensive_tests: true
+    - documentation_site: true
+    - examples_gallery: true
+    
+# CI/CD 配置
+cicd:
+  platform: GitHub Actions
+  config_file: ".github/workflows"
+  
+  workflows:
+    - name: ci.yml
+      description: 主 CI 流程
+      triggers: [push, pull_request]
+      
+    - name: publish.yml
+      description: 发布流程
+      triggers: [release]
+      
+  quality_gates:
+    - tests_pass
+    - type_check
+    - lint_check
+    - docs_build
+    
+# 代码托管
+version_control:
+  platform: GitHub
+  has_multiple_repos: false
+  
+# 匹配的项目模式
+matched_patterns:
+  - name: llm-development-framework
+    confidence: 0.95
+    source: project-patterns.yaml
+    
+  - name: monolith-web-app
+    confidence: 0.85
+    source: project-patterns.yaml
+    
+  - name: monorepo
+    confidence: 0.80
+    source: project-patterns.yaml
+    
+# 生成决策
+generation_decision:
+  depth: full
+  reason: "AI/LLM 项目 + Monorepo，需要完整的开发流程体系"
+  
+  generates:
+    templates:
+      - TEMPLATE-llm-integration.md
+      - TEMPLATE-feature.md
+      - TEMPLATE-bugfix.md
+      
+    references:
+      - gate-protocol.md
+      - ai-safety-protocol.md
+      - model-integration-guide.md
+      
+    scripts:
+      - check-llm-compatibility.py
+      - check-gates.py
+      
+    constitution:
+      - type-hints-required
+      - tests-required
+      - docs-updated
+      - api-stable

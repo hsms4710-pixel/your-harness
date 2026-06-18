@@ -1,0 +1,865 @@
+# 项目模式知识库
+# 基于 GitHub Top 100 项目分析，定义常见的项目模式和匹配规则
+# 
+# 数据来源: GitHub Ranking 2025-2026, GitHub Octoverse 2025
+# 更新时间: 2026-06-18
+
+version: 4.0.0
+
+# ============================================================
+# 设计原则
+# ============================================================
+# 
+# 1. 通用性: 模式应该是通用的，不针对特定项目
+#    - 不包含特定的文件路径（如 dbproxy/）
+#    - 不包含特定的 API 名称（如云 API）
+#    - 不包含特定的工具名称（如工蜂 MCP）
+# 
+# 2. 覆盖性: 覆盖 GitHub Top 100 项目的主要类型
+#    - AI/LLM 项目 (30%)
+#    - 前端项目 (25%)
+#    - 开发工具 (20%)
+#    - 学习资源 (15%)
+#    - 基础设施 (10%)
+# 
+# 3. 可组合性: 一个项目可能匹配多个模式
+#    - 模式的 generates 规则可以合并
+#    - 优先级规则决定最终生成内容
+# 
+# ============================================================
+
+# ============================================================
+# 项目模式定义
+# 按 GitHub Top 100 项目分布排序
+# ============================================================
+
+patterns:
+  # ==========================================================
+  # 1. AI/LLM 项目 (30% 的 Top 100 项目)
+  # ==========================================================
+  
+  # 1.1 AI Agent 框架
+  - name: ai-agent-framework
+    description: "AI Agent 框架项目，包含自主任务执行、工具调用、多 Agent 协作"
+    
+    signals:
+      files:
+        - "pyproject.toml"
+        - "package.json"
+        - "requirements.txt"
+        
+      directories:
+        - "agents"
+        - "tools"
+        - "prompts"
+        - "skills"
+        
+      code_patterns:
+        - "AutoGPT"
+        - "LangChain"
+        - "Agent"
+        - "Tool"
+        - "Prompt"
+        - "LLM"
+        - "GPT"
+        - "Claude"
+        - "Anthropic"
+        - "OpenAI"
+        
+      dependencies:
+        - "openai"
+        - "anthropic"
+        - "langchain"
+        - "llama-index"
+        - "autogen"
+        
+    confidence_boost: 1.4
+    
+    generates:
+      templates:
+        - "TEMPLATE-ai-agent.md"
+        - "TEMPLATE-ai-pipeline.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "ai-safety-protocol.md"
+        - "clarification-loop.md"
+        - "cost-estimation-guide.md"
+        
+      scripts:
+        - "check-ai-safety.py"
+        - "check-api-key-management.py"
+        - "check-prompt-version.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "api-keys-must-be-encrypted"
+        - "prompt-changes-must-be-reviewed"
+        - "cost-estimation-required"
+        - "model-versions-must-be-tracked"
+        - "safety-checks-required"
+        
+  # 1.2 LLM 开发框架
+  - name: llm-development-framework
+    description: "LLM 应用开发框架，包含模型集成、Prompt 管理、RAG 支持"
+    
+    signals:
+      files:
+        - "pyproject.toml"
+        - "setup.py"
+        
+      directories:
+        - "llms"
+        - "chains"
+        - "documents"
+        - "retrievers"
+        
+      code_patterns:
+        - "LangChain"
+        - "Transformers"
+        - "RAG"
+        - "Embedding"
+        - "Vector"
+        
+      dependencies:
+        - "langchain"
+        - "transformers"
+        - "sentence-transformers"
+        - "chromadb"
+        - "faiss"
+        
+    confidence_boost: 1.3
+    
+    generates:
+      templates:
+        - "TEMPLATE-llm-integration.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "model-integration-guide.md"
+        - "rag-implementation-guide.md"
+        
+      scripts:
+        - "check-model-compatibility.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "model-versions-documented"
+        - "prompt-templates-versioned"
+        
+  # 1.3 AI 应用平台
+  - name: ai-application-platform
+    description: "AI 应用平台，包含可视化界面、低代码/无代码、模型管理"
+    
+    signals:
+      files:
+        - "package.json"
+        - "tsconfig.json"
+        
+      directories:
+        - "frontend"
+        - "backend"
+        - "workflow"
+        - "plugins"
+        
+      code_patterns:
+        - "Dify"
+        - "Lobe"
+        - "RAGFlow"
+        - "Knowledge"
+        - "Chat"
+        
+    confidence_boost: 1.3
+    
+    generates:
+      templates:
+        - "TEMPLATE-ai-platform.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "plugin-development-guide.md"
+        
+      scripts:
+        - "check-plugin-compatibility.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "plugin-api-stable"
+        - "frontend-backend-sync"
+        
+  # ==========================================================
+  # 2. 前端项目 (25% 的 Top 100 项目)
+  # ==========================================================
+  
+  # 2.1 UI 框架/库
+  - name: ui-framework
+    description: "UI 框架或组件库项目"
+    
+    signals:
+      files:
+        - "package.json"
+        - "vite.config.*"
+        - "webpack.config.*"
+        
+      directories:
+        - "src/components"
+        - "src/hooks"
+        - "packages/*"  # Monorepo
+        
+      code_patterns:
+        - "React"
+        - "Vue"
+        - "Svelte"
+        - "Component"
+        - "Hook"
+        - "Props"
+        
+    confidence_boost: 1.2
+    
+    generates:
+      templates:
+        - "TEMPLATE-component.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "component-development-guide.md"
+        - "design-system-guide.md"
+        
+      scripts:
+        - "check-component-exports.py"
+        - "check-prop-types.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "component-exports-consistent"
+        - "prop-types-documented"
+        - "storybook-updated"
+        
+  # 2.2 全栈框架
+  - name: fullstack-framework
+    description: "全栈框架项目（前后端一体）"
+    
+    signals:
+      files:
+        - "package.json"
+        - "next.config.*"
+        - "nuxt.config.*"
+        
+      directories:
+        - "app"
+        - "pages"
+        - "components"
+        
+      code_patterns:
+        - "Next.js"
+        - "Nuxt"
+        - "App Router"
+        - "Server Component"
+        
+    confidence_boost: 1.3
+    
+    generates:
+      templates:
+        - "TEMPLATE-fullstack-feature.md"
+        - "TEMPLATE-api-route.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "fullstack-development-guide.md"
+        - "api-route-guide.md"
+        
+      scripts:
+        - "check-api-routes.py"
+        - "check-server-component-boundary.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "api-routes-versioned"
+        - "server-client-boundary-clear"
+        
+  # 2.3 前后端分离
+  - name: frontend-backend-separation
+    description: "前后端分离的 Web 应用项目"
+    
+    signals:
+      files:
+        - "package.json"  # 前端
+        - "requirements.txt"  # 后端 Python
+        - "go.mod"  # 后端 Go
+        - "pom.xml"  # 后端 Java
+        
+      directories:
+        - "frontend"
+        - "backend"
+        - "client"
+        - "server"
+        - "apps/*"  # Monorepo 结构
+        
+      code_patterns:
+        - "Next.js"
+        - "React"
+        - "Vue"
+        - "FastAPI"
+        - "Spring Boot"
+        - "Gin"
+        
+    confidence_boost: 1.2
+    
+    generates:
+      templates:
+        - "TEMPLATE-frontend-backend.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "api-contract-sync.md"
+        - "clarification-loop.md"
+        
+      scripts:
+        - "check-api-contract.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "api-changes-must-update-docs"
+        - "frontend-must-sync-with-backend"
+        
+  # ==========================================================
+  # 3. 开发工具项目 (20% 的 Top 100 项目)
+  # ==========================================================
+  
+  # 3.1 代码编辑器
+  - name: code-editor
+    description: "代码编辑器或 IDE 项目"
+    
+    signals:
+      files:
+        - "package.json"
+        - "tsconfig.json"
+        - "product.json"
+        
+      directories:
+        - "src/vs"  # VS Code 结构
+        - "extensions"
+        - "out"
+        
+      code_patterns:
+        - "Editor"
+        - "Language Service"
+        - "Extension"
+        - "LSP"
+        
+    confidence_boost: 1.4
+    
+    generates:
+      templates:
+        - "TEMPLATE-extension.md"
+        - "TEMPLATE-editor-feature.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "extension-development-guide.md"
+        - "performance-guide.md"
+        
+      scripts:
+        - "check-extension-api-compatibility.py"
+        - "check-performance-metrics.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "extension-api-stable"
+        - "performance-budget-enforced"
+        
+  # 3.2 CLI 工具
+  - name: cli-tool
+    description: "命令行工具项目"
+    
+    signals:
+      files:
+        - "Cargo.toml"  # Rust
+        - "package.json"  # Node.js
+        - "setup.py"  # Python
+        
+      directories:
+        - "src/commands"
+        - "src/cli"
+        - "src/bin"
+        
+      code_patterns:
+        - "Command"
+        - "CLI"
+        - "Arg"
+        - "Option"
+        - "Subcommand"
+        
+    confidence_boost: 1.2
+    
+    generates:
+      templates:
+        - "TEMPLATE-cli-command.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "cli-development-guide.md"
+        
+      scripts:
+        - "check-cli-help.py"
+        - "check-command-compatibility.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "cli-help-complete"
+        - "command-names-consistent"
+        
+  # 3.3 自动化工具
+  - name: automation-tool
+    description: "自动化工具或工作流平台"
+    
+    signals:
+      files:
+        - "package.json"
+        - "tsconfig.json"
+        
+      directories:
+        - "packages"
+        - "nodes"
+        - "workflows"
+        
+      code_patterns:
+        - "n8n"
+        - "Workflow"
+        - "Node"
+        - "Automation"
+        
+    confidence_boost: 1.3
+    
+    generates:
+      templates:
+        - "TEMPLATE-workflow.md"
+        - "TEMPLATE-node.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "workflow-development-guide.md"
+        
+      scripts:
+        - "check-workflow-compatibility.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "node-api-stable"
+        - "workflow-schema-versioned"
+        
+  # ==========================================================
+  # 4. 后端服务项目
+  # ==========================================================
+  
+  # 4.1 单体 Web 应用
+  - name: monolith-web-app
+    description: "单体 Web 应用，所有功能在同一应用中"
+    
+    signals:
+      files:
+        - "requirements.txt"
+        - "pyproject.toml"
+        - "go.mod"
+        - "pom.xml"
+        
+      directories:
+        - "app"
+        - "src"
+        - "lib"
+        
+      code_patterns:
+        - "Django"
+        - "Flask"
+        - "FastAPI"
+        - "Gin"
+        - "Express"
+        - "Spring"
+        
+    confidence_boost: 1.1
+    
+    generates:
+      templates:
+        - "TEMPLATE-backend-feature.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "api-development-guide.md"
+        
+      scripts:
+        - "check-api-structure.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "api-versioning-required"
+        - "response-format-consistent"
+        
+  # 4.2 微服务架构
+  - name: microservices
+    description: "微服务架构，服务拆分、独立部署"
+    
+    signals:
+      files:
+        - "docker-compose.yml"
+        - "k8s/*"
+        
+      directories:
+        - "services"
+        - "apps"
+        - "microservices"
+        
+      code_patterns:
+        - "gRPC"
+        - "Spring Cloud"
+        - "Microservice"
+        - "Service Mesh"
+        
+    confidence_boost: 1.3
+    
+    generates:
+      templates:
+        - "TEMPLATE-microservice.md"
+        - "TEMPLATE-service-deployment.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "microservice-development-guide.md"
+        - "service-communication-guide.md"
+        
+      scripts:
+        - "check-service-communication.py"
+        - "check-service-deployment.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "service-boundaries-clear"
+        - "api-contracts-defined"
+        - "deployment-order-specified"
+        
+  # ==========================================================
+  # 5. Monorepo 项目 (25% 的 Top 100 项目)
+  # ==========================================================
+  
+  - name: monorepo
+    description: "Monorepo 项目，多个包/应用在同一仓库"
+    
+    signals:
+      files:
+        - "pnpm-workspace.yaml"
+        - "lerna.json"
+        - "nx.json"
+        - "package.json"  # workspaces 字段
+        
+      directories:
+        - "packages/*"
+        - "apps/*"
+        - "libs/*"
+        
+      code_patterns:
+        - "workspaces"
+        - "monorepo"
+        
+    confidence_boost: 1.2
+    
+    generates:
+      templates:
+        - "TEMPLATE-monorepo-package.md"
+        - "TEMPLATE-cross-package-change.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "monorepo-development-guide.md"
+        - "package-publishing-guide.md"
+        
+      scripts:
+        - "check-package-dependency.py"
+        - "check-package-version.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "package-versions-consistent"
+        - "dependency-graph-acyclic"
+        
+  # ==========================================================
+  # 6. 学习资源项目 (15% 的 Top 100 项目)
+  # ==========================================================
+  
+  - name: learning-resource
+    description: "学习资源项目（文档、教程、学习路线）"
+    
+    signals:
+      files:
+        - "README.md"
+        - "*.md"
+        - "*.ipynb"
+        
+      directories:
+        - "docs"
+        - "tutorials"
+        - "examples"
+        
+      absence:
+        - "src"
+        - "app"
+        - "package.json"
+        
+      code_patterns:
+        - "awesome"
+        - "roadmap"
+        - "tutorial"
+        - "guide"
+        
+    confidence_boost: 1.0
+    
+    generates:
+      templates:
+        - "TEMPLATE-documentation.md"
+        - "TEMPLATE-example.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "documentation-guide.md"
+        
+      scripts:
+        - "check-markdown-links.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "documentation-updated"
+        - "examples-working"
+        
+  # ==========================================================
+  # 7. 基础设施项目 (10% 的 Top 100 项目)
+  # ==========================================================
+  
+  - name: infrastructure
+    description: "基础设施项目（操作系统、容器、CI/CD）"
+    
+    signals:
+      files:
+        - "Makefile"
+        - "Dockerfile"
+        - ".gitlab-ci.yml"
+        
+      directories:
+        - "src"  # C/C++ 项目
+        - "kernel"  # 内核项目
+        
+      code_patterns:
+        - "Docker"
+        - "Kubernetes"
+        - "CI/CD"
+        - "Infrastructure"
+        
+    confidence_boost: 1.1
+    
+    generates:
+      templates:
+        - "TEMPLATE-infrastructure.md"
+        - "TEMPLATE-deployment.md"
+        - "TEMPLATE-feature.md"
+        - "TEMPLATE-bugfix.md"
+        
+      references:
+        - "gate-protocol.md"
+        - "deployment-guide.md"
+        - "security-guide.md"
+        
+      scripts:
+        - "check-container-security.py"
+        - "check-deployment-manifest.py"
+        - "check-gates.py"
+        
+      constitution:
+        - "container-security-scanned"
+        - "deployment-manifest-validated"
+
+# ============================================================
+# 项目规模定义
+# ============================================================
+
+project_scale:
+  # 根据代码量和复杂度定义项目规模
+  definitions:
+    - name: small
+      description: "小型项目（< 1000 行代码）"
+      criteria:
+        code_lines: "< 1000"
+        files: "< 50"
+      generates:
+        depth: light
+        templates: ["TEMPLATE-feature.md", "TEMPLATE-bugfix.md"]
+        
+    - name: medium
+      description: "中型项目（1000-10000 行代码）"
+      criteria:
+        code_lines: "1000-10000"
+        files: "50-500"
+      generates:
+        depth: medium
+        templates: ["TEMPLATE-feature.md", "TEMPLATE-bugfix.md", "TEMPLATE-refactor.md"]
+        
+    - name: large
+      description: "大型项目（> 10000 行代码）"
+      criteria:
+        code_lines: "> 10000"
+        files: "> 500"
+      generates:
+        depth: full
+        templates: ["TEMPLATE-feature.md", "TEMPLATE-bugfix.md", "TEMPLATE-refactor.md", "TEMPLATE-architecture.md"]
+
+# ============================================================
+# 模式组合规则
+# ============================================================
+
+combination_rules:
+  # 当项目匹配多个模式时的组合规则
+  
+  # AI 项目 + 前端
+  - patterns: ["ai-agent-framework", "ui-framework"]
+    merged_name: "ai-platform-with-ui"
+    additional:
+      templates:
+        - "TEMPLATE-ai-platform.md"
+      constitution:
+        - "frontend-must-sync-with-ai-backend"
+        
+  # AI 项目 + Monorepo
+  - patterns: ["ai-agent-framework", "monorepo"]
+    merged_name: "ai-monorepo"
+    additional:
+      templates:
+        - "TEMPLATE-ai-monorepo.md"
+      constitution:
+        - "package-versions-must-sync"
+        
+  # 前后端分离 + Monorepo
+  - patterns: ["frontend-backend-separation", "monorepo"]
+    merged_name: "fullstack-monorepo"
+    additional:
+      templates:
+        - "TEMPLATE-fullstack-monorepo.md"
+      constitution:
+        - "package-boundaries-clear"
+        
+  # 编辑器 + 扩展
+  - patterns: ["code-editor", "cli-tool"]
+    merged_name: "editor-with-extensions"
+    additional:
+      templates:
+        - "TEMPLATE-extension-development.md"
+      constitution:
+        - "extension-api-versioned"
+        
+# ============================================================
+# 优先级规则
+# ============================================================
+
+priority_rules:
+  # 决定哪些产物总是生成、永不生成、条件生成
+  
+  always_generate:
+    - "gate-protocol.md"
+    - "check-gates.py"
+    - "TEMPLATE-feature.md"
+    - "TEMPLATE-bugfix.md"
+    
+  never_generate_when:
+    # 当项目类型为学习资源时，不生成技术实现相关的模板
+    learning-resource:
+      - "TEMPLATE-microservice.md"
+      - "TEMPLATE-deployment.md"
+      
+  generate_when_combined:
+    # 当组合特定模式时，额外生成
+    - patterns: ["ai-agent-framework", "monorepo"]
+      additional:
+        - "TEMPLATE-ai-monorepo.md"
+        
+    - patterns: ["frontend-backend-separation", "monorepo"]
+      additional:
+        - "TEMPLATE-fullstack-monorepo.md"
+        
+# ============================================================
+# 语言特定规则
+# ============================================================
+
+language_specific_rules:
+  # 不同语言的特定生成规则
+  
+  python:
+    additional_lints:
+      - "ruff"
+      - "mypy"
+      - "black"
+      
+    additional_tests:
+      - "pytest"
+      - "pytest-cov"
+      
+    constitution:
+      - "type-hints-required"
+      - "docstrings-required"
+      
+  typescript:
+    additional_lints:
+      - "eslint"
+      - "prettier"
+      - "typescript"
+      
+    additional_tests:
+      - "vitest"
+      - "playwright"
+      
+    constitution:
+      - "type-check-enabled"
+      - "no-explicit-any"
+      
+  go:
+    additional_lints:
+      - "golangci-lint"
+      - "go vet"
+      
+    additional_tests:
+      - "go test"
+      - "testify"
+      
+    constitution:
+      - "error-must-be-checked"
+      - "no-globals"
+      
+  rust:
+    additional_lints:
+      - "clippy"
+      - "rustfmt"
+      
+    additional_tests:
+      - "cargo test"
+      
+    constitution:
+      - "unsafe-blocks-justified"
+      - "lifetime-annotations-correct"
