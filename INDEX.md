@@ -98,9 +98,9 @@
 
 | Skill | 版本 |
 |-------|------|
-| harness-architect | v3.7.4 |
-| harness-archaeology | v3.5.1 |
-| harness-designer | v3.5.1 |
+| harness-architect | v4.0.0 |
+| harness-archaeology | v4.0.0 |
+| harness-designer | v6.0.0 |
 | harness-onboarding | v3.7.0 |
 | harness-registry | v3.6.0 |
 | harness-validator | v3.7.2 |

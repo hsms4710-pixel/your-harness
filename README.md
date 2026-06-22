@@ -2,7 +2,7 @@
 
 为项目生成完整的开发流程体系（Dev Workflow + Templates），类似 SmartMate 的深度流程规范。
 
-[![Version](https://img.shields.io/badge/version-v4.0.0-blue)](https://github.com/hsms4710-pixel/your-harness)
+[![Version](https://img.shields.io/badge/version-v6.0.0-blue)](https://github.com/hsms4710-pixel/your-harness)
 
 ## 核心价值
 
@@ -36,7 +36,7 @@
 
 详见 [用户指南](./HARNESS-USER-GUIDE.md)
 
-## 架构 (v4.0.0)
+## 架构 (当前版本)
 
 ```
 用户输入
@@ -45,7 +45,7 @@ harness-architect (v4.0.0) → 总调度
     ↓
 harness-archaeology (v4.0.0) → 识别项目特征
     ↓ 输出：intent + surfaces + risk + depth
-harness-designer (v4.0.0) → 生成开发流程体系
+harness-designer (v6.0.0) → 生成开发流程体系
     ↓ 输出：Workflow + Templates + References + Scripts
 完成
 ```
@@ -56,7 +56,7 @@ harness-designer (v4.0.0) → 生成开发流程体系
 |------|------|------|
 | harness-architect | v4.0.0 | 总调度，协调 archaeology 和 designer |
 | harness-archaeology | v4.0.0 | 识别项目特征，判断生成深度（light/medium/full） |
-| harness-designer | v4.0.0 | 生成 Workflow + Templates + References + Scripts |
+| harness-designer | v6.0.0 | 生成 Workflow + Templates + References + Scripts |
 | harness-validator | v3.7.2 | 5 层质量验证，报告生成 |
 | harness-onboarding | v3.7.0 | Legacy 项目渐进接入 |
 | harness-registry | v3.6.0 | 多项目管理 |

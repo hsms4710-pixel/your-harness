@@ -2,6 +2,43 @@
 
 All notable changes to the Your Harness Skills project.
 
+## [6.0.0] - 2026-06-22
+
+### Added
+
+- harness-designer: 智能优化能力，包括规则优化、个性化适配和预测性建议。
+- 新增知识文件：`rule-optimizer.yaml`、`personalization.yaml`、`prediction-engine.yaml`。
+
+## [5.2.0] - 2026-06-22
+
+### Added
+
+- harness-designer: 知识积累系统，支持学习记录、反馈数据、最佳实践和验证模式沉淀。
+
+## [5.1.0] - 2026-06-22
+
+### Added
+
+- harness-designer: 混合模式和智能路由机制。
+
+## [5.0.0] - 2026-06-22
+
+### Added
+
+- harness-designer: 元能力驱动生成模式。
+
+## [4.6.0] - 2026-06-22
+
+### Added
+
+- harness-designer: 知识积累机制。
+
+## [4.5.0] - 2026-06-18
+
+### Added
+
+- harness-designer: 基于 GitHub Top 100 项目分析扩展项目模式覆盖。
+
 ## [4.0.0] - 2026-06-18
 
 ### Major Refactoring
