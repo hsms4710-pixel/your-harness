@@ -1,0 +1,478 @@
+---
+version: 1.0.0
+description: |
+  元素库定义
+  可复用的流程元素，用于混合模式的组合
+---
+
+# 元素库 (Element Library)
+
+## 概述
+
+元素库是混合模式的核心组件，提供可复用的流程元素。
+
+```
+混合模式 = 元模板（已知模式） + 元能力（未知推理） + 元素库（组合基础）
+```
+
+## 元素类型
+
+### 1. Template 元素
+
+```yaml
+template_elements:
+  # 基础模板
+  - id: TPL-001
+    name: "feature-development"
+    description: "标准功能开发流程"
+    category: "development"
+    
+    structure:
+      header:
+        required_skill: "executing-plans"
+        
+      scope_checklist:
+        - "是否需要改数据库结构？"
+        - "是否需要改 API？"
+        - "是否需要改前端？"
+        
+      tasks:
+        - id: "Task 1"
+          name: "需求分析"
+          steps: ["分析需求", "拆解任务"]
+          
+      completion_checklist:
+        - "需求已分析"
+        - "任务已拆解"
+        
+  # AI 相关模板
+  - id: TPL-002
+    name: "prompt-engineering"
+    description: "Prompt 工程开发流程"
+    category: "ai-llm"
+    
+    structure:
+      header:
+        required_skill: "executing-plans"
+        
+      scope_checklist:
+        - "Prompt 的输入是什么？"
+        - "期望的输出格式？"
+        - "是否有示例？"
+        
+      tasks:
+        - id: "Task 1"
+          name: "Prompt 设计"
+          steps: ["设计结构", "编写 Prompt", "测试效果"]
+          
+      completion_checklist:
+        - "Prompt 已设计"
+        - "效果已测试"
+        
+  # 安全相关模板
+  - id: TPL-003
+    name: "security-implementation"
+    description: "安全实现流程"
+    category: "security"
+    
+    structure:
+      header:
+        required_skill: "executing-plans"
+        
+      scope_checklist:
+        - "涉及哪些敏感数据？"
+        - "需要什么级别的保护？"
+        - "是否有合规要求？"
+        
+      tasks:
+        - id: "Task 1"
+          name: "安全设计"
+          steps: ["识别风险", "设计保护方案"]
+          
+      completion_checklist:
+        - "安全设计已完成"
+        - "风险已识别"
+```
+
+### 2. Script 元素
+
+```yaml
+script_elements:
+  # 闸门检查脚本
+  - id: SCR-001
+    name: "gate-checker"
+    description: "通用闸门检查脚本"
+    category: "gate"
+    language: "python"
+    
+    interface:
+      inputs:
+        - name: feature_name
+          type: string
+          required: true
+          
+        - name: gate_id
+          type: string
+          required: true
+          
+      outputs:
+        - name: status
+          type: string
+          values: ["PASS", "FAIL", "BLOCKED"]
+          
+    template: |
+      #!/usr/bin/env python3
+      """闸门检查脚本"""
+      import json
+      import sys
+      from pathlib import Path
+      
+      def check_gate(feature: str, gate_id: str) -> dict:
+          # 检查闸门状态
+          pass
+          
+      if __name__ == "__main__":
+          # CLI 入口
+          pass
+          
+  # 产物检查脚本
+  - id: SCR-002
+    name: "artifact-checker"
+    description: "产物完整性检查脚本"
+    category: "verification"
+    language: "python"
+    
+    interface:
+      inputs:
+        - name: feature_name
+          type: string
+          required: true
+          
+        - name: stage
+          type: string
+          required: true
+          
+      outputs:
+        - name: status
+          type: string
+          values: ["COMPLETE", "INCOMPLETE", "MISSING"]
+        
+        - name: missing_items
+          type: array
+          
+  # 成本检查脚本（AI 项目专用）
+  - id: SCR-003
+    name: "cost-checker"
+    description: "AI API 成本检查脚本"
+    category: "ai-llm"
+    language: "python"
+    
+    interface:
+      inputs:
+        - name: api_calls
+          type: integer
+          required: true
+          
+        - name: model
+          type: string
+          required: true
+          
+      outputs:
+        - name: estimated_cost
+          type: float
+          
+        - name: is_within_budget
+          type: boolean
+```
+
+### 3. Reference 元素
+
+```yaml
+reference_elements:
+  # 闸门协议
+  - id: REF-001
+    name: "gate-protocol"
+    description: "闸门协议参考文档"
+    category: "protocol"
+    
+    sections:
+      - name: "purpose"
+        content: "定义闸门协议，确保关键节点有人工确认"
+        
+      - name: "universal_gate_output"
+        template: |
+          ## Gate: {gate_id}
+          
+          **状态**：{status}
+          
+          **本阶段产物**
+          {artifacts}
+          
+          **通过标准**
+          {checks}
+          
+      - name: "stop_rules"
+        content:
+          - "不得在没有显式用户批准的情况下跨越阶段闸门"
+          - "不得跳过任何必需的闸门"
+          - "闸门检查失败时，必须先修复问题"
+          
+  # 任务执行协议
+  - id: REF-002
+    name: "task-execution-protocol"
+    description: "任务执行协议参考文档"
+    category: "protocol"
+    
+    sections:
+      - name: "context_package_requirements"
+        content:
+          - "任务目标"
+          - "相关文件列表"
+          - "设计文档（如有）"
+          - "依赖任务的输出"
+          - "验收标准"
+          
+      - name: "execution_checkpoints"
+        content:
+          - "每个步骤完成后检查"
+          - "遇到问题时暂停"
+          - "完成前验证"
+          
+  # AI 安全指南
+  - id: REF-003
+    name: "ai-safety-guidelines"
+    description: "AI 安全实现指南"
+    category: "ai-llm"
+    
+    sections:
+      - name: "prompt_injection_protection"
+        content:
+          - "验证用户输入"
+          - "使用系统提示隔离"
+          - "限制输出长度"
+          
+      - name: "content_filtering"
+        content:
+          - "过滤敏感内容"
+          - "过滤有害内容"
+          - "记录异常情况"
+          
+      - name: "output_validation"
+        content:
+          - "验证输出格式"
+          - "验证输出内容"
+          - "处理异常输出"
+```
+
+### 4. Gate 元素
+
+```yaml
+gate_elements:
+  # 基础闸门
+  - id: GATE-001
+    name: "requirement-confirmation"
+    description: "需求确认闸门"
+    category: "universal"
+    
+    stage: "需求理解"
+    required_artifacts:
+      - "需求文档"
+      - "澄清记录（如有）"
+    checks:
+      - "需求已完整收集"
+      - "模糊点已澄清"
+      - "用户已确认理解"
+    approval_required: true
+    
+  # 设计评审闸门
+  - id: GATE-002
+    name: "design-review"
+    description: "设计评审闸门"
+    category: "universal"
+    
+    stage: "设计"
+    required_artifacts:
+      - "技术方案文档"
+      - "接口定义"
+    checks:
+      - "技术方案可行"
+      - "接口定义完整"
+      - "风险已识别"
+    approval_required: true
+    
+  # 代码审查闸门
+  - id: GATE-003
+    name: "code-review"
+    description: "代码审查闸门"
+    category: "universal"
+    
+    stage: "实现"
+    required_artifacts:
+      - "代码"
+      - "测试代码"
+    checks:
+      - "代码通过 lint 检查"
+      - "测试通过"
+      - "代码审查通过"
+    approval_required: true
+    per_task: true
+    
+  # 安全审查闸门
+  - id: GATE-004
+    name: "security-review"
+    description: "安全审查闸门"
+    category: "security"
+    
+    stage: "验证"
+    required_artifacts:
+      - "安全设计文档"
+      - "安全审查记录"
+    checks:
+      - "安全设计已完成"
+      - "安全审查已通过"
+      - "无高危漏洞"
+    approval_required: true
+    
+  # AI 测试闸门
+  - id: GATE-005
+    name: "ai-testing"
+    description: "AI 测试闸门"
+    category: "ai-llm"
+    
+    stage: "验证"
+    required_artifacts:
+      - "Prompt 测试结果"
+      - "模型测试结果"
+    checks:
+      - "Prompt 效果已验证"
+      - "模型选择已完成"
+      - "输出质量已检查"
+    approval_required: true
+```
+
+### 5. Check 元素
+
+```yaml
+check_elements:
+  # 通用检查
+  - id: CHK-001
+    name: "code-quality-check"
+    description: "代码质量检查"
+    category: "universal"
+    
+    items:
+      - "代码通过 lint 检查"
+      - "测试通过"
+      - "代码覆盖率达标"
+      - "无明显性能问题"
+    
+  # 安全检查
+  - id: CHK-002
+    name: "security-check"
+    description: "安全检查"
+    category: "security"
+    
+    items:
+      - "API Key 不硬编码"
+      - "密码使用安全算法"
+      - "无 SQL 注入风险"
+      - "无 XSS 风险"
+      - "敏感数据已加密"
+      
+  # AI 相关检查
+  - id: CHK-003
+    name: "ai-safety-check"
+    description: "AI 安全检查"
+    category: "ai-llm"
+    
+    items:
+      - "Prompt injection 防护已实现"
+      - "输出内容已过滤"
+      - "成本控制已实现"
+      - "错误处理已实现"
+      
+  # 性能检查
+  - id: CHK-004
+    name: "performance-check"
+    description: "性能检查"
+    category: "performance"
+    
+    items:
+      - "响应时间符合要求"
+      - "并发处理正常"
+      - "资源使用合理"
+      - "缓存策略已实现"
+```
+
+## 元素组合规则
+
+```yaml
+combination_rules:
+  # 元素组合约束
+  constraints:
+    - rule: "gate 必须有对应的 required_artifacts"
+      description: "每个闸门必须定义必须的产物"
+      
+    - rule: "check 必须有对应的验证方法"
+      description: "每个检查项必须有验证方法"
+      
+    - rule: "template 必须有完整的 tasks"
+      description: "每个模板必须有任务定义"
+      
+  # 组合优先级
+  priority:
+    - "security 相关元素优先级最高"
+    - "universal 元素作为基础"
+    - "项目特定元素作为补充"
+    
+  # 组合算法
+  algorithm:
+    # 1. 收集所需元素
+    1_collect:
+      - "从推理结果中提取需要的元素类型"
+      - "从项目特征中提取需要的元素类型"
+      
+    # 2. 匹配元素
+    2_match:
+      - "在元素库中查找匹配的元素"
+      - "计算匹配度"
+      - "选择最佳匹配"
+      
+    # 3. 组合元素
+    3_combine:
+      - "按优先级排序"
+      - "处理冲突"
+      - "生成组合结果"
+      
+    # 4. 验证组合
+    4_validate:
+      - "验证组合完整性"
+      - "验证组合一致性"
+```
+
+## 元素版本管理
+
+```yaml
+versioning:
+  # 版本号格式
+  format: "major.minor.patch"
+  
+  # 版本规则
+  rules:
+    major:
+      - "不兼容的变更"
+      - "删除元素"
+      
+    minor:
+      - "新增元素"
+      - "新增属性"
+      
+    patch:
+      - "修复错误"
+      - "文档更新"
+      
+  # 兼容性
+  compatibility:
+    - "向后兼容"
+    - "废弃元素保留 2 个主版本"
+```

@@ -1,0 +1,446 @@
+---
+version: 1.0.0
+description: |
+  流程骨架定义
+  所有项目都遵循相同的流程骨架，AI 的工作是填充每个阶段的具体内容
+---
+
+# 流程骨架
+
+flow_skeleton:
+  name: "通用开发流程"
+  description: "适用于任何项目的开发流程骨架"
+  
+  # ============================================================
+  # 阶段 0: 需求理解
+  # ============================================================
+  stage_0:
+    id: REQUIREMENT_UNDERSTANDING
+    name: "需求理解"
+    order: 0
+    
+    goal: "理解要做什么"
+    
+    universal_steps:
+      - id: "collect"
+        name: "收集需求信息"
+        description: "从用户、文档、设计稿等来源收集需求"
+        
+      - id: "clarify"
+        name: "澄清模糊点"
+        description: "识别并解决需求中的模糊点和歧义"
+        
+      - id: "confirm"
+        name: "确认理解一致"
+        description: "与用户确认对需求的理解是否正确"
+        
+    output:
+      - "需求文档"
+      - "澄清记录"
+      
+    gate:
+      id: G0_REQUIREMENT
+      name: "需求确认"
+      required_artifacts:
+        - "需求文档"
+        - "澄清记录（如有）"
+      checks:
+        - "需求已完整收集"
+        - "模糊点已澄清"
+        - "用户已确认理解"
+      approval_required: true
+      
+    # 可插入的项目特定步骤
+    extensibility_points:
+      - "如果项目涉及 API 设计，可插入 API 需求分析"
+      - "如果项目涉及 UI，可插入 UI 需求分析"
+      - "如果项目涉及 AI，可插入 AI 能力需求分析"
+
+  # ============================================================
+  # 阶段 1: 任务分解
+  # ============================================================
+  stage_1:
+    id: TASK_DECOMPOSITION
+    name: "任务分解"
+    order: 1
+    
+    goal: "拆解为可执行任务"
+    
+    universal_steps:
+      - id: "breakdown"
+        name: "拆解大任务"
+        description: "将大任务拆解为小的、可独立完成的任务"
+        
+      - id: "identify_dependencies"
+        name: "识别任务依赖"
+        description: "识别任务之间的依赖关系"
+        
+      - id: "estimate"
+        name: "估算工作量"
+        description: "估算每个任务的工作量"
+        
+    output:
+      - "任务列表"
+      - "依赖关系图"
+      
+    gate:
+      id: G1_TASKS
+      name: "任务确认"
+      required_artifacts:
+        - "任务列表"
+        - "依赖关系"
+      checks:
+        - "任务粒度合理"
+        - "依赖关系明确"
+        - "工作量估算合理"
+      approval_required: true
+      
+    extensibility_points:
+      - "可根据项目复杂度调整任务粒度"
+      - "可按功能模块或技术层次组织任务"
+
+  # ============================================================
+  # 阶段 2: 设计
+  # ============================================================
+  stage_2:
+    id: DESIGN
+    name: "设计"
+    order: 2
+    
+    goal: "确定怎么做"
+    
+    universal_steps:
+      - id: "technical_solution"
+        name: "确定技术方案"
+        description: "确定使用的技术栈、框架、库等"
+        
+      - id: "interface_contract"
+        name: "设计接口契约"
+        description: "设计模块之间的接口、API 契约等"
+        
+      - id: "risk_identification"
+        name: "识别风险点"
+        description: "识别技术风险和应对策略"
+        
+    output:
+      - "技术方案文档"
+      - "接口定义"
+      - "风险清单"
+      
+    gate:
+      id: G2_DESIGN
+      name: "设计评审"
+      required_artifacts:
+        - "技术方案文档"
+        - "接口定义"
+      checks:
+        - "技术方案可行"
+        - "接口定义完整"
+        - "风险已识别并有应对策略"
+      approval_required: true
+      
+    extensibility_points:
+      - "根据项目特征添加特定设计步骤"
+      - "如：数据模型设计、安全设计、性能设计等"
+
+  # ============================================================
+  # 阶段 3: 实现
+  # ============================================================
+  stage_3:
+    id: IMPLEMENTATION
+    name: "实现"
+    order: 3
+    
+    goal: "写出代码"
+    
+    universal_steps:
+      - id: "implement_task"
+        name: "按任务实现"
+        description: "按照任务列表逐个实现"
+        
+      - id: "write_tests"
+        name: "编写测试"
+        description: "为代码编写测试"
+        
+      - id: "code_review"
+        name: "代码审查"
+        description: "进行代码审查，确保代码质量"
+        
+    output:
+      - "代码"
+      - "测试代码"
+      - "代码审查记录"
+      
+    gate:
+      id: G3_SLICE
+      name: "代码审查"
+      required_artifacts:
+        - "代码"
+        - "测试代码"
+        - "代码审查通过记录"
+      checks:
+        - "代码通过 lint 检查"
+        - "测试通过"
+        - "代码审查通过"
+      approval_required: true
+      per_task: true  # 每个任务都需要通过
+      
+    extensibility_points:
+      - "根据项目特征添加特定实现步骤"
+      - "如：API 集成、数据库迁移、安全实现等"
+
+  # ============================================================
+  # 阶段 4: 验证
+  # ============================================================
+  stage_4:
+    id: VERIFICATION
+    name: "验证"
+    order: 4
+    
+    goal: "确保质量"
+    
+    universal_steps:
+      - id: "run_tests"
+        name: "运行测试"
+        description: "运行所有测试，确保通过"
+        
+      - id: "check_coverage"
+        name: "检查覆盖率"
+        description: "检查测试覆盖率是否达标"
+        
+      - id: "verify_acceptance"
+        name: "验证验收标准"
+        description: "验证是否满足验收标准"
+        
+    output:
+      - "测试报告"
+      - "覆盖率报告"
+      - "验收验证记录"
+      
+    gate:
+      id: G4_VERIFY
+      name: "质量检查"
+      required_artifacts:
+        - "测试报告"
+        - "覆盖率报告"
+      checks:
+        - "所有测试通过"
+        - "覆盖率达标"
+        - "验收标准满足"
+      approval_required: true
+      
+    extensibility_points:
+      - "根据项目特征添加特定验证步骤"
+      - "如：性能测试、安全测试、兼容性测试等"
+
+  # ============================================================
+  # 阶段 5: 上线
+  # ============================================================
+  stage_5:
+    id: DEPLOYMENT
+    name: "上线"
+    order: 5
+    
+    goal: "安全发布"
+    
+    universal_steps:
+      - id: "prepare_config"
+        name: "准备部署配置"
+        description: "准备生产环境的配置文件"
+        
+      - id: "execute_deployment"
+        name: "执行部署"
+        description: "执行部署流程"
+        
+      - id: "verify_deployment"
+        name: "验证上线结果"
+        description: "验证部署是否成功"
+        
+    output:
+      - "部署配置"
+      - "部署记录"
+      - "上线验证报告"
+      
+    gate:
+      id: G5_DEPLOY
+      name: "上线审批"
+      required_artifacts:
+        - "部署配置"
+        - "回滚方案"
+        - "监控告警配置"
+      checks:
+        - "部署配置已准备"
+        - "回滚方案已准备"
+        - "监控告警已配置"
+        - "上线窗口已确认"
+      approval_required: true
+      
+    extensibility_points:
+      - "根据项目特征添加特定上线步骤"
+      - "如：灰度发布、数据迁移、服务注册等"
+
+# ============================================================
+# 闸门协议
+# ============================================================
+
+gate_protocol:
+  name: "通用闸门协议"
+  
+  universal_gate_output:
+    template: |
+      ## Gate: {gate_id}
+      
+      **状态**：{status}
+      
+      **本阶段产物**
+      {artifacts}
+      
+      **通过标准**
+      {checks}
+      
+      **需要用户确认**
+      1. 通过，进入下一阶段
+      2. 有问题，按反馈修改
+      3. 暂停，不继续
+      
+  stop_rules:
+    - "不得在没有显式用户批准的情况下跨越阶段闸门"
+    - "不得跳过任何必需的闸门"
+    - "闸门检查失败时，必须先修复问题"
+    - "用户可以选择跳过可选闸门"
+
+# ============================================================
+# 流程深度
+# ============================================================
+
+flow_depths:
+  # 完整深度
+  full:
+    description: "适用于复杂项目"
+    includes:
+      - "所有阶段"
+      - "所有闸门"
+      - "所有检查项"
+    output:
+      - "SKILL.md"
+      - "templates/"
+      - "references/"
+      - "scripts/"
+      - "constitution-profiles.json"
+      
+  # 中等深度
+  medium:
+    description: "适用于一般项目"
+    includes:
+      - "核心阶段"
+      - "核心闸门"
+      - "核心检查项"
+    output:
+      - "SKILL.md"
+      - "references/"
+      - "scripts/"
+      
+  # 轻量深度
+  light:
+    description: "适用于简单项目"
+    includes:
+      - "基础阶段"
+      - "基础闸门"
+    output:
+      - "SKILL.md"
+      - "scripts/"
+
+# ============================================================
+# 阶段组合规则
+# ============================================================
+
+stage_combination:
+  # 项目特定阶段的插入点
+  insertion_points:
+    - location: "after:REQUIREMENT_UNDERSTANDING"
+      description: "需求理解后，可以插入项目特定的分析阶段"
+      examples:
+        - "API 分析"
+        - "成本分析"
+        - "安全分析"
+        
+    - location: "after:DESIGN"
+      description: "设计后，可以插入项目特定的设计阶段"
+      examples:
+        - "数据模型设计"
+        - "安全设计"
+        - "性能设计"
+        
+    - location: "after:IMPLEMENTATION"
+      description: "实现后，可以插入项目特定的实现阶段"
+      examples:
+        - "API 集成"
+        - "安全实现"
+        - "数据迁移"
+        
+    - location: "after:VERIFICATION"
+      description: "验证后，可以插入项目特定的验证阶段"
+      examples:
+        - "性能测试"
+        - "安全测试"
+        - "兼容性测试"
+        
+  # 阶段依赖关系
+  dependencies:
+    - from: TASK_DECOMPOSITION
+      to: [DESIGN, IMPLEMENTATION]
+      
+    - from: DESIGN
+      to: [IMPLEMENTATION]
+      
+    - from: IMPLEMENTATION
+      to: [VERIFICATION]
+      
+    - from: VERIFICATION
+      to: [DEPLOYMENT]
+      
+  # 阶段可并行性
+  parallelism:
+    - stages: ["API 分析", "安全分析", "成本分析"]
+      note: "这些分析阶段可以并行进行"
+      
+    - stages: ["性能测试", "安全测试"]
+      note: "这些验证阶段可以并行进行"
+
+# ============================================================
+# 上下文包要求
+# ============================================================
+
+context_package:
+  name: "任务上下文包"
+  description: "每个任务开始时，必须有完整的上下文包"
+  
+  required_elements:
+    - "任务目标"
+    - "相关文件列表"
+    - "设计文档（如有）"
+    - "依赖任务的输出"
+    - "验收标准"
+    
+  optional_elements:
+    - "相关代码示例"
+    - "参考文档"
+    - "注意事项"
+    
+  format:
+    template: |
+      ## 任务: {task_name}
+      
+      **目标**：{task_goal}
+      
+      **相关文件**
+      {file_list}
+      
+      **设计参考**
+      {design_reference}
+      
+      **验收标准**
+      {acceptance_criteria}
+      
+      **注意事项**
+      {notes}

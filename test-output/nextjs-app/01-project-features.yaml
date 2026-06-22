@@ -1,0 +1,160 @@
+# Next.js App 项目特征识别结果
+# 用于测试 Your Harness v4.6.0
+
+generation_info:
+  version: "4.6.0"
+  timestamp: "2026-06-22T14:30:00"
+  test_project: "nextjs-app"
+  reference: "GitHub Next.js App - 基于 Next.js 的全栈 Web 应用"
+
+# ============================================================
+# 项目基本信息
+# ============================================================
+
+project_info:
+  name: nextjs-app
+  type: web-app
+  description: "基于 Next.js 的全栈 Web 应用，包含前端页面、API 路由、数据库"
+  
+# ============================================================
+# 技术栈特征
+# ============================================================
+
+tech_stack:
+  language: typescript
+  framework: nextjs
+  version: "14.x"
+  
+  runtime:
+    frontend: react
+    backend: nodejs
+    database: postgresql
+    cache: redis
+    
+  package_manager: pnpm
+  monorepo_tool: pnpm-workspaces
+  
+# ============================================================
+# 项目结构
+# ============================================================
+
+structure:
+  type: full-stack
+  
+  directories:
+    - "app/"           # Next.js App Router
+    - "components/"    # React 组件
+    - "lib/"           # 工具库
+    - "api/"           # API 路由
+    - "db/"            # 数据库迁移
+    - "public/"        # 静态资源
+    
+  files:
+    - "next.config.js"
+    - "package.json"
+    - "tsconfig.json"
+    - "pnpm-workspace.yaml"
+    - "docker-compose.yml"
+    
+# ============================================================
+# 项目模式匹配
+# ============================================================
+
+pattern_matching:
+  matched_patterns:
+    - name: frontend-backend-separation
+      confidence: 0.9
+      reason: "Next.js App Router 包含前端页面和 API 路由"
+      
+    - name: web-app
+      confidence: 0.95
+      reason: "这是一个完整的 Web 应用"
+      
+    - name: typescript-project
+      confidence: 1.0
+      reason: "使用 TypeScript 开发"
+      
+    - name: monorepo
+      confidence: 0.7
+      reason: "使用 pnpm workspaces 管理"
+      
+  combined_features:
+    - full_stack
+    - ssr
+    - api_routes
+    - database
+    - authentication
+    
+# ============================================================
+# 特殊流程
+# ============================================================
+
+special_flows:
+  - name: page-development
+    description: "Next.js 页面开发流程"
+    steps:
+      - "创建页面组件"
+      - "配置路由"
+      - "添加样式"
+      - "测试页面"
+      
+  - name: api-development
+    description: "API 路由开发流程"
+    steps:
+      - "创建 API 路由"
+      - "实现业务逻辑"
+      - "添加验证"
+      - "测试 API"
+      
+  - name: database-migration
+    description: "数据库迁移流程"
+    steps:
+      - "创建迁移文件"
+      - "本地测试"
+      - "应用到生产"
+      
+# ============================================================
+# 工具集成
+# ============================================================
+
+tool_integration:
+  code_hosting: github
+  ci_cd: github-actions
+  container: docker
+  database: postgresql
+  
+  mcp_tools:
+    - github
+    - vercel
+    
+# ============================================================
+# 生成规划
+# ============================================================
+
+generation_plan:
+  depth: medium
+  
+  templates:
+    - TEMPLATE-feature.md
+    - TEMPLATE-bugfix.md
+    
+  scripts:
+    - check-gates.py
+    - check-nextjs-build.py
+    
+  references:
+    - gate-protocol.md
+    - clarification-loop.md
+    
+  constitution:
+    - typescript-type-checks-required
+    - nextjs-best-practices
+    - api-validation-required
+    - database-migration-review
+    
+  gates:
+    - G0_REQUIREMENTS
+    - G1_DESIGN
+    - G2_CODE
+    - G3_TEST
+    - G4_DEPLOY

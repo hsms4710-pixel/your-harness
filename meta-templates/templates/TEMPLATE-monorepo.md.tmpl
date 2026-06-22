@@ -1,0 +1,514 @@
+---
+name: TEMPLATE-monorepo
+description: Monorepo 项目变更模板
+version: 2.0.0
+---
+
+# {{feature_name}} - Monorepo 变更
+
+## 概述
+
+本模板用于 Monorepo 项目的变更，包括跨包修改、依赖管理、构建配置、发布流程等。
+
+**适用场景**:
+- 跨多个包的变更
+- 修改包间依赖
+- 调整构建配置
+- 发布多个包
+- 共享代码变更
+
+---
+
+## 前置检查
+
+### Monorepo 工具检测
+
+```yaml
+# 检测项目使用的 Monorepo 工具
+monorepo_tool: {{monorepo_tool}}
+
+# 支持的工具
+supported_tools:
+  - pnpm-workspaces
+  - yarn-workspaces
+  - lerna
+  - nx
+  - turborepo
+  - rush
+```
+
+### 包管理器检测
+
+```yaml
+# 检测项目使用的包管理器
+package_manager: {{package_manager}}
+
+# 支持的包管理器
+supported_managers:
+  - pnpm
+  - yarn
+  - npm
+  - bun
+```
+
+---
+
+## 变更流程
+
+### Step 1: 分析跨包变更需求
+
+**Input**:
+- 功能需求描述
+- Monorepo 结构文档
+- 包依赖关系图
+
+**Process**:
+1. 理解功能需求，确定涉及的包
+2. 分析包间依赖关系
+3. 确定变更顺序和影响范围
+
+**Output**:
+- Monorepo 变更分析文档
+
+**Run**:
+```bash
+# 创建变更分析文档
+cat > docs/spec/{{feature_name}}/analyze/01-monorepo-analysis.md << 'EOF'
+# Monorepo 变更分析
+
+## 变更类型
+[ ] 跨包功能开发
+[ ] 依赖关系调整
+[ ] 构建配置修改
+[ ] 共享代码变更
+
+## 涉及包
+{{#each affected_packages}}
+- {{this.name}} ({{this.type}})
+{{/each}}
+
+## 包依赖关系
+```
+{{#each package_dependencies}}
+{{this.from}} → {{this.to}}
+{{/each}}
+```
+
+## 变更顺序
+{{#each change_order}}
+{{@index}}. {{this}}
+{{/each}}
+
+## 影响范围
+- 需要重新构建的包: {{packages_to_rebuild}}
+- 需要重新发布的包: {{packages_to_publish}}
+EOF
+```
+
+**Expected**:
+- 文档创建成功
+- 依赖关系清晰
+- 变更顺序合理
+
+---
+
+### Step 2: 检查包间依赖
+
+**Input**:
+- 变更分析文档
+- 现有依赖关系
+
+**Process**:
+1. 检查依赖关系是否正确
+2. 检查循环依赖
+3. 检查版本兼容性
+
+**Output**:
+- 依赖检查报告
+
+**Run**:
+```bash
+# 根据 Monorepo 工具运行依赖检查
+case "{{monorepo_tool}}" in
+  nx)
+    npx nx graph --file=docs/spec/{{feature_name}}/design/01-package-graph.json
+    npx nx show projects
+    ;;
+  turborepo)
+    turbo run --dry
+    ;;
+  lerna)
+    lerna ls --graph
+    ;;
+  *)
+    {{package_manager}} list --json > docs/spec/{{feature_name}}/design/01-dependency-tree.json
+    ;;
+esac
+
+# 创建依赖检查文档
+cat > docs/spec/{{feature_name}}/design/02-dependency-check.md << 'EOF'
+# 依赖检查报告
+
+## 依赖关系分析
+{{#each dependency_analysis}}
+### {{this.package_name}}
+- 依赖: {{this.dependencies}}
+- 被依赖: {{this.dependents}}
+- 循环依赖: {{this.circular_deps}}
+{{/each}}
+
+## 检查结果
+- 循环依赖: {{circular_dep_count}}
+- 版本冲突: {{version_conflict_count}}
+- 未使用依赖: {{unused_dep_count}}
+EOF
+```
+
+**Expected**:
+- 无循环依赖
+- 无版本冲突
+- 依赖关系正确
+
+---
+
+### Step 3: 实现变更
+
+**Input**:
+- 变更分析文档
+- 依赖检查报告
+
+**Process**:
+1. 按顺序修改各包
+2. 更新包间依赖
+3. 添加/更新共享代码
+
+**Output**:
+- 修改后的代码
+- 更新的依赖关系
+
+**Run**:
+```bash
+# 根据变更顺序修改包
+{{#each change_order}}
+echo "修改包: {{this}}"
+cd packages/{{this}}
+# 实现变更...
+cd ../..
+{{/each}}
+
+# 更新依赖
+case "{{package_manager}}" in
+  pnpm)
+    pnpm install
+    ;;
+  yarn)
+    yarn install
+    ;;
+  npm)
+    npm install
+    ;;
+  bun)
+    bun install
+    ;;
+esac
+```
+
+**Expected**:
+- 所有包修改完成
+- 依赖更新成功
+- 无安装错误
+
+---
+
+### Step 4: 运行构建
+
+**Input**:
+- 修改后的代码
+
+**Process**:
+1. 构建受影响的包
+2. 检查构建是否成功
+3. 检查构建产物
+
+**Output**:
+- 构建产物
+
+**Run**:
+```bash
+# 根据 Monorepo 工具运行构建
+case "{{monorepo_tool}}" in
+  nx)
+    npx nx run-many --target=build --projects={{affected_packages_csv}}
+    ;;
+  turborepo)
+    turbo build --filter={{affected_packages_csv}}
+    ;;
+  lerna)
+    lerna run build --scope={{affected_packages_csv}}
+    ;;
+  *)
+    {{package_manager}} run build
+    ;;
+esac
+
+# 创建构建报告
+cat > docs/spec/{{feature_name}}/build/01-build-report.md << 'EOF'
+# 构建报告
+
+## 构建结果
+- 成功: {{build_success}}
+- 失败: {{build_failed}}
+- 跳过: {{build_skipped}}
+
+## 构建时间
+- 总时间: {{total_build_time}}
+- 平均时间: {{avg_build_time}}
+
+## 构建产物
+{{#each build_artifacts}}
+- {{this.package}}: {{this.size}}
+{{/each}}
+EOF
+```
+
+**Expected**:
+- 所有包构建成功
+- 构建时间合理
+- 产物大小正常
+
+---
+
+### Step 5: 运行测试
+
+**Input**:
+- 构建产物
+
+**Process**:
+1. 运行单元测试
+2. 运行集成测试
+3. 检查测试覆盖率
+
+**Output**:
+- 测试报告
+
+**Run**:
+```bash
+# 根据 Monorepo 工具运行测试
+case "{{monorepo_tool}}" in
+  nx)
+    npx nx run-many --target=test --projects={{affected_packages_csv}}
+    ;;
+  turborepo)
+    turbo test --filter={{affected_packages_csv}}
+    ;;
+  lerna)
+    lerna run test --scope={{affected_packages_csv}}
+    ;;
+  *)
+    {{package_manager}} run test
+    ;;
+esac
+
+# 创建测试报告
+cat > docs/spec/{{feature_name}}/test/01-test-report.md << 'EOF'
+# Monorepo 测试报告
+
+## 测试结果
+- 总测试数: {{total_tests}}
+- 通过: {{passed_tests}}
+- 失败: {{failed_tests}}
+- 跳过: {{skipped_tests}}
+
+## 测试覆盖率
+{{#each test_coverage}}
+- {{this.package}}: {{this.coverage}}%
+{{/each}}
+
+## 失败测试详情
+{{#if failed_tests}}
+{{#each failed_tests_detail}}
+### {{this.name}}
+- 错误: {{this.error}}
+{{/each}}
+{{else}}
+无失败测试
+{{/if}}
+EOF
+```
+
+**Expected**:
+- 所有测试通过
+- 覆盖率达标
+- 无失败测试
+
+---
+
+### Step 6: 更新文档
+
+**Input**:
+- 修改后的代码
+- 测试报告
+
+**Process**:
+1. 更新 README
+2. 更新 API 文档
+3. 更新使用示例
+
+**Output**:
+- 更新的文档
+
+**Run**:
+```bash
+# 更新文档
+{{#if has_auto_doc}}
+# 自动生成 API 文档
+{{auto_doc_command}}
+{{else}}
+# 手动更新文档
+cat > docs/spec/{{feature_name}}/docs/01-changelog.md << 'EOF'
+# 变更日志
+
+## {{feature_name}}
+
+### 变更内容
+{{#each changes}}
+- {{this}}
+{{/each}}
+
+### 影响范围
+- 涉及包: {{affected_packages_csv}}
+- 影响功能: {{affected_features}}
+EOF
+{{/if}}
+```
+
+**Expected**:
+- 文档更新完成
+- 文档格式正确
+
+---
+
+### Step 7: 发布包
+
+**Input**:
+- 构建产物
+- 测试报告
+- 更新的文档
+
+**Process**:
+1. 确定需要发布的包
+2. 更新版本号
+3. 发布到包管理器
+4. 更新 CHANGELOG
+
+**Output**:
+- 发布的包
+
+**Run**:
+```bash
+# 根据 Monorepo 工具发布包
+case "{{monorepo_tool}}" in
+  nx)
+    npx nx release
+    ;;
+  turborepo)
+    turbo run publish --filter={{packages_to_publish_csv}}
+    ;;
+  lerna)
+    lerna version patch --yes
+    lerna publish from-git
+    ;;
+  *)
+    {{package_manager}} version patch
+    {{package_manager}} publish
+    ;;
+esac
+
+# 创建发布报告
+cat > docs/spec/{{feature_name}}/release/01-release-report.md << 'EOF'
+# 发布报告
+
+## 发布信息
+- 发布时间: {{release_time}}
+- 发布版本: {{release_version}}
+
+## 发布包
+{{#each released_packages}}
+- {{this.name}}: {{this.version}}
+{{/each}}
+
+## 发布检查清单
+- [x] 代码已合并
+- [x] 测试已通过
+- [x] 文档已更新
+- [x] 版本已更新
+EOF
+```
+
+**Expected**:
+- 所有包发布成功
+- 版本号正确
+- CHANGELOG 已更新
+
+---
+
+## 闸门检查
+
+### G1: 需求分析闸门
+- [ ] 变更类型已明确
+- [ ] 涉及包已识别
+- [ ] 变更顺序已确定
+
+### G2: 依赖检查闸门
+- [ ] 无循环依赖
+- [ ] 版本兼容性已检查
+- [ ] 依赖关系正确
+
+### G3: 构建闸门
+- [ ] 所有包构建成功
+- [ ] 构建产物正确
+- [ ] 构建时间合理
+
+### G4: 测试闸门
+- [ ] 所有测试通过
+- [ ] 覆盖率达标
+- [ ] 无失败测试
+
+### G5: 发布闸门
+- [ ] 文档已更新
+- [ ] 版本号已更新
+- [ ] CHANGELOG 已更新
+
+---
+
+## 常见问题
+
+### Q1: 如何处理跨包的循环依赖？
+
+**推荐方案**:
+1. 提取公共代码到独立包
+2. 使用接口解耦
+3. 重构依赖关系
+
+### Q2: 如何优化 Monorepo 构建速度？
+
+**推荐方案**:
+1. 使用增量构建
+2. 使用构建缓存
+3. 并行构建
+
+### Q3: 如何管理多个包的版本？
+
+**推荐方案**:
+1. 使用 Changesets
+2. 独立版本管理
+3. 自动版本更新
+
+---
+
+## 参考资源
+
+- [Nx Documentation](https://nx.dev)
+- [Turborepo Documentation](https://turborepo.dev)
+- [Lerna Documentation](https://lerna.js.org)
+- [Monorepo Best Practices](https://github.com/babel/monorepo)

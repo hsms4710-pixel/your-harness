@@ -1,0 +1,727 @@
+---
+version: 1.0.0
+description: |
+  元素模板定义
+  可复用的 Template 结构
+---
+
+# Template 元素模板
+
+## 基础模板
+
+### TPL-001: 功能开发模板
+
+```yaml
+id: TPL-001
+name: feature-development
+category: development
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - feature_name: "功能名称"
+    - project_path: "项目路径"
+    - language: "主要语言"
+    - framework: "主要框架"
+    
+  scope_checklist:
+    - "是否需要改数据库结构？"
+    - "是否需要改 API？"
+    - "是否需要改前端？"
+    - "是否需要改配置？"
+    
+  tasks_template: |
+    ## Task 1: 需求分析
+    
+    **Goal:** 理解功能需求
+    
+    **Steps:**
+    1. 阅读需求文档
+    2. 识别功能边界
+    3. 确定验收标准
+    
+    **Output:** 需求理解文档
+    
+    ---
+    
+    ## Task 2: 任务拆解
+    
+    **Goal:** 将功能拆解为可执行任务
+    
+    **Steps:**
+    1. 按模块拆解
+    2. 识别依赖关系
+    3. 估算工作量
+    
+    **Output:** 任务列表
+    
+    ---
+    
+    ## Task 3: 实现
+    
+    **Goal:** 实现功能代码
+    
+    **Files:**
+    - 创建/修改: `{file_list}`
+    
+    **Steps:**
+    1. 按任务实现代码
+    2. 编写测试
+    3. 代码审查
+    
+    **Output:** 代码 + 测试
+    
+    ---
+    
+    ## 完工检查清单
+    
+    - [ ] 需求已理解
+    - [ ] 任务已拆解
+    - [ ] 代码已实现
+    - [ ] 测试已通过
+    - [ ] 代码审查已通过
+
+  completion_checklist:
+    - "需求已理解"
+    - "任务已拆解"
+    - "代码已实现"
+    - "测试已通过"
+    - "代码审查已通过"
+```
+
+### TPL-002: Bug 修复模板
+
+```yaml
+id: TPL-002
+name: bugfix-development
+category: development
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - bug_id: "Bug ID"
+    - bug_description: "Bug 描述"
+    - severity: "严重程度"
+    
+  scope_checklist:
+    - "Bug 的复现步骤是什么？"
+    - "影响范围是什么？"
+    - "是否需要修复数据？"
+    
+  tasks_template: |
+    ## Task 1: Bug 分析
+    
+    **Goal:** 理解 Bug 原因
+    
+    **Steps:**
+    1. 复现 Bug
+    2. 分析代码
+    3. 确定根因
+    
+    **Output:** Bug 分析报告
+    
+    ---
+    
+    ## Task 2: 修复
+    
+    **Goal:** 修复 Bug
+    
+    **Files:**
+    - 修改: `{affected_files}`
+    
+    **Steps:**
+    1. 实现修复
+    2. 编写测试
+    3. 验证修复
+    
+    **Output:** 修复代码 + 测试
+    
+    ---
+    
+    ## 完工检查清单
+    
+    - [ ] Bug 原因已确定
+    - [ ] 修复已实现
+    - [ ] 测试已通过
+    - [ ] 无回归
+
+  completion_checklist:
+    - "Bug 原因已确定"
+    - "修复已实现"
+    - "测试已通过"
+    - "无回归"
+```
+
+## AI/LLM 模板
+
+### TPL-003: Prompt 工程模板
+
+```yaml
+id: TPL-003
+name: prompt-engineering
+category: ai-llm
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - prompt_name: "Prompt 名称"
+    - input_description: "输入描述"
+    - output_description: "输出描述"
+    - model: "使用的模型"
+    
+  scope_checklist:
+    - "Prompt 的输入是什么格式？"
+    - "期望的输出是什么格式？"
+    - "是否有示例？"
+    - "是否有特殊要求？"
+    
+  tasks_template: |
+    ## Task 1: 需求分析
+    
+    **Goal:** 理解 Prompt 需求
+    
+    **Steps:**
+    1. 分析使用场景
+    2. 确定输入输出格式
+    3. 收集示例
+    
+    **Output:** Prompt 需求文档
+    
+    ---
+    
+    ## Task 2: Prompt 设计
+    
+    **Goal:** 设计 Prompt 结构
+    
+    **Steps:**
+    1. 设计系统提示
+    2. 设计用户提示模板
+    3. 添加示例（如需要）
+    
+    **Output:** Prompt 设计
+    
+    ---
+    
+    ## Task 3: 测试验证
+    
+    **Goal:** 验证 Prompt 效果
+    
+    **Steps:**
+    1. 编写测试用例
+    2. 执行测试
+    3. 分析结果
+    
+    **Output:** 测试报告
+    
+    ---
+    
+    ## Task 4: 优化迭代
+    
+    **Goal:** 优化 Prompt
+    
+    **Steps:**
+    1. 分析失败案例
+    2. 调整 Prompt
+    3. 重新测试
+    
+    **Output:** 优化后的 Prompt
+    
+    ---
+    ## 完工检查清单
+    
+    - [ ] Prompt 需求已明确
+    - [ ] Prompt 结构已设计
+    - [ ] 测试已通过
+    - [ ] 效果已验证
+
+  completion_checklist:
+    - "Prompt 需求已明确"
+    - "Prompt 结构已设计"
+    - "测试已通过"
+    - "效果已验证"
+```
+
+### TPL-004: AI 安全模板
+
+```yaml
+id: TPL-004
+name: ai-safety-implementation
+category: ai-llm
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - safety_concerns: "安全关注点"
+    - protection_level: "保护级别"
+    
+  scope_checklist:
+    - "需要防护哪些安全风险？"
+    - "需要什么级别的保护？"
+    - "是否有合规要求？"
+    
+  tasks_template: |
+    ## Task 1: 安全分析
+    
+    **Goal:** 识别安全风险
+    
+    **Steps:**
+    1. 分析输入来源
+    2. 识别攻击向量
+    3. 评估风险等级
+    
+    **Output:** 安全分析报告
+    
+    ---
+    
+    ## Task 2: 防护设计
+    
+    **Goal:** 设计防护方案
+    
+    **Steps:**
+    1. 设计输入验证
+    2. 设计内容过滤
+    3. 设计输出验证
+    
+    **Output:** 防护设计方案
+    
+    ---
+    
+    ## Task 3: 实现
+    
+    **Goal:** 实现安全防护
+    
+    **Steps:**
+    1. 实现输入验证
+    2. 实现内容过滤
+    3. 实现输出验证
+    
+    **Output:** 安全防护代码
+    
+    ---
+    
+    ## Task 4: 测试
+    
+    **Goal:** 测试安全防护
+    
+    **Steps:**
+    1. 测试正常场景
+    2. 测试攻击场景
+    3. 测试边界情况
+    
+    **Output:** 安全测试报告
+    
+    ---
+    ## 完工检查清单
+    
+    - [ ] 安全风险已识别
+    - [ ] 防护方案已设计
+    - [ ] 防护已实现
+    - [ ] 测试已通过
+
+  completion_checklist:
+    - "安全风险已识别"
+    - "防护方案已设计"
+    - "防护已实现"
+    - "测试已通过"
+```
+
+### TPL-005: 成本管理模板
+
+```yaml
+id: TPL-005
+name: cost-management
+category: ai-llm
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - estimated_calls: "预估调用次数"
+    - model: "使用的模型"
+    - budget_limit: "预算限制"
+    
+  scope_checklist:
+    - "预估每月调用次数？"
+    - "使用什么模型？"
+    - "预算限制是多少？"
+    - "是否有缓存策略？"
+    
+  tasks_template: |
+    ## Task 1: 成本估算
+    
+    **Goal:** 估算 API 成本
+    
+    **Steps:**
+    1. 收集调用数据
+    2. 计算成本
+    3. 评估预算
+    
+    **Output:** 成本估算报告
+    
+    ---
+    
+    ## Task 2: 成本优化
+    
+    **Goal:** 优化成本
+    
+    **Steps:**
+    1. 设计缓存策略
+    2. 设计模型选择策略
+    3. 设计批量处理策略
+    
+    **Output:** 成本优化方案
+    
+    ---
+    
+    ## Task 3: 实现
+    
+    **Goal:** 实现成本控制
+    
+    **Steps:**
+    1. 实现缓存
+    2. 实现模型路由
+    3. 实现成本监控
+    
+    **Output:** 成本控制代码
+    
+    ---
+    
+    ## 完工检查清单
+    
+    - [ ] 成本已估算
+    - [ ] 优化方案已设计
+    - [ ] 成本控制已实现
+    - [ ] 预算在限制内
+
+  completion_checklist:
+    - "成本已估算"
+    - "优化方案已设计"
+    - "成本控制已实现"
+    - "预算在限制内"
+```
+
+## 安全模板
+
+### TPL-006: 认证授权模板
+
+```yaml
+id: TPL-006
+name: authentication-authorization
+category: security
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - auth_method: "认证方式"
+    - permission_model: "权限模型"
+    
+  scope_checklist:
+    - "使用什么认证方式？"
+    - "需要什么级别的权限控制？"
+    - "是否有合规要求？"
+    
+  tasks_template: |
+    ## Task 1: 认证设计
+    
+    **Goal:** 设计认证方案
+    
+    **Steps:**
+    1. 选择认证方式
+    2. 设计凭证存储
+    3. 设计会话管理
+    
+    **Output:** 认证设计方案
+    
+    ---
+    
+    ## Task 2: 授权设计
+    
+    **Goal:** 设计授权方案
+    
+    **Steps:**
+    1. 定义角色
+    2. 定义权限
+    3. 设计访问控制
+    
+    **Output:** 授权设计方案
+    
+    ---
+    
+    ## Task 3: 实现
+    
+    **Goal:** 实现认证授权
+    
+    **Steps:**
+    1. 实现认证逻辑
+    2. 实现授权逻辑
+    3. 实现会话管理
+    
+    **Output:** 认证授权代码
+    
+    ---
+    
+    ## Task 4: 安全审查
+    
+    **Goal:** 审查安全实现
+    
+    **Steps:**
+    1. 审查认证实现
+    2. 审查授权实现
+    3. 测试攻击场景
+    
+    **Output:** 安全审查报告
+    
+    ---
+    ## 完工检查清单
+    
+    - [ ] 认证方案已设计
+    - [ ] 授权方案已设计
+    - [ ] 实现已完成
+    - [ ] 安全审查已通过
+
+  completion_checklist:
+    - "认证方案已设计"
+    - "授权方案已设计"
+    - "实现已完成"
+    - "安全审查已通过"
+```
+
+### TPL-007: 数据加密模板
+
+```yaml
+id: TPL-007
+name: data-encryption
+category: security
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - encryption_scope: "加密范围"
+    - encryption_method: "加密方法"
+    
+  scope_checklist:
+    - "哪些数据需要加密？"
+    - "使用什么加密方法？"
+    - "密钥如何管理？"
+    
+  tasks_template: |
+    ## Task 1: 加密需求分析
+    
+    **Goal:** 分析加密需求
+    
+    **Steps:**
+    1. 识别敏感数据
+    2. 评估加密需求
+    3. 选择加密方法
+    
+    **Output:** 加密需求文档
+    
+    ---
+    
+    ## Task 2: 密钥管理设计
+    
+    **Goal:** 设计密钥管理
+    
+    **Steps:**
+    1. 设计密钥存储
+    2. 设计密钥轮换
+    3. 设计访问控制
+    
+    **Output:** 密钥管理方案
+    
+    ---
+    
+    ## Task 3: 实现
+    
+    **Goal:** 实现加密
+    
+    **Steps:**
+    1. 实现加密逻辑
+    2. 实现解密逻辑
+    3. 实现密钥管理
+    
+    **Output:** 加密实现代码
+    
+    ---
+    
+    ## 完工检查清单
+    
+    - [ ] 加密需求已分析
+    - [ ] 密钥管理已设计
+    - [ ] 加密已实现
+    - [ ] 测试已通过
+
+  completion_checklist:
+    - "加密需求已分析"
+    - "密钥管理已设计"
+    - "加密已实现"
+    - "测试已通过"
+```
+
+## 微服务模板
+
+### TPL-008: 服务边界设计模板
+
+```yaml
+id: TPL-008
+name: service-boundary-design
+category: microservice
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - service_name: "服务名称"
+    - service_responsibilities: "服务职责"
+    
+  scope_checklist:
+    - "服务的职责边界是什么？"
+    - "服务依赖哪些其他服务？"
+    - "服务暴露哪些接口？"
+    
+  tasks_template: |
+    ## Task 1: 职责定义
+    
+    **Goal:** 定义服务职责
+    
+    **Steps:**
+    1. 分析业务需求
+    2. 定义服务边界
+    3. 确定服务职责
+    
+    **Output:** 服务职责文档
+    
+    ---
+    
+    ## Task 2: 接口设计
+    
+    **Goal:** 设计服务接口
+    
+    **Steps:**
+    1. 设计 API 契约
+    2. 定义数据格式
+    3. 设计错误处理
+    
+    **Output:** 接口定义文档
+    
+    ---
+    
+    ## Task 3: 依赖分析
+    
+    **Goal:** 分析服务依赖
+    
+    **Steps:**
+    1. 识别上游服务
+    2. 识别下游服务
+    3. 设计依赖关系
+    
+    **Output:** 依赖关系图
+    
+    ---
+    
+    ## 完工检查清单
+    
+    - [ ] 服务职责已定义
+    - [ ] 接口已设计
+    - [ ] 依赖已分析
+
+  completion_checklist:
+    - "服务职责已定义"
+    - "接口已设计"
+    - "依赖已分析"
+```
+
+### TPL-009: 服务通信设计模板
+
+```yaml
+id: TPL-009
+name: service-communication-design
+category: microservice
+version: 1.0.0
+
+structure:
+  header:
+    required_skill: "executing-plans"
+    
+  variables:
+    - communication_protocol: "通信协议"
+    - message_format: "消息格式"
+    
+  scope_checklist:
+    - "使用什么通信协议？"
+    - "消息格式是什么？"
+    - "如何处理错误？"
+    
+  tasks_template: |
+    ## Task 1: 协议选择
+    
+    **Goal:** 选择通信协议
+    
+    **Steps:**
+    1. 分析需求
+    2. 评估协议选项
+    3. 选择协议
+    
+    **Output:** 协议选择文档
+    
+    ---
+    
+    ## Task 2: 消息设计
+    
+    **Goal:** 设计消息格式
+    
+    **Steps:**
+    1. 定义消息结构
+    2. 定义消息类型
+    3. 设计版本策略
+    
+    **Output:** 消息定义文档
+    
+    ---
+    
+    ## Task 3: 错误处理
+    
+    **Goal:** 设计错误处理
+    
+    **Steps:**
+    1. 定义错误码
+    2. 设计重试策略
+    3. 设计降级方案
+    
+    **Output:** 错误处理方案
+    
+    ---
+    
+    ## 完工检查清单
+    
+    - [ ] 协议已选择
+    - [ ] 消息已设计
+    - [ ] 错误处理已设计
+
+  completion_checklist:
+    - "协议已选择"
+    - "消息已设计"
+    - "错误处理已设计"
+```

@@ -1,0 +1,398 @@
+#!/usr/bin/env python3
+"""
+微服务健康检查脚本
+检查微服务的健康状态，包括依赖服务、API 兼容性、配置等
+
+用法:
+    python check-microservice-health.py --service <service_name>
+    python check-microservice-health.py --all
+
+版本: {{version}}
+生成时间: {{generation_time}}
+"""
+
+import argparse
+import json
+import os
+import sys
+import time
+from pathlib import Path
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+from urllib.parse import urljoin
+
+try:
+    import requests
+except ImportError:
+    print("请安装 requests: pip install requests")
+    sys.exit(1)
+
+
+@dataclass
+class HealthCheckResult:
+    """健康检查结果"""
+    check_name: str
+    passed: bool
+    severity: str  # critical, warning, info
+    message: str
+    details: Optional[Dict] = None
+
+
+class MicroserviceHealthChecker:
+    """微服务健康检查器"""
+    
+    def __init__(self, project_dir: str = "."):
+        self.project_dir = Path(project_dir)
+        self.results: List[HealthCheckResult] = []
+        self.services: Dict = {}
+    
+    def load_services_config(self) -> None:
+        """加载服务配置"""
+        config_files = [
+            'config/services.yaml',
+            'config/services.json',
+            '.env',
+        ]
+        
+        for config_file in config_files:
+            config_path = self.project_dir / config_file
+            if config_path.exists():
+                if config_file.endswith('.yaml') or config_file.endswith('.yml'):
+                    try:
+                        import yaml
+                        with open(config_path) as f:
+                            self.services = yaml.safe_load(f) or {}
+                    except ImportError:
+                        print("请安装 pyyaml: pip install pyyaml")
+                        sys.exit(1)
+                elif config_file.endswith('.json'):
+                    with open(config_path) as f:
+                        self.services = json.load(f)
+                elif config_file == '.env':
+                    self._parse_env_file(config_path)
+                break
+    
+    def _parse_env_file(self, env_path: Path) -> None:
+        """解析 .env 文件"""
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if '=' in line and not line.startswith('#'):
+                    key, value = line.split('=', 1)
+                    self.services[key] = value
+    
+    def check_service_health(self, service_name: Optional[str] = None) -> List[HealthCheckResult]:
+        """检查服务健康状态"""
+        results = []
+        
+        # 获取要检查的服务
+        services_to_check = [service_name] if service_name else self.services.get('services', [])
+        
+        for svc in services_to_check:
+            # 检查健康端点
+            health_url = self.services.get(svc, {}).get('health_url')
+            if health_url:
+                result = self._check_health_endpoint(svc, health_url)
+                results.append(result)
+            
+            # 检查依赖服务
+            dependencies = self.services.get(svc, {}).get('dependencies', [])
+            for dep in dependencies:
+                dep_result = self._check_dependency(svc, dep)
+                results.append(dep_result)
+        
+        return results
+    
+    def _check_health_endpoint(self, service_name: str, health_url: str) -> HealthCheckResult:
+        """检查健康端点"""
+        try:
+            response = requests.get(health_url, timeout=5)
+            
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    is_healthy = data.get('status') == 'healthy' or data.get('healthy') == True
+                except:
+                    is_healthy = True
+                
+                return HealthCheckResult(
+                    check_name=f"{service_name} 健康检查",
+                    passed=is_healthy,
+                    severity="critical",
+                    message=f"服务健康端点响应正常 (HTTP {response.status_code})" if is_healthy else f"服务不健康 (HTTP {response.status_code})",
+                    details={'url': health_url, 'status_code': response.status_code}
+                )
+            else:
+                return HealthCheckResult(
+                    check_name=f"{service_name} 健康检查",
+                    passed=False,
+                    severity="critical",
+                    message=f"健康端点返回错误 (HTTP {response.status_code})",
+                    details={'url': health_url, 'status_code': response.status_code}
+                )
+        except requests.exceptions.RequestException as e:
+            return HealthCheckResult(
+                check_name=f"{service_name} 健康检查",
+                passed=False,
+                severity="critical",
+                message=f"无法连接到健康端点: {e}",
+                details={'url': health_url, 'error': str(e)}
+            )
+    
+    def _check_dependency(self, service_name: str, dependency: Dict) -> HealthCheckResult:
+        """检查依赖服务"""
+        dep_name = dependency.get('name', 'unknown')
+        dep_url = dependency.get('url')
+        dep_type = dependency.get('type', 'http')
+        
+        if dep_type == 'http' and dep_url:
+            try:
+                response = requests.get(dep_url, timeout=5)
+                passed = response.status_code == 200
+                
+                return HealthCheckResult(
+                    check_name=f"{service_name} → {dep_name} 依赖",
+                    passed=passed,
+                    severity="warning",
+                    message=f"依赖服务 {dep_name} 可达" if passed else f"依赖服务 {dep_name} 不可达 (HTTP {response.status_code})",
+                    details={'dependency': dep_name, 'url': dep_url, 'reachable': passed}
+                )
+            except requests.exceptions.RequestException as e:
+                return HealthCheckResult(
+                    check_name=f"{service_name} → {dep_name} 依赖",
+                    passed=False,
+                    severity="warning",
+                    message=f"依赖服务 {dep_name} 不可达: {e}",
+                    details={'dependency': dep_name, 'url': dep_url, 'error': str(e)}
+                )
+        
+        # 对于非 HTTP 依赖（如消息队列），只做配置检查
+        return HealthCheckResult(
+            check_name=f"{service_name} → {dep_name} 依赖配置",
+            passed=True,
+            severity="info",
+            message=f"依赖 {dep_name} ({dep_type}) 配置存在",
+            details={'dependency': dep_name, 'type': dep_type}
+        )
+    
+    def check_api_compatibility(self) -> List[HealthCheckResult]:
+        """检查 API 兼容性"""
+        results = []
+        
+        # 查找 API 规范文件
+        api_spec_files = [
+            'openapi.yaml',
+            'openapi.yml',
+            'swagger.json',
+            'api.proto',
+        ]
+        
+        spec_file = None
+        for f in api_spec_files:
+            path = self.project_dir / f
+            if path.exists():
+                spec_file = path
+                break
+        
+        if not spec_file:
+            results.append(HealthCheckResult(
+                check_name="API 规范文件",
+                passed=False,
+                severity="warning",
+                message="未发现 API 规范文件 (OpenAPI/Swagger/Proto)",
+                suggestion="建议添加 API 规范文件，便于版本管理和兼容性检查"
+            ))
+            return results
+        
+        results.append(HealthCheckResult(
+            check_name="API 规范文件",
+            passed=True,
+            severity="info",
+            message=f"发现 API 规范文件: {spec_file.name}"
+        ))
+        
+        # 检查是否有版本信息
+        try:
+            if spec_file.name.endswith('.json'):
+                spec = json.load(open(spec_file))
+            else:
+                import yaml
+                spec = yaml.safe_load(open(spec_file))
+            
+            version = spec.get('info', {}).get('version') or spec.get('openapi')
+            
+            if version:
+                results.append(HealthCheckResult(
+                    check_name="API 版本信息",
+                    passed=True,
+                    severity="info",
+                    message=f"API 版本: {version}"
+                ))
+            else:
+                results.append(HealthCheckResult(
+                    check_name="API 版本信息",
+                    passed=False,
+                    severity="warning",
+                    message="API 规范中未包含版本信息",
+                    suggestion="在 info.version 中添加版本信息"
+                ))
+        except Exception as e:
+            results.append(HealthCheckResult(
+                check_name="API 规范解析",
+                passed=False,
+                severity="warning",
+                message=f"无法解析 API 规范文件: {e}"
+            ))
+        
+        return results
+    
+    def check_configuration(self) -> List[HealthCheckResult]:
+        """检查配置"""
+        results = []
+        
+        # 检查必要的配置文件
+        config_files = [
+            ('config.yaml', '主配置文件'),
+            ('config.json', '主配置文件'),
+            ('.env', '环境变量文件'),
+            ('docker-compose.yaml', 'Docker Compose 配置'),
+            ('Dockerfile', 'Docker 镜像配置'),
+        ]
+        
+        for filename, desc in config_files:
+            path = self.project_dir / filename
+            if path.exists():
+                results.append(HealthCheckResult(
+                    check_name=f"{desc} ({filename})",
+                    passed=True,
+                    severity="info",
+                    message=f"发现 {filename}"
+                ))
+        
+        # 检查 .gitignore
+        gitignore_path = self.project_dir / '.gitignore'
+        if not gitignore_path.exists():
+            results.append(HealthCheckResult(
+                check_name=".gitignore",
+                passed=False,
+                severity="warning",
+                message="未发现 .gitignore 文件",
+                suggestion="创建 .gitignore 文件，防止敏感配置泄露"
+            ))
+        else:
+            # 检查是否包含必要的忽略规则
+            gitignore_content = gitignore_path.read_text()
+            recommended_patterns = [
+                '.env',
+                '*.pem',
+                '*.key',
+                'credentials',
+            ]
+            
+            missing_patterns = [p for p in recommended_patterns if p not in gitignore_content]
+            
+            if missing_patterns:
+                results.append(HealthCheckResult(
+                    check_name=".gitignore 完整性",
+                    passed=False,
+                    severity="warning",
+                    message=f".gitignore 中缺少以下模式: {', '.join(missing_patterns)}",
+                    suggestion=f"在 .gitignore 中添加: {'\n'.join(missing_patterns)}"
+                ))
+        
+        return results
+    
+    def run_all_checks(self, service_name: Optional[str] = None) -> Dict:
+        """运行所有检查"""
+        self.results = []
+        
+        # 加载服务配置
+        self.load_services_config()
+        
+        # 运行各项检查
+        self.results.extend(self.check_service_health(service_name))
+        self.results.extend(self.check_api_compatibility())
+        self.results.extend(self.check_configuration())
+        
+        # 统计结果
+        critical_count = sum(1 for r in self.results if r.severity == "critical" and not r.passed)
+        warning_count = sum(1 for r in self.results if r.severity == "warning" and not r.passed)
+        passed_count = sum(1 for r in self.results if r.passed)
+        
+        return {
+            "total_checks": len(self.results),
+            "passed": passed_count,
+            "critical": critical_count,
+            "warning": warning_count,
+            "results": [
+                {
+                    "check_name": r.check_name,
+                    "passed": r.passed,
+                    "severity": r.severity,
+                    "message": r.message,
+                    "details": r.details
+                }
+                for r in self.results
+            ]
+        }
+    
+    def print_report(self, report: Dict) -> None:
+        """打印检查报告"""
+        print("\n" + "=" * 60)
+        print("微服务健康检查报告")
+        print("=" * 60)
+        
+        print(f"\n总计: {report['total_checks']} 项检查")
+        print(f"通过: {report['passed']} 项")
+        print(f"严重问题: {report['critical']} 项")
+        print(f"警告: {report['warning']} 项")
+        
+        print("\n" + "-" * 60)
+        print("详细结果:")
+        print("-" * 60)
+        
+        for result in report['results']:
+            status = "✓" if result['passed'] else "✗"
+            severity_icon = {
+                "critical": "🔴",
+                "warning": "🟡",
+                "info": "🔵"
+            }.get(result['severity'], "⚪")
+            
+            print(f"\n{status} {severity_icon} {result['check_name']}")
+            print(f"   {result['message']}")
+        
+        print("\n" + "=" * 60)
+        
+        # 返回状态码
+        if report['critical'] > 0:
+            print("\n❌ 存在严重问题，请修复后再继续")
+            sys.exit(1)
+        elif report['warning'] > 0:
+            print("\n⚠️ 存在警告，建议修复")
+            sys.exit(0)
+        else:
+            print("\n✅ 健康检查通过")
+            sys.exit(0)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='微服务健康检查脚本')
+    parser.add_argument('--service', help='要检查的服务名称')
+    parser.add_argument('--all', action='store_true', help='检查所有服务')
+    parser.add_argument('--dir', default='.', help='项目目录')
+    parser.add_argument('--json', action='store_true', help='输出 JSON 格式')
+    
+    args = parser.parse_args()
+    
+    checker = MicroserviceHealthChecker(args.dir)
+    report = checker.run_all_checks(args.service if not args.all else None)
+    
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    else:
+        checker.print_report(report)
+
+
+if __name__ == '__main__':
+    main()

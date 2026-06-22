@@ -1,0 +1,508 @@
+# 知识库更新规则
+# 版本: 1.0.0
+# 创建日期: 2026-06-22
+
+---
+
+schema:
+  name: knowledge_update_rules
+  version: "1.0"
+  description: "定义 Your Harness 知识库的更新规则和流程"
+
+---
+
+## 更新触发条件
+
+update_triggers:
+  # 自动触发
+  automatic:
+    - id: TRIGGER_001
+      name: feedback_collected
+      description: "收集到用户反馈时触发"
+      condition: "quality_score is not null"
+      priority: medium
+      
+    - id: TRIGGER_002
+      name: learning_aggregated
+      description: "学习记录聚合完成后触发"
+      condition: "records_in_aggregation >= 5"
+      priority: medium
+      
+    - id: TRIGGER_003
+      name: pattern_identified
+      description: "识别出新模式时触发"
+      condition: "pattern_confidence >= 0.8"
+      priority: high
+      
+    - id: TRIGGER_004
+      name: rule_mismatch
+      description: "推理规则不匹配时触发"
+      condition: "rule_confidence < 0.5"
+      priority: high
+      
+    - id: TRIGGER_005
+      name: scheduled_update
+      description: "定时更新（每周）"
+      condition: "last_update > 7 days ago"
+      priority: low
+
+  # 手动触发
+  manual:
+    - id: TRIGGER_006
+      name: user_request
+      description: "用户请求更新"
+      command: "/harness-update-knowledge"
+      priority: high
+      
+    - id: TRIGGER_007
+      name: admin_action
+      description: "管理员操作"
+      command: "/harness-admin-update"
+      priority: critical
+
+---
+
+## 更新目标
+
+update_targets:
+  # 推理规则
+  reasoning_rules:
+    path: knowledge/reasoning-rules.yaml
+    update_types:
+      - type: add_rule
+        description: "添加新的推理规则"
+        requires: pattern_identification
+        
+      - type: modify_rule
+        description: "修改现有规则的条件或权重"
+        requires: sufficient_evidence
+        min_evidence_count: 10
+        
+      - type: deprecate_rule
+        description: "标记规则为废弃"
+        requires: low_effectiveness
+        effectiveness_threshold: 0.5
+        
+      - type: remove_rule
+        description: "删除规则"
+        requires: admin_approval
+        
+    validation:
+      - "规则 ID 唯一"
+      - "规则条件可解析"
+      - "规则不产生循环依赖"
+
+  # 项目模式
+  project_patterns:
+    path: knowledge/project-patterns.yaml
+    update_types:
+      - type: add_pattern
+        description: "添加新的项目模式"
+        requires: successful_pattern
+        min_success_count: 5
+        min_success_rate: 0.8
+        
+      - type: update_pattern
+        description: "更新模式的特征或流程"
+        requires: new_evidence
+        min_evidence_count: 3
+        
+      - type: merge_patterns
+        description: "合并相似的模式"
+        requires: high_similarity
+        similarity_threshold: 0.9
+        
+    validation:
+      - "模式 ID 唯一"
+      - "模式特征完整"
+      - "模式流程可执行"
+
+  # 模板元素
+  template_elements:
+    path: element-library/
+    update_types:
+      - type: add_element
+        description: "添加新的模板元素"
+        requires: element_definition
+        
+      - type: update_element
+        description: "更新元素内容"
+        requires: improvement_justified
+        
+      - type: add_combination
+        description: "添加新的元素组合"
+        requires: successful_combination
+        min_success_count: 3
+        
+    validation:
+      - "元素 ID 唯一"
+      - "元素结构完整"
+      - "元素可独立使用"
+
+  # 最佳实践
+  best_practices:
+    path: knowledge/best-practices/
+    update_types:
+      - type: promote_from_learning
+        description: "从学习记录提升"
+        requires: promotion_criteria
+        min_records: 10
+        min_avg_satisfaction: 4.5
+        min_success_rate: 0.9
+        has_recommendation: true
+        
+      - type: add_manual
+        description: "手动添加"
+        requires: admin_approval
+        
+      - type: update_practice
+        description: "更新最佳实践"
+        requires: new_evidence
+        
+      - type: demote_practice
+        description: "降级为普通模板"
+        requires: low_effectiveness
+        effectiveness_threshold: 0.6
+        
+    validation:
+      - "实践 ID 唯一"
+      - "实践经过验证"
+      - "实践文档完整"
+
+  # 学习记录
+  learning_records:
+    path: knowledge/learnings/
+    update_types:
+      - type: add_record
+        description: "添加学习记录"
+        requires: feedback_collected
+        
+      - type: update_record
+        description: "更新学习记录"
+        requires: new_evidence
+        
+      - type: aggregate_records
+        description: "聚合学习记录"
+        requires: sufficient_records
+        min_count: 5
+        
+    validation:
+      - "记录 ID 唯一"
+      - "记录包含必要字段"
+      - "记录可追溯"
+
+---
+
+## 更新规则
+
+update_rules:
+  # 规则 1: 增量更新
+  - id: RULE_001
+    name: incremental_update
+    description: "优先增量更新，避免大规模重写"
+    priority: high
+    
+    conditions:
+      - "变更范围 < 30%"
+      - "现有内容质量 >= acceptable"
+      
+    actions:
+      - "只更新受影响的部分"
+      - "保留未变更的内容"
+      - "记录变更历史"
+      
+    exceptions:
+      - "知识库结构变更"
+      - "大规模重构"
+
+  # 规则 2: 验证更新
+  - id: RULE_002
+    name: validate_before_update
+    description: "更新前验证新内容的正确性"
+    priority: critical
+    
+    conditions:
+      - "always"
+      
+    actions:
+      - "检查语法正确性"
+      - "检查引用完整性"
+      - "检查逻辑一致性"
+      - "进行小规模测试"
+      
+    exceptions:
+      - "紧急修复"
+
+  # 规则 3: 保留历史
+  - id: RULE_003
+    name: preserve_history
+    description: "保留更新前的历史版本"
+    priority: high
+    
+    conditions:
+      - "更新影响已有内容"
+      
+    actions:
+      - "记录更新前的版本"
+      - "记录更新原因"
+      - "保留回滚能力"
+      
+    exceptions:
+      - "删除操作"
+      - "废弃标记"
+
+  # 规则 4: 冲突解决
+  - id: RULE_004
+    name: conflict_resolution
+    description: "解决知识冲突时的优先级规则"
+    priority: high
+    
+    conflict_types:
+      - type: version_conflict
+        description: "同一知识的不同版本"
+        resolution: "保留最新版本，归档旧版本"
+        
+      - type: pattern_conflict
+        description: "相似模式的特征冲突"
+        resolution: "合并为统一模式，记录变体"
+        
+      - type: rule_conflict
+        description: "推理规则的逻辑冲突"
+        resolution: "标记冲突，请求人工审核"
+        
+      - type: priority_conflict
+        description: "多个更新的优先级冲突"
+        resolution: "按优先级顺序处理"
+        
+    priority_order:
+      1: security_related
+        description: "安全相关知识"
+        
+      2: user_marked
+        description: "用户标记为重要的"
+        
+      3: high_confidence
+        description: "高置信度的更新"
+        
+      4: recent
+        description: "最近的更新"
+        
+      5: manual
+        description: "手动添加的"
+        
+      6: automatic
+        description: "自动学习的"
+
+  # 规则 5: 渐进式推广
+  - id: RULE_005
+    name: progressive_promotion
+    description: "从学习记录到最佳实践的渐进式推广"
+    priority: medium
+    
+    promotion_path:
+      level_1: learning_record
+        description: "初始学习记录"
+        location: knowledge/learnings/
+        
+      level_2: validated_pattern
+        description: "经过验证的模式"
+        location: knowledge/patterns/
+        promotion_criteria:
+          - "使用次数 >= 5"
+          - "成功率 >= 0.8"
+          
+      level_3: template_element
+        description: "可复用的模板元素"
+        location: element-library/
+        promotion_criteria:
+          - "使用次数 >= 10"
+          - "成功率 >= 0.85"
+          - "有明确的复用价值"
+          
+      level_4: best_practice
+        description: "最佳实践"
+        location: knowledge/best-practices/
+        promotion_criteria:
+          - "使用次数 >= 15"
+          - "平均满意度 >= 4.5"
+          - "成功率 >= 0.9"
+          - "有用户推荐"
+
+  # 规则 6: 清理过时知识
+  - id: RULE_006
+    name: cleanup_obsolete
+    description: "清理过时的知识"
+    priority: low
+    
+    cleanup_conditions:
+      - type: unused
+        description: "长期未使用"
+        criteria: "last_used > 90 days ago"
+        action: "标记为候选删除"
+        
+      - type: low_effectiveness
+        description: "效果不佳"
+        criteria: "average_effectiveness < 0.5"
+        action: "标记为待审核"
+        
+      - type: superseded
+        description: "已被新知识取代"
+        criteria: "has_newer_version"
+        action: "标记为废弃"
+        
+      - type: conflicting
+        description: "与其他知识冲突"
+        criteria: "has_conflict"
+        action: "请求人工审核"
+        
+    cleanup_process:
+      - "识别候选清理项"
+      - "生成清理报告"
+      - "请求确认"
+      - "执行清理"
+      - "记录清理历史"
+
+---
+
+## 更新流程
+
+update_flow:
+  name: standard_update_flow
+  description: "标准知识库更新流程"
+  
+  steps:
+    - step: 1
+      id: UF_STEP_001
+      name: 触发检测
+      description: "检测是否需要更新"
+      action: |
+        检查所有触发条件：
+        - 反馈收集完成
+        - 学习记录生成
+        - 定时触发
+        - 用户请求
+        
+    - step: 2
+      id: UF_STEP_002
+      name: 分析变更
+      description: "分析需要更新的内容"
+      action: |
+        基于反馈和学习记录，分析：
+        - 哪些知识需要更新
+        - 更新的类型（添加/修改/删除）
+        - 更新的优先级
+        
+    - step: 3
+      id: UF_STEP_003
+      name: 生成更新计划
+      description: "生成详细的更新计划"
+      action: |
+        ```yaml
+        update_plan:
+          id: UP-{timestamp}
+          created_at: {timestamp}
+          updates:
+            - target: reasoning_rules
+              type: modify_rule
+              rule_id: R006
+              changes: [...]
+              reason: "基于 15 条反馈的分析"
+            
+            - target: template_elements
+              type: add_element
+              element_id: TPL-010
+              definition: [...]
+              reason: "识别出新的常用模式"
+        ```
+        
+    - step: 4
+      id: UF_STEP_004
+      name: 验证更新
+      description: "验证更新内容的正确性"
+      action: |
+        对每个更新进行验证：
+        - 语法检查
+        - 引用完整性
+        - 逻辑一致性
+        - 小规模测试
+        
+    - step: 5
+      id: UF_STEP_005
+      name: 执行更新
+      description: "执行知识库更新"
+      action: |
+        按优先级顺序执行更新：
+        1. 安全相关更新
+        2. 高优先级更新
+        3. 普通更新
+        4. 低优先级更新
+        
+    - step: 6
+      id: UF_STEP_006
+      name: 记录历史
+      description: "记录更新历史"
+      action: |
+        ```yaml
+        update_history:
+          id: UH-{timestamp}
+          executed_at: {timestamp}
+          updates_applied:
+            - update_id: UP-001
+              status: success
+              changes: [...]
+          
+          updates_rejected:
+            - update_id: UP-002
+              reason: "验证失败"
+        ```
+        
+    - step: 7
+      id: UF_STEP_007
+      name: 通知相关方
+      description: "通知用户和管理员"
+      action: |
+        生成更新报告：
+        - 更新摘要
+        - 影响范围
+        - 建议操作
+
+---
+
+## 与元能力的协作
+
+capability_collaboration:
+  - capability: learning-system
+    relationship: consumes_output
+    description: "学习系统的输出是更新的主要依据"
+    data_flow:
+      - "LearningRecord → 更新依据"
+      - "LearningAggregation → 聚合更新"
+      - "PromotionCandidate → 提升依据"
+      
+  - capability: project-analysis
+    relationship: bidirectional
+    description: "项目分析和知识库互相改进"
+    feedback_loop:
+      - "知识库 → 项目分析规则"
+      - "项目分析结果 → 知识库更新"
+      
+  - capability: stage-reasoning
+    relationship: bidirectional
+    description: "阶段推理和知识库互相改进"
+    feedback_loop:
+      - "知识库 → 推理规则"
+      - "推理结果反馈 → 知识库更新"
+
+---
+
+## 版本历史
+
+version_history:
+  - version: "1.0.0"
+    date: "2026-06-22"
+    changes:
+      - "初始版本"
+      - "定义更新触发条件"
+      - "定义更新目标"
+      - "定义更新规则"
+      - "定义更新流程"

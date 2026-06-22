@@ -1,0 +1,808 @@
+---
+version: 1.0.0
+description: |
+  通用推理规则库
+  用于开发阶段推理（stage-reasoning）元能力
+  
+  这些规则是通用的，不针对特定项目
+  任何项目都可以通过这些规则推导出适合它的开发阶段
+---
+
+# 推理规则
+
+rules:
+  # ============================================================
+  # 规则 1: 外部集成规则
+  # ============================================================
+  - id: R001
+    name: external-integration
+    description: "项目涉及调用外部系统/API 时触发"
+    
+    trigger:
+      condition: "项目涉及调用外部系统/API"
+      signals:
+        - "有 HTTP 客户端调用外部服务"
+        - "有 API Key、Token 配置"
+        - "有第三方 SDK 依赖"
+        - "有 webhook 或 callback 处理"
+        - "有外部服务集成代码"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        外部集成意味着：
+        1. 需要理解外部 API 的行为和限制
+        2. 需要处理 API 变更的兼容性
+        3. 需要测试与外部系统的交互
+        4. 需要考虑外部服务的可用性
+        
+      therefore: |
+        必须有专门的阶段来处理这些关注点
+        
+    stages_required:
+      - id: API_ANALYSIS
+        name: "API 分析"
+        importance: critical
+        focus:
+          - "理解外部 API 的功能和限制"
+          - "识别 API 的版本和兼容性策略"
+          - "评估 API 的稳定性"
+          - "分析 API 的限制（限流、超时等）"
+          
+      - id: INTERFACE_DESIGN
+        name: "接口设计"
+        importance: high
+        focus:
+          - "设计内部与外部 API 的交互层"
+          - "定义错误处理策略"
+          - "设计降级和重试机制"
+          - "定义缓存策略"
+          
+      - id: COMPATIBILITY_TEST
+        name: "兼容性测试"
+        importance: high
+        focus:
+          - "测试不同 API 版本的兼容性"
+          - "测试错误场景处理"
+          - "验证限流和超时处理"
+          - "测试降级方案"
+          
+      - id: INTEGRATION_TEST
+        name: "集成测试"
+        importance: critical
+        focus:
+          - "端到端测试外部集成"
+          - "模拟外部服务故障"
+          - "验证数据一致性"
+          - "压力测试外部调用"
+    
+    checks:
+      - "API 成本已估算"
+      - "API 限流已处理"
+      - "错误重试已实现"
+      - "降级方案已准备"
+      - "外部 API 文档已阅读"
+
+  # ============================================================
+  # 规则 2: 数据处理规则
+  # ============================================================
+  - id: R002
+    name: data-processing
+    description: "项目涉及数据存储/处理时触发"
+    
+    trigger:
+      condition: "项目涉及数据存储/处理"
+      signals:
+        - "有数据库连接代码"
+        - "有 ORM 或数据库迁移"
+        - "有数据模型定义"
+        - "有数据导入/导出功能"
+        - "有缓存实现"
+        - "有数据验证代码"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        数据处理意味着：
+        1. 需要设计合适的数据模型
+        2. 需要考虑数据迁移和版本兼容
+        3. 需要测试数据一致性和完整性
+        4. 需要考虑数据安全和隐私
+        
+      therefore: |
+        必须有专门的阶段来处理数据相关关注点
+        
+    stages_required:
+      - id: DATA_MODEL_DESIGN
+        name: "数据模型设计"
+        importance: critical
+        focus:
+          - "定义实体和关系"
+          - "设计索引策略"
+          - "考虑查询模式"
+          - "定义数据约束"
+          
+      - id: DATABASE_DESIGN
+        name: "数据库设计"
+        importance: high
+        focus:
+          - "表结构设计"
+          - "迁移脚本"
+          - "初始化数据"
+          - "种子数据"
+          
+      - id: DATA_TEST
+        name: "数据测试"
+        importance: high
+        focus:
+          - "测试 CRUD 操作"
+          - "测试数据一致性"
+          - "测试迁移脚本"
+          - "测试并发访问"
+          
+      - id: DATA_SECURITY
+        name: "数据安全"
+        importance: medium
+        focus:
+          - "敏感数据加密"
+          - "访问控制"
+          - "审计日志"
+          - "数据备份策略"
+    
+    checks:
+      - "数据模型已设计"
+      - "迁移脚本已准备"
+      - "回滚方案已准备"
+      - "索引已优化"
+      - "数据验证已实现"
+
+  # ============================================================
+  # 规则 3: 用户交互规则
+  # ============================================================
+  - id: R003
+    name: user-interaction
+    description: "项目涉及用户界面时触发"
+    
+    trigger:
+      condition: "项目涉及用户界面"
+      signals:
+        - "有前端代码 (HTML/CSS/JS/React/Vue)"
+        - "有 UI 组件库依赖"
+        - "有设计稿或原型"
+        - "有用户输入处理"
+        - "有状态管理代码"
+        - "有路由配置"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        用户交互意味着：
+        1. 需要将需求转化为 UI 设计
+        2. 需要开发可复用的组件
+        3. 需要测试用户体验
+        4. 需要考虑响应式和可访问性
+        
+      therefore: |
+        必须有专门的阶段来处理 UI/UX 关注点
+        
+    stages_required:
+      - id: REQUIREMENT_ANALYSIS
+        name: "需求分析"
+        importance: critical
+        focus:
+          - "理解用户需求"
+          - "识别功能优先级"
+          - "定义验收标准"
+          - "识别用户流程"
+          
+      - id: UI_DESIGN
+        name: "UI 设计"
+        importance: high
+        focus:
+          - "设计界面布局"
+          - "定义组件结构"
+          - "考虑响应式设计"
+          - "定义交互状态"
+          
+      - id: COMPONENT_DEVELOPMENT
+        name: "组件开发"
+        importance: high
+        focus:
+          - "开发可复用组件"
+          - "实现状态管理"
+          - "处理用户输入"
+          - "实现表单验证"
+          
+      - id: INTERACTION_TEST
+        name: "交互测试"
+        importance: high
+        focus:
+          - "测试用户流程"
+          - "测试表单验证"
+          - "测试错误提示"
+          - "测试响应式布局"
+    
+    checks:
+      - "UI 设计已评审"
+      - "组件结构已定义"
+      - "状态管理已实现"
+      - "表单验证已测试"
+      - "响应式设计已验证"
+
+  # ============================================================
+  # 规则 4: 安全敏感规则
+  # ============================================================
+  - id: R004
+    name: security-sensitive
+    description: "项目涉及认证/授权/敏感数据时触发"
+    
+    trigger:
+      condition: "项目涉及认证/授权/敏感数据"
+      signals:
+        - "有密码处理代码"
+        - "有 JWT 或 Token 生成/验证"
+        - "有 API Key 存储"
+        - "有加密/解密代码"
+        - "处理支付信息"
+        - "处理个人隐私数据"
+        - "有 RBAC 权限控制"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        安全敏感意味着：
+        1. 不能依赖常规测试，需要专门的安全审查
+        2. 需要考虑多种攻击向量
+        3. 需要遵循安全最佳实践
+        4. 可能需要合规性检查
+        
+      therefore: |
+        必须有专门的安全设计和审查阶段
+        
+    stages_required:
+      - id: SECURITY_DESIGN
+        name: "安全设计"
+        importance: critical
+        focus:
+          - "识别安全风险"
+          - "设计认证授权方案"
+          - "定义加密策略"
+          - "设计审计日志"
+          
+      - id: SECURITY_IMPLEMENTATION
+        name: "安全实现"
+        importance: critical
+        focus:
+          - "使用安全的密码存储"
+          - "实现访问控制"
+          - "添加安全头"
+          - "实现 CSRF 防护"
+          
+      - id: SECURITY_REVIEW
+        name: "安全审查"
+        importance: critical
+        focus:
+          - "代码安全审计"
+          - "依赖漏洞扫描"
+          - "安全配置检查"
+          - "权限模型审查"
+          
+      - id: PENETRATION_TEST
+        name: "渗透测试"
+        importance: high
+        focus:
+          - "测试常见攻击向量"
+          - "测试授权绕过"
+          - "测试数据泄露"
+          - "测试 SQL 注入"
+    
+    checks:
+      - "安全设计已完成"
+      - "安全审查已通过"
+      - "API Key 不硬编码"
+      - "密码使用 bcrypt/argon2"
+      - "无高危漏洞"
+      - "审计日志已实现"
+
+  # ============================================================
+  # 规则 5: 性能要求规则
+  # ============================================================
+  - id: R005
+    name: performance-requirements
+    description: "项目涉及高并发/实时性要求时触发"
+    
+    trigger:
+      condition: "项目涉及高并发/实时性要求"
+      signals:
+        - "有 async/await 或并发代码"
+        - "有性能测试代码"
+        - "有缓存实现"
+        - "有队列或消息系统"
+        - "有流式处理"
+        - "有速率限制"
+        - "有连接池配置"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        性能要求意味着：
+        1. 需要在设计阶段考虑性能
+        2. 需要进行性能分析和优化
+        3. 需要进行压力测试
+        4. 需要监控性能指标
+        
+      therefore: |
+        必须有专门的性能分析和测试阶段
+        
+    stages_required:
+      - id: PERFORMANCE_ANALYSIS
+        name: "性能分析"
+        importance: critical
+        focus:
+          - "识别性能瓶颈点"
+          - "分析算法复杂度"
+          - "评估资源使用"
+          - "定义性能指标"
+          
+      - id: ARCHITECTURE_DESIGN
+        name: "架构设计（性能视角）"
+        importance: high
+        focus:
+          - "设计缓存策略"
+          - "设计分页方案"
+          - "设计并发模型"
+          - "设计限流策略"
+          
+      - id: PERFORMANCE_TEST
+        name: "性能测试"
+        importance: critical
+        focus:
+          - "基准测试"
+          - "压力测试"
+          - "负载测试"
+          - " endurance 测试"
+          
+      - id: PERFORMANCE_OPTIMIZATION
+        name: "性能优化"
+        importance: high
+        focus:
+          - "优化热点代码"
+          - "优化数据库查询"
+          - "优化网络通信"
+          - "优化内存使用"
+    
+    checks:
+      - "性能指标已定义"
+      - "基准测试已通过"
+      - "压力测试已通过"
+      - "缓存策略已实现"
+      - "限流已实现"
+
+  # ============================================================
+  # 规则 6: AI/LLM 集成规则
+  # ============================================================
+  - id: R006
+    name: ai-llm-integration
+    description: "项目涉及 LLM 调用/Prompt 工程时触发"
+    
+    trigger:
+      condition: "项目涉及 LLM 调用/Prompt 工程"
+      signals:
+        - "有 OpenAI/Anthropic/LangChain 导入"
+        - "有 prompt 模板文件"
+        - "有 embedding 或 vector store"
+        - "有 API Key 配置"
+        - "有 LLM 响应处理代码"
+        - "有 token 计数代码"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        AI/LLM 集成意味着：
+        1. 需要管理 API 成本
+        2. 需要处理 LLM 输出的不确定性
+        3. 需要考虑 prompt 版本管理
+        4. 需要测试不同模型的表现
+        
+      therefore: |
+        必须有专门的 AI 管理阶段
+        
+    stages_required:
+      - id: COST_ANALYSIS
+        name: "成本分析"
+        importance: critical
+        focus:
+          - "估算 API 调用成本"
+          - "设计成本控制策略"
+          - "评估不同模型的成本"
+          - "设计缓存策略"
+          
+      - id: PROMPT_DESIGN
+        name: "Prompt 设计"
+        importance: critical
+        focus:
+          - "设计 prompt 模板"
+          - "测试 prompt 效果"
+          - "版本管理"
+          - "A/B 测试"
+          
+      - id: MODEL_SELECTION
+        name: "模型选择"
+        importance: high
+        focus:
+          - "评估不同模型的能力"
+          - "测试模型在特定任务上的表现"
+          - "权衡成本和效果"
+          - "设计模型 fallback"
+          
+      - id: AI_TESTING
+        name: "AI 测试"
+        importance: critical
+        focus:
+          - "测试输出质量"
+          - "测试边界情况"
+          - "测试错误处理"
+          - "测试幻觉情况"
+          
+      - id: SAFETY_GUARDS
+        name: "安全防护"
+        importance: critical
+        focus:
+          - "Prompt injection 防护"
+          - "内容过滤"
+          - "输出验证"
+          - "敏感信息过滤"
+    
+    checks:
+      - "API 成本已估算"
+      - "Prompt 已测试"
+      - "模型选择已完成"
+      - "输出已验证"
+      - "安全防护已实现"
+      - "成本控制已实现"
+
+  # ============================================================
+  # 规则 7: 微服务架构规则
+  # ============================================================
+  - id: R007
+    name: microservice-architecture
+    description: "项目采用微服务架构时触发"
+    
+    trigger:
+      condition: "项目采用微服务架构"
+      signals:
+        - "有多个服务目录"
+        - "有服务发现配置"
+        - "有 docker-compose 或 k8s 配置"
+        - "有服务间调用代码"
+        - "有服务注册配置"
+        - "有负载均衡配置"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        微服务架构意味着：
+        1. 需要管理服务间通信
+        2. 需要考虑分布式事务
+        3. 需要处理服务部署顺序
+        4. 需要设计服务边界
+        
+      therefore: |
+        必须有专门的服务管理阶段
+        
+    stages_required:
+      - id: SERVICE_BOUNDARY_DESIGN
+        name: "服务边界设计"
+        importance: critical
+        focus:
+          - "定义服务职责"
+          - "设计 API 契约"
+          - "定义数据边界"
+          - "定义服务依赖"
+          
+      - id: SERVICE_COMMUNICATION_DESIGN
+        name: "服务通信设计"
+        importance: critical
+        focus:
+          - "选择通信协议"
+          - "设计消息格式"
+          - "处理服务发现"
+          - "设计错误处理"
+          
+      - id: DEPLOYMENT_SEQUENCING
+        name: "部署顺序"
+        importance: high
+        focus:
+          - "确定服务依赖"
+          - "设计部署顺序"
+          - "处理版本兼容"
+          - "设计灰度策略"
+          
+      - id: SERVICE_TESTING
+        name: "服务测试"
+        importance: critical
+        focus:
+          - "服务独立测试"
+          - "集成测试"
+          - "契约测试"
+          - "端到端测试"
+    
+    checks:
+      - "服务边界已定义"
+      - "API 契约已定义"
+      - "服务发现已配置"
+      - "部署顺序已确定"
+      - "契约测试已实现"
+
+  # ============================================================
+  # 规则 8: 数据密集型规则
+  # ============================================================
+  - id: R008
+    name: data-intensive
+    description: "项目涉及大数据/批处理时触发"
+    
+    trigger:
+      condition: "项目涉及大数据/批处理"
+      signals:
+        - "有 Spark/Dask 依赖"
+        - "有数据管道代码"
+        - "有大数据文件"
+        - "有批处理任务"
+        - "有数据分区代码"
+        - "有数据压缩代码"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        数据密集型意味着：
+        1. 需要考虑资源使用
+        2. 需要优化数据处理效率
+        3. 需要考虑数据存储成本
+        4. 需要测试大数据量场景
+        
+      therefore: |
+        必须有专门的数据处理阶段
+        
+    stages_required:
+      - id: RESOURCE_PLANNING
+        name: "资源规划"
+        importance: critical
+        focus:
+          - "评估计算资源需求"
+          - "评估存储需求"
+          - "成本估算"
+          - "集群配置"
+          
+      - id: DATA_PIPELINE_DESIGN
+        name: "数据管道设计"
+        importance: critical
+        focus:
+          - "设计数据流程"
+          - "选择处理框架"
+          - "设计存储方案"
+          - "设计分区策略"
+          
+      - id: EFFICIENCY_OPTIMIZATION
+        name: "效率优化"
+        importance: high
+        focus:
+          - "优化数据读取"
+          - "优化数据处理"
+          - "优化内存使用"
+          - "优化 shuffle"
+          
+      - id: SCALE_TESTING
+        name: "规模测试"
+        importance: critical
+        focus:
+          - "测试大数据量"
+          - "测试处理时间"
+          - "测试资源使用"
+          - "测试失败恢复"
+    
+    checks:
+      - "资源需求已评估"
+      - "数据流程已设计"
+      - "存储方案已确定"
+      - "效率已优化"
+      - "规模测试已通过"
+
+  # ============================================================
+  # 规则 9: 实时性要求规则
+  # ============================================================
+  - id: R009
+    name: real-time-requirements
+    description: "项目涉及实时数据处理/推送时触发"
+    
+    trigger:
+      condition: "项目涉及实时数据处理/推送"
+      signals:
+        - "有 WebSocket 代码"
+        - "有 Server-Sent Events"
+        - "有流式处理"
+        - "有实时通知"
+        - "有 SSE 配置"
+        - "有实时数据库"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        实时性要求意味着：
+        1. 需要确保低延迟
+        2. 需要考虑连接管理
+        3. 需要处理断线重连
+        4. 需要设计消息队列
+        
+      therefore: |
+        必须有专门的实时性设计阶段
+        
+    stages_required:
+      - id: LATENCY_ANALYSIS
+        name: "延迟分析"
+        importance: critical
+        focus:
+          - "识别延迟来源"
+          - "设定延迟目标"
+          - "优化延迟敏感路径"
+          - "监控延迟指标"
+          
+      - id: CONNECTION_MANAGEMENT
+        name: "连接管理"
+        importance: high
+        focus:
+          - "设计连接池"
+          - "处理断线重连"
+          - "设计心跳机制"
+          - "设计消息确认"
+          
+      - id: MESSAGE_QUEUE_DESIGN
+        name: "消息队列设计"
+        importance: high
+        focus:
+          - "选择消息队列"
+          - "设计消息格式"
+          - "设计消费策略"
+          - "设计持久化策略"
+          
+      - id: REALTIME_TESTING
+        name: "实时性测试"
+        importance: critical
+        focus:
+          - "测试延迟"
+          - "测试并发连接"
+          - "测试断线恢复"
+          - "测试消息顺序"
+    
+    checks:
+      - "延迟目标已设定"
+      - "连接管理已设计"
+      - "消息队列已设计"
+      - "实时性测试已通过"
+
+  # ============================================================
+  # 规则 10: 协议驱动规则
+  # ============================================================
+  - id: R010
+    name: protocol-driven
+    description: "项目采用协议驱动开发时触发"
+    
+    trigger:
+      condition: "项目采用协议驱动开发"
+      signals:
+        - "有 *.proto 文件"
+        - "有 cgi/ 目录"
+        - "有 dbproxy 相关代码"
+        - "有 YunAPI 注册"
+        - "有 Tag 同步"
+      min_signals: 2
+      
+    reasoning:
+      logic: |
+        协议驱动意味着：
+        1. 需要管理协议版本
+        2. 需要同步多个系统的变更
+        3. 需要考虑协议兼容性
+        4. 需要注册云 API
+        
+      therefore: |
+        必须有专门的协议管理阶段
+        
+    stages_required:
+      - id: PROTOCOL_ANALYSIS
+        name: "协议分析"
+        importance: critical
+        focus:
+          - "分析协议变更范围"
+          - "评估影响面"
+          - "确定变更顺序"
+          - "检查兼容性"
+          
+      - id: PROTOCOL_DESIGN
+        name: "协议设计"
+        importance: critical
+        focus:
+          - "设计 Proto 文件"
+          - "设计 Tag 映射"
+          - "设计 DB 结构"
+          - "设计 CGI 接口"
+          
+      - id: PROTOCOL_SYNC
+        name: "协议同步"
+        importance: critical
+        focus:
+          - "同步 DB 变更"
+          - "同步 Proto 变更"
+          - "同步 Tag 变更"
+          - "同步 CGI 变更"
+          
+      - id: API_REGISTRATION
+        name: "API 注册"
+        importance: high
+        focus:
+          - "注册云 API"
+          - "配置权限"
+          - "配置限流"
+          - "配置监控"
+    
+    checks:
+      - "协议变更已分析"
+      - "协议文件已设计"
+      - "协议已同步"
+      - "API 已注册"
+      - "兼容性已验证"
+
+# ============================================================
+# 元规则
+# ============================================================
+
+meta_rules:
+  # 规则优先级
+  priority:
+    description: "当多个规则都匹配时，按此优先级排序"
+    order:
+      - "security-sensitive"  # 安全永远第一
+      - "ai-llm-integration"  # AI 项目特殊处理
+      - "performance-requirements"  # 性能要求
+      - "microservice-architecture"  # 微服务架构
+      - "data-intensive"  # 数据密集型
+      - "real-time-requirements"  # 实时性要求
+      - "protocol-driven"  # 协议驱动
+      - "external-integration"  # 外部集成
+      - "data-processing"  # 数据处理
+      - "user-interaction"  # 用户交互
+      
+  # 阶段合并规则
+  stage_merge:
+    description: "当多个规则产生相同阶段时，合并为一个"
+    merge_strategy: "union"
+    
+  # 冲突解决规则
+  conflict_resolution:
+    - condition: "一个规则要求安全检查，另一个不要求"
+      resolution: "保留安全检查"
+      
+    - condition: "两个规则对同一阶段有不同 focus"
+      resolution: "合并 focus"
+      
+    - condition: "冲突无法自动解决"
+      resolution: "提交给用户确认"
+      
+  # 默认阶段
+  default_stages:
+    description: "所有项目都包含的基础阶段"
+    stages:
+      - id: REQUIREMENT_UNDERSTANDING
+        name: "需求理解"
+        
+      - id: IMPLEMENTATION
+        name: "实现"
+        
+      - id: VERIFICATION
+        name: "验证"
+        
+  # 阶段重要性阈值
+  importance_thresholds:
+    critical: ">= 0.8"  # 必须包含
+    high: ">= 0.6"  # 建议包含
+    medium: ">= 0.4"  # 可选
+    low: "< 0.4"  # 不包含

@@ -1,0 +1,722 @@
+# 预测性建议引擎
+# 版本: 1.0.0
+# 创建日期: 2026-06-22
+
+---
+
+schema:
+  name: prediction_engine
+  version: "1.0"
+  description: "定义基于历史数据的预测性建议机制"
+
+---
+
+## 概述
+
+预测性建议引擎能够基于用户的历史使用模式、项目特征和知识库，主动提供预测性建议，帮助用户更高效地完成开发任务。
+
+### 核心理念
+
+```
+被动响应: 用户问什么，系统答什么
+主动预测: 系统预测用户需要什么，主动提供
+
+预测 = 历史模式 + 当前上下文 + 知识库
+```
+
+### 预测场景
+
+```yaml
+prediction_scenarios:
+  - id: PS_001
+    name: next_step_prediction
+    description: "预测用户下一步需要什么"
+    example: "完成 API 设计后，建议进行安全性审查"
+    
+  - id: PS_002
+    name: missing_element_detection
+    description: "检测可能遗漏的元素"
+    example: "AI 项目缺少成本估算步骤"
+    
+  - id: PS_003
+    name: risk_prediction
+    description: "预测潜在风险"
+    example: "当前变更可能影响 XX 模块"
+    
+  - id: PS_004
+    name: optimization_suggestion
+    description: "建议优化点"
+    example: "可以将这两个步骤合并"
+    
+  - id: PS_005
+    name: best_time_prediction
+    description: "预测最佳执行时机"
+    example: "建议在部署前完成性能测试"
+    
+  - id: PS_006
+    name: resource_prediction
+    description: "预测资源需求"
+    example: "预计需要 2 个 API 密钥"
+```
+
+---
+
+## 预测模型
+
+### 序列预测模型
+
+```yaml
+sequence_prediction:
+  name: sequential_pattern_prediction
+  description: "基于历史序列预测下一步"
+  
+  # 序列数据结构
+  sequence_data:
+    ```yaml
+    user_sequence:
+      user_id: "user-123"
+      project_id: "project-456"
+      timestamp: "2026-06-22T10:00:00Z"
+      
+      actions:
+        - timestamp: "10:00"
+          action: "complete_requirement_analysis"
+          duration: "30m"
+          
+        - timestamp: "10:30"
+          action: "start_api_design"
+          duration: "45m"
+          
+        - timestamp: "11:15"
+          action: "request_security_review"
+          duration: "15m"
+          
+        - timestamp: "11:30"
+          action: "???"  # 待预测
+    ```
+    
+  # 模式挖掘
+  pattern_mining:
+    algorithms:
+      - name: markov_chain
+        description: "马尔可夫链模型"
+        implementation: |
+          ```python
+          # 状态转移概率矩阵
+          transition_matrix = {
+              "requirement_analysis": {
+                  "api_design": 0.6,
+                  "data_model": 0.2,
+                  "security_review": 0.1,
+                  "other": 0.1
+              },
+              "api_design": {
+                  "security_review": 0.5,
+                  "performance_test": 0.3,
+                  "implementation": 0.2
+              }
+              # ...
+          }
+          
+          def predict_next(current_state):
+              return max(transition_matrix[current_state], key=transition_matrix[current_state].get)
+          ```
+          
+      - name: association_rules
+        description: "关联规则挖掘"
+        implementation: |
+          ```python
+          # 关联规则
+          rules = [
+              {"antecedent": ["ai_project", "api_design"], 
+               "consequent": ["cost_analysis"],
+               "confidence": 0.85,
+               "support": 0.42},
+               
+              {"antecedent": ["security_sensitive", "data_model"],
+               "consequent": ["encryption_check"],
+               "confidence": 0.91,
+               "support": 0.38}
+          ]
+          ```
+          
+      - name: sequence_pattern_mining
+        description: "序列模式挖掘"
+        implementation: |
+          ```python
+          # 频繁序列
+          frequent_sequences = [
+              ["requirement", "design", "review", "implement"],
+              ["analysis", "design", "test", "deploy"],
+              ["design", "security_review", "performance_test", "deploy"]
+          ]
+          ```
+    
+  # 预测输出
+  prediction_output:
+    ```yaml
+    prediction:
+      current_state: "api_design_completed"
+      predicted_next:
+        action: "security_review"
+        confidence: 0.85
+        reason: "基于 85% 类似项目的模式"
+        
+      alternative_next:
+        - action: "performance_test"
+          confidence: 0.62
+          reason: "如果 API 有性能要求"
+          
+        - action: "implementation"
+          confidence: 0.45
+          reason: "如果 API 设计已稳定"
+          
+      suggested_action:
+        type: "recommendation"
+        message: "建议进行安全性审查，确保 API 设计符合安全标准"
+        priority: "high"
+    ```
+```
+
+### 上下文感知预测
+
+```yaml
+context_aware_prediction:
+  name: context_aware_prediction
+  description: "基于当前上下文的智能预测"
+  
+  context_types:
+    - type: project_context
+      description: "项目特征和状态"
+      signals:
+        - "项目类型"
+        - "项目阶段"
+        - "已完成功能"
+        - "待完成功能"
+        
+    - type: task_context
+      description: "当前任务信息"
+      signals:
+        - "任务类型"
+        - "任务复杂度"
+        - "任务进度"
+        - "遇到的问题"
+        
+    - type: user_context
+      description: "用户相关信息"
+      signals:
+        - "用户偏好"
+        - "用户历史"
+        - "用户能力"
+        - "用户当前状态"
+        
+    - type: temporal_context
+      description: "时间和环境信息"
+      signals:
+        - "当前时间"
+        - "截止日期"
+        - "团队状态"
+        - "依赖状态"
+  
+  context_features:
+    ```yaml
+    context_features:
+      # 项目特征
+      project:
+        type: "ai_agent"
+        complexity: "high"
+        stage: "development"
+        
+      # 任务特征
+      task:
+        type: "new_feature"
+        complexity: "medium"
+        progress: "50%"
+        
+      # 用户特征
+      user:
+        experience: "senior"
+        preference: "detailed"
+        current_load: "medium"
+        
+      # 时间特征
+      temporal:
+        time_of_day: "afternoon"
+        deadline_in: "3_days"
+        weekend: false
+    ```
+    
+  # 预测逻辑
+  prediction_logic:
+    ```yaml
+    rules:
+      - id: "CTX_RULE_001"
+        name: "deadline_pressure"
+        condition: "deadline_in < 1_day AND progress < 80%"
+        prediction: "user_will_skip_non_essential_steps"
+        suggestion: "建议专注于核心功能，跳过可选检查"
+        priority: "high"
+        
+      - id: "CTX_RULE_002"
+        name: "complexity_mismatch"
+        condition: "task_complexity == 'high' AND user_experience == 'junior'"
+        prediction: "user_may_need_more_guidance"
+        suggestion: "建议增加详细说明和示例"
+        priority: "high"
+        
+      - id: "CTX_RULE_003"
+        name: "stage_transition"
+        condition: "task_progress > 80% AND current_stage_complete"
+        prediction: "user_will_move_to_next_stage"
+        suggestion: "建议进行阶段检查点确认"
+        priority: "medium"
+        
+      - id: "CTX_RULE_004"
+        name: "pattern_completion"
+        condition: "current_pattern matches known_pattern AND missing_elements"
+        prediction: "user_has_missing_elements"
+        suggestion: "建议补充遗漏的检查项"
+        priority: "high"
+    ```
+```
+
+### 知识库增强预测
+
+```yaml
+knowledge_enhanced_prediction:
+  name: knowledge_enhanced_prediction
+  description: "结合知识库进行增强预测"
+  
+  knowledge_sources:
+    - source: project_patterns
+      description: "项目模式知识"
+      usage: |
+        ```yaml
+        # 使用项目模式预测
+        pattern = get_pattern(project_features)
+        
+        prediction = {
+            "typical_stages": pattern.stages,
+            "common_issues": pattern.issues,
+            "best_practices": pattern.best_practices,
+            "warnings": pattern.warnings
+        }
+        ```
+        
+    - source: best_practices
+      description: "最佳实践知识"
+      usage: |
+        ```yaml
+        # 使用最佳实践预测
+        practices = search_best_practices(project_context)
+        
+        prediction = {
+            "recommended_practices": practices,
+            "common_mistakes": practices.antipatterns,
+            "success_indicators": practices.metrics
+        }
+        ```
+        
+    - source: learnings
+      description: "学习记录知识"
+      usage: |
+        ```yaml
+        # 使用历史学习预测
+        similar_cases = find_similar_learnings(current_context)
+        
+        prediction = {
+            "successful_approaches": similar_cases.successful_patterns,
+            "failed_approaches": similar_cases.failed_patterns,
+            "user_feedback": similar_cases.common_feedback
+        }
+        ```
+        
+    - source: reasoning_rules
+      description: "推理规则知识"
+      usage: |
+        ```yaml
+        # 使用推理规则预测
+        applicable_rules = match_rules(project_features)
+        
+        prediction = {
+            "recommended_stages": rules.stages,
+            "required_checks": rules.checks,
+            "risk_indicators": rules.risks
+        }
+        ```
+  
+  # 知识融合
+  knowledge_fusion:
+    ```yaml
+    fusion_strategy: "weighted_combination"
+    
+    weights:
+      project_patterns: 0.3
+      best_practices: 0.3
+      learnings: 0.2
+      reasoning_rules: 0.2
+      
+    fusion_process:
+      1. 获取各知识源的预测
+      2. 计算预测一致性
+      3. 加权组合预测结果
+      4. 生成综合预测
+    ```
+```
+
+---
+
+## 预测建议生成
+
+### 建议类型
+
+```yaml
+suggestion_types:
+  - id: ST_001
+    name: action_suggestion
+    description: "建议执行的操作"
+    example: "建议进行 API 安全性审查"
+    
+  - id: ST_002
+    name: element_suggestion
+    description: "建议添加的元素"
+    example: "建议添加成本估算检查项"
+    
+  - id: ST_003
+    name: timing_suggestion
+    description: "建议的时机"
+    example: "建议在部署前 1 天完成测试"
+    
+  - id: ST_004
+    name: resource_suggestion
+    description: "建议的资源"
+    example: "建议准备备用 API 密钥"
+    
+  - id: ST_005
+    name: risk_suggestion
+    description: "建议的风险处理"
+    example: "建议增加回滚方案"
+    
+  - id: ST_006
+    name: optimization_suggestion
+    description: "建议的优化"
+    example: "建议合并这两个相似步骤"
+```
+
+### 建议生成规则
+
+```yaml
+suggestion_generation:
+  name: generate_suggestions
+  description: "基于预测生成具体建议"
+  
+  # 建议模板
+  suggestion_templates:
+    - template: "ACTION_RECOMMENDATION"
+      format: "建议您进行 {action}，因为 {reason}。"
+      example: "建议您进行 API 安全性审查，因为该 API 处理敏感用户数据。"
+      
+    - template: "MISSING_ELEMENT"
+      format: "{project_type} 项目通常需要 {element}，当前流程中缺少此步骤。"
+      example: "AI/LLM 项目通常需要成本估算步骤，当前流程中缺少此步骤。"
+      
+    - template: "RISK_WARNING"
+      format: "注意：{risk_description}。建议 {mitigation}。"
+      example: "注意：当前变更可能影响支付模块。建议在测试环境先验证。"
+      
+    - template: "BEST_PRACTICE"
+      format: "根据最佳实践，建议 {practice}。这样可以 {benefit}。"
+      example: "根据最佳实践，建议在部署前进行性能基准测试。这样可以确保生产环境性能。"
+      
+    - template: "EFFICIENCY_TIP"
+      format: "提示：{tip}，可以节省约 {time_saved}。"
+      example: "提示：可以将代码审查和测试合并进行，可以节省约 30 分钟。"
+  
+  # 建议优先级
+  priority_rules:
+    - id: "PRIO_001"
+      name: security_related
+      condition: "suggestion involves security"
+      priority: "critical"
+      
+    - id: "PRIO_002"
+      name: cost_related
+      condition: "suggestion involves cost"
+      priority: "high"
+      
+    - id: "PRIO_003"
+      name: risk_related
+      condition: "suggestion involves risk mitigation"
+      priority: "high"
+      
+    - id: "PRIO_004"
+      name: best_practice
+      condition: "suggestion is best practice recommendation"
+      priority: "medium"
+      
+    - id: "PRIO_005"
+      name: efficiency
+      condition: "suggestion is efficiency tip"
+      priority: "low"
+  
+  # 建议生成流程
+  generation_flow:
+    ```yaml
+    1. 获取预测结果
+       predictions = get_predictions(context)
+       
+    2. 为每个预测生成建议
+       for prediction in predictions:
+           suggestion = generate_suggestion(prediction)
+           
+    3. 计算建议优先级
+           suggestion.priority = calculate_priority(suggestion)
+           
+    4. 应用个性化适配
+           suggestion = adapt_to_user(suggestion, user_profile)
+           
+    5. 排序并限制数量
+           suggestions = sort_by_priority(suggestions)[:5]
+           
+    6. 生成最终输出
+           output = format_suggestions(suggestions)
+    ```
+```
+
+### 建议展示
+
+```yaml
+suggestion_display:
+  name: present_suggestions
+  description: "将建议展示给用户"
+  
+  display_modes:
+    - mode: inline
+      description: "在相关步骤旁边显示"
+      example: "在 API 设计步骤后，显示'建议进行安全性审查'"
+      
+    - mode: sidebar
+      description: "在侧边栏显示所有建议"
+      example: "侧边栏显示 5 条建议，可展开查看详情"
+      
+    - mode: notification
+      description: "作为通知显示"
+      example: "完成当前步骤后，弹出建议通知"
+      
+    - mode: summary
+      description: "在流程开始时显示摘要"
+      example: "流程开始时显示'本次可能需要关注的 3 点'"
+  
+  display_rules:
+    - id: "DISP_001"
+      name: critical_immediate
+      condition: "priority == 'critical'"
+      action: "立即显示，不可忽略"
+      
+    - id: "DISP_002"
+      name: high_after_step
+      condition: "priority == 'high'"
+      action: "步骤完成后显示"
+      
+    - id: "DISP_003"
+      name: medium_in_sidebar
+      condition: "priority == 'medium'"
+      action: "在侧边栏显示"
+      
+    - id: "DISP_004"
+      name: low_on_request
+      condition: "priority == 'low'"
+      action: "仅在用户请求时显示"
+  
+  output_format:
+    ```yaml
+    suggestions:
+      critical:
+        - id: "SUG-001"
+          type: "risk_warning"
+          message: "检测到安全风险：API 处理敏感数据但缺少加密检查"
+          priority: "critical"
+          action: "立即添加加密检查步骤"
+          auto_apply: true
+          
+      high:
+        - id: "SUG-002"
+          type: "element_suggestion"
+          message: "AI 项目推荐添加成本估算步骤"
+          priority: "high"
+          action: "添加成本估算模板"
+          
+      medium:
+        - id: "SUG-003"
+          type: "best_practice"
+          message: "建议在部署前进行性能基准测试"
+          priority: "medium"
+          action: "查看性能测试指南"
+          
+      low:
+        - id: "SUG-004"
+          type: "optimization"
+          message: "可以将步骤 3 和 4 合并以提高效率"
+          priority: "low"
+          action: "查看合并建议"
+    ```
+```
+
+---
+
+## 预测准确性
+
+### 准确性追踪
+
+```yaml
+accuracy_tracking:
+  name: track_prediction_accuracy
+  description: "追踪预测的准确性"
+  
+  tracking_metrics:
+    - id: ACC_001
+      name: prediction_accuracy
+      description: "预测正确率"
+      calculation: "correct_predictions / total_predictions"
+      target: "> 0.7"
+      
+    - id: ACC_002
+      name: user_acceptance
+      description: "用户接受建议的比例"
+      calculation: "accepted_suggestions / total_suggestions"
+      target: "> 0.6"
+      
+    - id: ACC_003
+      name: false_positive_rate
+      description: "误报率"
+      calculation: "incorrect_predictions / total_predictions"
+      target: "< 0.2"
+      
+    - id: ACC_004
+      name: missed_prediction_rate
+      description: "漏报率"
+      calculation: "missed_predictions / total Opportunities"
+      target: "< 0.15"
+  
+  tracking_structure:
+    ```yaml
+    prediction_record:
+      id: "PR-2026-06-22-001"
+      timestamp: "2026-06-22T10:30:00Z"
+      
+      prediction:
+        type: "next_step"
+        predicted: "security_review"
+        confidence: 0.85
+        
+      actual:
+        occurred: "security_review"
+        timestamp: "2026-06-22T11:00:00Z"
+        
+      result:
+        correct: true
+        user_feedback: "建议很有帮助"
+        
+      metadata:
+        context_hash: "abc123"
+        model_version: "1.2.0"
+    ```
+```
+
+### 准确性改进
+
+```yaml
+accuracy_improvement:
+  name: improve_prediction_accuracy
+  description: "基于反馈改进预测准确性"
+  
+  improvement_strategies:
+    - id: "IMP_001"
+      name: feature_weight_adjustment
+      description: "调整特征权重"
+      process: |
+        1. 分析错误预测的特征分布
+        2. 识别被忽略的重要特征
+        3. 调整特征权重
+        4. 重新训练模型
+        
+    - id: "IMP_002"
+      name: context_expansion
+      description: "扩展上下文信息"
+      process: |
+        1. 分析哪些上下文信息有助于准确预测
+        2. 添加新的上下文信号
+        3. 更新预测模型
+        
+    - id: "IMP_003"
+      name: user_feedback_learning
+      description: "从用户反馈中学习"
+      process: |
+        1. 收集用户对建议的反馈
+        2. 分析哪些建议被忽略
+        3. 调整预测逻辑
+        
+    - id: "IMP_004"
+      name: ensemble_methods
+      description: "使用集成方法"
+      process: |
+        1. 组合多个预测模型
+        2. 使用投票或加权平均
+        3. 提高整体准确性
+```
+
+---
+
+## 与元能力的协作
+
+### 与所有元能力的协作
+
+```yaml
+collaboration:
+  capabilities:
+    - capability: project-analysis
+      prediction_enhancement:
+        - "预测项目特征的完整性"
+        - "预测可能遗漏的特征"
+        
+    - capability: stage-reasoning
+      prediction_enhancement:
+        - "预测下一步需要的阶段"
+        - "预测可能遗漏的阶段"
+        - "预测阶段顺序的最优性"
+        
+    - capability: flow-generation
+      prediction_enhancement:
+        - "预测流程的完整性"
+        - "预测可能的流程问题"
+        
+    - capability: knowledge-composition
+      prediction_enhancement:
+        - "预测需要的知识组合"
+        - "预测知识缺口"
+        
+    - capability: learning-system
+      prediction_enhancement:
+        - "预测学习价值"
+        - "预测知识更新需求"
+        
+    - capability: personalization
+      prediction_enhancement:
+        - "预测用户偏好"
+        - "预测个性化需求"
+```
+
+---
+
+## 版本历史
+
+version_history:
+  - version: "1.0.0"
+    date: "2026-06-22"
+    changes:
+      - "初始版本"
+      - "定义序列预测模型"
+      - "定义上下文感知预测"
+      - "定义知识库增强预测"
+      - "定义建议生成规则"
+      - "定义准确性追踪机制"

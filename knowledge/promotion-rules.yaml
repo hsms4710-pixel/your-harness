@@ -1,0 +1,624 @@
+# 知识提升规则
+# 版本: 1.0.0
+# 创建日期: 2026-06-22
+
+---
+
+schema:
+  name: promotion_rules
+  version: "1.0"
+  description: "定义从学习记录提升为最佳实践的规则"
+
+---
+
+## 提升层级
+
+promotion_levels:
+  description: "知识从低层级向高层级提升的路径"
+  
+  levels:
+    - level: 0
+      name: raw_feedback
+      description: "原始反馈数据"
+      location: knowledge/feedbacks/
+      characteristics:
+        - "未处理的用户反馈"
+        - "单次使用记录"
+        - "可能包含噪音"
+        
+    - level: 1
+      name: learning_record
+      description: "学习记录"
+      location: knowledge/learnings/
+      characteristics:
+        - "处理后的反馈"
+        - "包含质量评分"
+        - "已提取模式"
+        
+    - level: 2
+      name: validated_pattern
+      description: "经过验证的模式"
+      location: knowledge/patterns/
+      characteristics:
+        - "多次成功使用"
+        - "明确的适用场景"
+        - "已验证有效性"
+        
+    - level: 3
+      name: template_element
+      description: "可复用的模板元素"
+      location: element-library/
+      characteristics:
+        - "可独立使用"
+        - "有清晰的接口"
+        - "经过充分测试"
+        
+    - level: 4
+      name: best_practice
+      description: "最佳实践"
+      location: knowledge/best-practices/
+      characteristics:
+        - "高成功率"
+        - "用户推荐"
+        - "完整文档"
+
+---
+
+## 提升规则
+
+promotion_rules:
+  # 从反馈到学习记录
+  - id: PR_001
+    name: feedback_to_learning
+    description: "将反馈转化为学习记录"
+    from_level: 0
+    to_level: 1
+    
+    criteria:
+      required:
+        - "feedback contains quality_score"
+        - "feedback contains project_features"
+        
+      optional:
+        - "feedback contains comments"
+        - "feedback contains modifications"
+        
+    process:
+      steps:
+        - "收集所有反馈数据"
+        - "计算质量评分"
+        - "提取项目特征"
+        - "识别成功/失败模式"
+        - "生成 LearningRecord"
+        
+    output:
+      location: knowledge/learnings/
+      format: learning_record.yaml
+      
+  # 从学习记录到验证模式
+  - id: PR_002
+    name: learning_to_pattern
+    description: "将学习记录聚类为验证模式"
+    from_level: 1
+    to_level: 2
+    
+    criteria:
+      required:
+        - "total_learning_records >= 5"
+        - "success_rate >= 0.8"
+        - "pattern_similarity >= 0.85"
+        
+      optional:
+        - "has_common_modifications"
+        - "has_common_praise"
+        
+    process:
+      steps:
+        - "收集相似的学习记录"
+        - "计算共同特征"
+        - "提取成功模式"
+        - "计算成功率"
+        - "生成 Pattern 定义"
+        
+    output:
+      location: knowledge/patterns/
+      format: pattern.yaml
+      
+  # 从验证模式到模板元素
+  - id: PR_003
+    name: pattern_to_element
+    description: "将验证模式转化为模板元素"
+    from_level: 2
+    to_level: 3
+    
+    criteria:
+      required:
+        - "pattern_usage_count >= 10"
+        - "pattern_success_rate >= 0.85"
+        - "has_reuse_value"
+        
+      optional:
+        - "has_clear_interface"
+        - "has_documentation"
+        
+    process:
+      steps:
+        - "分析模式的复用价值"
+        - "设计模板元素结构"
+        - "提取可配置参数"
+        - "生成使用文档"
+        - "创建 TemplateElement"
+        
+    output:
+      location: element-library/
+      format: template_element.yaml
+      
+  # 从模板元素到最佳实践
+  - id: PR_004
+    name: element_to_best_practice
+    description: "将模板元素提升为最佳实践"
+    from_level: 3
+    to_level: 4
+    
+    criteria:
+      required:
+        - "element_usage_count >= 15"
+        - "average_satisfaction >= 4.5"
+        - "success_rate >= 0.9"
+        - "has_user_recommendation"
+        
+      optional:
+        - "has_detailed_documentation"
+        - "has_working_examples"
+        
+    process:
+      steps:
+        - "验证元素的有效性"
+        - "收集用户推荐"
+        - "生成完整文档"
+        - "创建使用示例"
+        - "生成 BestPractice"
+        
+    output:
+      location: knowledge/best-practices/
+      format: best_practice.yaml
+
+---
+
+## 提升评估
+
+promotion_evaluation:
+  description: "评估是否应该进行提升"
+  
+  metrics:
+    # 使用统计
+    usage_stats:
+      - id: METRIC_001
+        name: usage_count
+        description: "使用次数"
+        calculation: "count(records where element was used)"
+        weight: 0.3
+        
+      - id: METRIC_002
+        name: success_rate
+        description: "成功率"
+        calculation: "count(successful_usages) / total_usages"
+        weight: 0.3
+        
+      - id: METRIC_003
+        name: completion_rate
+        description: "完成率"
+        calculation: "count(completed_flows) / total_flows"
+        weight: 0.2
+        
+      - id: METRIC_004
+        name: modification_rate
+        description: "修改率（越低越好）"
+        calculation: "1 - (count(modifications) / total_usages)"
+        weight: 0.2
+        
+    # 用户反馈
+    user_feedback:
+      - id: METRIC_005
+        name: satisfaction_score
+        description: "满意度评分"
+        calculation: "average(satisfaction_scores) / 5"
+        weight: 0.3
+        
+      - id: METRIC_006
+        name: recommendation_rate
+        description: "推荐率"
+        calculation: "count(would_recommend=true) / total_feedbacks"
+        weight: 0.2
+        
+      - id: METRIC_007
+        name: positive_comments
+        description: "正面评论数"
+        calculation: "count(positive_comments)"
+        weight: 0.2
+        
+      - id: METRIC_008
+        name: negative_comments
+        description: "负面评论数（越少越好）"
+        calculation: "1 - (count(negative_comments) / total_comments)"
+        weight: 0.1
+        
+    # 知识质量
+    knowledge_quality:
+      - id: METRIC_009
+        name: completeness
+        description: "完整性"
+        calculation: "count(required_fields_filled) / total_required_fields"
+        weight: 0.3
+        
+      - id: METRIC_010
+        name: consistency
+        description: "一致性"
+        calculation: "1 - count(inconsistencies) / total_checks"
+        weight: 0.3
+        
+      - id: METRIC_011
+        name: documentation_quality
+        description: "文档质量"
+        calculation: "based on documentation completeness and clarity"
+        weight: 0.2
+        
+      - id: METRIC_012
+        name: test_coverage
+        description: "测试覆盖"
+        calculation: "count(tested_scenarios) / total_scenarios"
+        weight: 0.2
+  
+  scoring:
+    formula: |
+      promotion_score = (
+        sum(usage_stats_metrics * weights) * 0.5 +
+        sum(user_feedback_metrics * weights) * 0.3 +
+        sum(knowledge_quality_metrics * weights) * 0.2
+      ) * 100
+      
+    thresholds:
+      excellent: [90, 100]
+      good: [75, 90)
+      acceptable: [60, 75)
+      not_ready: [0, 60)
+
+---
+
+## 提升流程
+
+promotion_flow:
+  name: standard_promotion_flow
+  description: "标准提升流程"
+  
+  steps:
+    - step: 1
+      id: PF_STEP_001
+      name: 触发评估
+      description: "检测是否需要评估提升"
+      trigger:
+        - "新反馈收集完成"
+        - "定时触发（每周）"
+        - "手动触发"
+        
+    - step: 2
+      id: PF_STEP_002
+      name: 收集数据
+      description: "收集评估所需的数据"
+      action: |
+        ```yaml
+        evaluation_data:
+          candidate_id: "{id}"
+          current_level: {level}
+          
+          usage_stats:
+            total_usages: {count}
+            successful_usages: {count}
+            completed_flows: {count}
+            modifications: {count}
+            
+          user_feedback:
+            satisfaction_scores: [{scores}]
+            recommendations: {count}
+            positive_comments: {count}
+            negative_comments: {count}
+            
+          knowledge_quality:
+            completeness: {score}
+            consistency: {score}
+            documentation: {score}
+            test_coverage: {score}
+        ```
+        
+    - step: 3
+      id: PF_STEP_003
+      name: 计算评分
+      description: "计算提升评分"
+      action: |
+        使用提升评分公式计算：
+        ```
+        promotion_score = calculate_promotion_score(evaluation_data)
+        ```
+        
+    - step: 4
+      id: PF_STEP_004
+      name: 检查条件
+      description: "检查是否满足提升条件"
+      action: |
+        ```yaml
+        promotion_decision:
+          candidate_id: "{id}"
+          promotion_score: {score}
+          
+          criteria_check:
+            usage_count: {met/not_met}
+            success_rate: {met/not_met}
+            satisfaction: {met/not_met}
+            recommendations: {met/not_met}
+            
+          decision: {promote/review/reject}
+          reason: "{reason}"
+        ```
+        
+    - step: 5
+      id: PF_STEP_005
+      name: 生成提升计划
+      description: "如果决定提升，生成计划"
+      condition: "decision == promote"
+      action: |
+        ```yaml
+        promotion_plan:
+          candidate_id: "{id}"
+          from_level: {level}
+          to_level: {level + 1}
+          
+          preparation_steps:
+            - "更新文档"
+            - "添加示例"
+            - "验证测试"
+            
+          target_location: "{path}"
+          target_format: "{format}"
+        ```
+        
+    - step: 6
+      id: PF_STEP_006
+      name: 执行提升
+      description: "执行提升操作"
+      action: |
+        1. 创建新层级的知识条目
+        2. 更新引用关系
+        3. 记录提升历史
+        4. 标记原条目为已提升
+        
+    - step: 7
+      id: PF_STEP_007
+      name: 验证提升
+      description: "验证提升结果"
+      action: |
+        ```yaml
+        verification:
+          new_entry_exists: true
+          references_updated: true
+          history_recorded: true
+          original_marked: true
+        ```
+        
+    - step: 8
+      id: PF_STEP_008
+      name: 通知
+      description: "通知相关人员"
+      action: |
+        生成提升报告：
+        - 提升摘要
+        - 新知识位置
+        - 建议使用方式
+
+---
+
+## 提升模板
+
+promotion_templates:
+  # 从学习记录到模式
+  - id: TEMPLATE_001
+    name: learning_to_pattern_template
+    description: "学习记录到模式的转换模板"
+    
+    source_schema: learning_record
+    target_schema: pattern
+    
+    transformations:
+      - source_field: project_features
+        target_field: pattern_features
+        operation: aggregate
+        
+      - source_field: reasoning.rules_applied
+        target_field: applicable_rules
+        operation: extract_ids
+        
+      - source_field: output.stages
+        target_field: recommended_stages
+        operation: deduplicate
+        
+      - source_field: feedback.common_modifications
+        target_field: common_customizations
+        operation: aggregate
+        
+    output_template: |
+      ```yaml
+      pattern:
+        id: PAT-{pattern_type}-{timestamp}
+        name: "{pattern_name}"
+        type: "{pattern_type}"
+        
+        features:
+          # 从 learning_record.project_features 聚合
+          
+        stages:
+          # 从 learning_record.output.stages 去重
+          
+        customizations:
+          common: []
+          optional: []
+          
+        statistics:
+          source_records: {count}
+          success_rate: {rate}
+          average_satisfaction: {score}
+          
+        metadata:
+          created_from: [LR-xxx, LR-xxx, ...]
+          created_at: "{timestamp}"
+      ```
+      
+  # 从模式到模板元素
+  - id: TEMPLATE_002
+    name: pattern_to_element_template
+    description: "模式到模板元素的转换模板"
+    
+    source_schema: pattern
+    target_schema: template_element
+    
+    transformations:
+      - source_field: pattern.features
+        target_field: element.context
+        operation: convert_to_context
+        
+      - source_field: pattern.stages
+        target_field: element.structure
+        operation: convert_to_structure
+        
+      - source_field: pattern.customizations
+        target_field: element.parameters
+        operation: extract_parameters
+        
+    output_template: |
+      ```yaml
+      template_element:
+        id: TPL-{element_type}-{timestamp}
+        name: "{element_name}"
+        type: "{element_type}"
+        
+        context:
+          # 从 pattern.features 转换
+          
+        structure:
+          # 从 pattern.stages 转换
+          
+        parameters:
+          required: []
+          optional: []
+          
+        usage:
+          description: "{description}"
+          examples: []
+          
+        metadata:
+          derived_from: PAT-xxx
+          promoted_at: "{timestamp}"
+          promotion_criteria:
+            usage_count: {count}
+            success_rate: {rate}
+      ```
+      
+  # 从模板元素到最佳实践
+  - id: TEMPLATE_003
+    name: element_to_best_practice_template
+    description: "模板元素到最佳实践的转换模板"
+    
+    source_schema: template_element
+    target_schema: best_practice
+    
+    transformations:
+      - source_field: element.context
+        target_field: practice.scenario
+        operation: describe_scenario
+        
+      - source_field: element.structure
+        target_field: practice.workflow
+        operation: expand_structure
+        
+      - source_field: element.parameters
+        target_field: practice.configurations
+        operation: document_configurations
+        
+      - source_field: element.usage.examples
+        target_field: practice.examples
+        operation: copy
+        
+    output_template: |
+      ```yaml
+      best_practice:
+        id: BP-{category}-{timestamp}
+        name: "{practice_name}"
+        category: "{category}"
+        
+        scenario:
+          description: "{scenario_description}"
+          when_to_use: []
+          when_not_to_use: []
+          
+        workflow:
+          steps: []
+          gates: []
+          checks: []
+          
+        configurations:
+          parameters: []
+          defaults: []
+          
+        examples:
+          - name: "Example 1"
+            description: "{description}"
+            code: "{example_code}"
+            
+        benefits:
+          - "{benefit_1}"
+          - "{benefit_2}"
+          
+        statistics:
+          source_element: TPL-xxx
+          total_usages: {count}
+          success_rate: {rate}
+          average_satisfaction: {score}
+          
+        metadata:
+          promoted_at: "{timestamp}"
+          recommended_by: [{user_ids}]
+      ```
+
+---
+
+## 与元能力的协作
+
+capability_collaboration:
+  - capability: learning-system
+    relationship: feeds_into
+    description: "学习系统的输出是提升的主要依据"
+    data_flow:
+      - "LearningRecord → 提升评估"
+      - "LearningAggregation → 聚合提升"
+      - "PromotionCandidate → 提升执行"
+      
+  - capability: knowledge-composition
+    relationship: uses_output
+    description: "知识组合使用提升后的最佳实践"
+    data_flow:
+      - "BestPractice → 组合参考"
+      - "TemplateElement → 组合素材"
+      - "Pattern → 模式匹配"
+
+---
+
+## 版本历史
+
+version_history:
+  - version: "1.0.0"
+    date: "2026-06-22"
+    changes:
+      - "初始版本"
+      - "定义提升层级"
+      - "定义提升规则"
+      - "定义评估指标"
+      - "定义提升流程"
+      - "定义转换模板"

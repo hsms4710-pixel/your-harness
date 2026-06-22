@@ -1,0 +1,703 @@
+---
+version: 1.0.0
+description: |
+  组合引擎
+  智能组合元模板和元能力生成的内容
+---
+
+# 组合引擎
+
+## 概述
+
+组合引擎是混合模式的核心，负责智能组合来自不同来源的内容。
+
+```
+输入来源：
+  - 元模板库
+  - 元能力推理结果
+  - 元素库
+  - 知识库
+
+输出：
+  - 统一的流程定义
+  - 完整的产物集合
+```
+
+## 组合策略
+
+### 策略 1: 模板优先组合
+
+```yaml
+strategy_id: CE-001
+name: template-first
+priority: 1
+
+description: |
+  当有匹配的元模板时，以模板为基础，用元能力推理结果补充
+
+process:
+  # Step 1: 加载匹配的模板
+  1_load_template:
+    template: "matched_template"
+    structure: "template.structure"
+    
+  # Step 2: 识别模板的可扩展点
+  2_identify_extension_points:
+    extension_points = find_extension_points(template)
+    # 如：可插入的阶段、可添加的检查项等
+    
+  # Step 3: 从元能力推理结果中提取补充内容
+  3_extract_supplements:
+    supplements = extract_from_reasoning(reasoning_result)
+    # 如：额外的阶段、额外的检查项
+    
+  # Step 4: 在扩展点插入补充内容
+  4_insert_supplements:
+    for extension_point in extension_points:
+      matching_supplements = find_matching_supplements(extension_point, supplements)
+      insert_at(extension_point, matching_supplements)
+      
+  # Step 5: 验证组合结果
+  5_validate:
+    validate_combination(result)
+
+output:
+  base: "template content"
+  supplements: "reasoning supplements"
+  merged: "final flow definition"
+```
+
+### 策略 2: 推理优先组合
+
+```yaml
+strategy_id: CE-002
+name: reasoning-first
+priority: 2
+
+description: |
+  当没有匹配的元模板时，以元能力推理结果为基础，用模板元素补充
+
+process:
+  # Step 1: 获取元能力推理结果
+  1_get_reasoning:
+    reasoning_result = capability_reasoning(project_features)
+    stages = reasoning_result.stages
+    checks = reasoning_result.checks
+    
+  # Step 2: 从元素库中查找匹配的元素
+  2_find_elements:
+    for stage in stages:
+      matching_elements = search_element_library(stage)
+      
+  # Step 3: 将元素组合到推理结果中
+  3_combine_elements:
+    for stage, elements in stage_elements.items():
+      if elements:
+        use_template_elements(stage, elements)
+      else:
+        use_reasoning_content(stage)
+        
+  # Step 4: 使用流程骨架填充
+  4_fill_skeleton:
+    skeleton = load_flow_skeleton()
+    fill_skeleton(skeleton, combined_content)
+    
+  # Step 5: 验证组合结果
+  5_validate:
+    validate_combination(result)
+
+output:
+  base: "reasoning content"
+  supplements: "element library matches"
+  merged: "final flow definition"
+```
+
+### 策略 3: 分层组合
+
+```yaml
+strategy_id: CE-003
+name: layered-composition
+priority: 3
+
+description: |
+  按层次组合：流程骨架 → 模板内容 → 推理结果 → 元素补充
+
+layers:
+  # Layer 1: 流程骨架（基础）
+  layer_1:
+    name: "flow-skeleton"
+    source: "knowledge/flow-skeleton.yaml"
+    provides:
+      - "universal stages"
+      - "gate protocol"
+      - "basic structure"
+      
+  # Layer 2: 模板内容（如果匹配）
+  layer_2:
+    name: "template-content"
+    source: "meta-templates/"
+    provides:
+      - "project-specific stages"
+      - "project-specific checks"
+      - "project-specific gates"
+      
+    condition: "has_matching_template"
+    
+  # Layer 3: 推理结果（补充）
+  layer_3:
+    name: "reasoning-result"
+    source: "meta-capabilities/"
+    provides:
+      - "inferred stages"
+      - "inferred checks"
+      - "inferred gates"
+      
+    condition: "always"
+    
+  # Layer 4: 元素补充（增强）
+  layer_4:
+    name: "element-supplements"
+    source: "element-library/"
+    provides:
+      - "template elements"
+      - "script elements"
+      - "reference elements"
+      - "gate elements"
+      - "check elements"
+      
+    condition: "always"
+
+process:
+  # 从底层到顶层依次组合
+  1_start_with_skeleton:
+    result = copy(flow_skeleton)
+    
+  2_add_template_if_matched:
+    if has_matching_template:
+      merge(result, template_content)
+      
+  3_add_reasoning_result:
+    merge(result, reasoning_result)
+    # 使用智能合并，处理冲突
+    
+  4_add_element_supplements:
+    merge(result, element_supplements)
+    # 填充可扩展点
+    
+  5_resolve_conflicts:
+    for conflict in find_conflicts(result):
+      apply_resolution_strategy(conflict)
+      
+  6_validate:
+    validate_combination(result)
+
+output:
+  layers_used: array
+  combination_result: object
+```
+
+## 冲突解决
+
+### 冲突类型
+
+```yaml
+conflict_types:
+  # 阶段冲突
+  stage_conflict:
+    description: "两个来源定义了相同的阶段，但内容不同"
+    example: |
+      模板定义: "Task 1: 实现前端组件"
+      推理定义: "Task 1: 设计组件结构"
+      
+  # 检查项冲突
+  check_conflict:
+    description: "两个来源定义了相同的检查项，但标准不同"
+    example: |
+      模板定义: "测试覆盖率 >= 80%"
+      推理定义: "测试覆盖率 >= 90%"
+      
+  # 闸门冲突
+  gate_conflict:
+    description: "两个来源定义了相同的闸门，但要求不同"
+    example: |
+      模板定义: "G1: 代码审查通过"
+      推理定义: "G1: 代码审查 + 安全审查通过"
+      
+  # 顺序冲突
+  order_conflict:
+    description: "两个来源定义了不同的阶段顺序"
+    example: |
+      模板定义: "设计 → 实现 → 测试"
+      推理定义: "实现 → 测试 → 设计"
+```
+
+### 解决策略
+
+```yaml
+resolution_strategies:
+  # 策略 1: 优先级规则
+  priority_strategy:
+    priority_order:
+      1: "security-related"  # 安全相关内容优先
+      2: "project-specific"  # 项目特定内容次之
+      3: "reasoning-result"  # 推理结果再次
+      4: "template-content"  # 模板内容最后
+      
+    apply:
+      - "如果冲突涉及安全，优先安全"
+      - "如果冲突涉及项目特定，优先项目特定"
+      
+  # 策略 2: 合并策略
+  merge_strategy:
+    apply_to: ["stage_conflict", "check_conflict"]
+    
+    process:
+      # 合并两个来源的内容
+      merged_content = merge(source_1, source_2)
+      
+      # 去重
+      deduplicate(merged_content)
+      
+      # 保持顺序
+      sort_by_priority(merged_content)
+      
+  # 策略 3: 用户确认策略
+  user_confirmation_strategy:
+    apply_to: ["gate_conflict", "order_conflict"]
+    
+    process:
+      # 提交给用户确认
+      present_conflict_to_user(conflict)
+      
+      # 等待用户选择
+      user_choice = wait_for_user_decision()
+      
+      # 应用用户选择
+      apply_user_choice(user_choice)
+      
+  # 策略 4: 自动检测策略
+  auto_detection_strategy:
+    apply_to: ["all"]
+    
+    process:
+      # 自动检测潜在冲突
+      potential_conflicts = detect_potential_conflicts()
+      
+      # 如果是已知的冲突模式，自动解决
+      for conflict in potential_conflicts:
+        if is_known_pattern(conflict):
+          apply_known_resolution(conflict)
+          
+        # 否则标记为需要关注
+        else:
+          mark_for_review(conflict)
+```
+
+### 冲突解决执行
+
+```yaml
+execution:
+  process:
+    # 1. 检测冲突
+    1_detect:
+      conflicts = []
+      
+      for stage in result.stages:
+        if has_multiple_definitions(stage):
+          conflicts.append({
+            type: "stage_conflict",
+            stage: stage,
+            sources: get_definition_sources(stage)
+          })
+          
+      for check in result.checks:
+        if has_multiple_definitions(check):
+          conflicts.append({
+            type: "check_conflict",
+            check: check,
+            sources: get_definition_sources(check)
+          })
+          
+      for gate in result.gates:
+        if has_multiple_definitions(gate):
+          conflicts.append({
+            type: "gate_conflict",
+            gate: gate,
+            sources: get_definition_sources(gate)
+          })
+          
+    # 2. 分类冲突
+    2_classify:
+      for conflict in conflicts:
+        if can_auto_resolve(conflict):
+          conflict.resolution_strategy = "auto"
+          
+        elif involves_security(conflict):
+          conflict.resolution_strategy = "priority"
+          
+        elif is_order_conflict(conflict):
+          conflict.resolution_strategy = "user_confirmation"
+          
+        else:
+          conflict.resolution_strategy = "merge"
+          
+    # 3. 应用解决策略
+    3_resolve:
+      for conflict in conflicts:
+        apply_strategy(conflict.resolution_strategy, conflict)
+        
+    # 4. 验证解决结果
+    4_verify:
+      verify_no_remaining_conflicts(result)
+```
+
+## 组合验证
+
+### 验证规则
+
+```yaml
+validation_rules:
+  # 完整性验证
+  completeness:
+    - rule: "所有必需阶段都已定义"
+      check: "all_required_stages_defined(result)"
+      
+    - rule: "所有闸门都有对应的阶段"
+      check: "all_gates_have_stages(result)"
+      
+    - rule: "所有检查项都有验证方法"
+      check: "all_checks_have_methods(result)"
+      
+    - rule: "所有脚本都有实现"
+      check: "all_scripts_have_implementation(result)"
+      
+  # 一致性验证
+  consistency:
+    - rule: "阶段顺序合理"
+      check: "stage_order_is_valid(result)"
+      
+    - rule: "闸门顺序与阶段顺序一致"
+      check: "gate_order_matches_stage_order(result)"
+      
+    - rule: "检查项与阶段匹配"
+      check: "checks_match_stages(result)"
+      
+    - rule: "脚本与闸门匹配"
+      check: "scripts_match_gates(result)"
+      
+  # 可执行性验证
+  executability:
+    - rule: "每个阶段都有具体步骤"
+      check: "all_stages_have_steps(result)"
+      
+    - rule: "每个步骤都是可执行的"
+      check: "all_steps_are_executable(result)"
+      
+    - rule: "每个检查项都有验证命令"
+      check: "all_checks_have_commands(result)"
+      
+    - rule: "每个脚本都可以运行"
+      check: "all_scripts_can_run(result)"
+```
+
+### 验证执行
+
+```yaml
+execution:
+  process:
+    # 1. 完整性验证
+    1_completeness:
+      for rule in validation_rules.completeness:
+        if not evaluate(rule.check, result):
+          add_validation_error({
+            type: "completeness",
+            rule: rule.rule,
+            severity: "error"
+          })
+          
+    # 2. 一致性验证
+    2_consistency:
+      for rule in validation_rules.consistency:
+        if not evaluate(rule.check, result):
+          add_validation_error({
+            type: "consistency",
+            rule: rule.rule,
+            severity: "error"
+          })
+          
+    # 3. 可执行性验证
+    3_executability:
+      for rule in validation_rules.executability:
+        if not evaluate(rule.check, result):
+          add_validation_warning({
+            type: "executability",
+            rule: rule.rule,
+            severity: "warning"
+          })
+          
+    # 4. 生成验证报告
+    4_report:
+      if errors:
+        status = "FAILED"
+        
+      elif warnings:
+        status = "WARNING"
+        
+      else:
+        status = "PASSED"
+        
+      report = {
+        status: status,
+        errors: errors,
+        warnings: warnings,
+        suggestions: generate_suggestions(errors, warnings)
+      }
+```
+
+## 组合结果
+
+### 结果结构
+
+```yaml
+combination_result:
+  # 元数据
+  metadata:
+    project_name: string
+    combination_timestamp: datetime
+    
+    # 使用的来源
+    sources_used:
+      - name: "meta-templates"
+        items: array
+        
+      - name: "meta-capabilities"
+        items: array
+        
+      - name: "element-library"
+        items: array
+        
+      - name: "knowledge-base"
+        items: array
+        
+    # 路由信息
+    routing_info:
+      selected_route: string
+      confidence: string
+      
+  # 组合的流程
+  flow:
+    # 阶段
+    stages:
+      - id: string
+        name: string
+        order: number
+        goal: string
+        steps: array
+        checks: array
+        output: array
+        gate: string
+        
+    # 闸门
+    gates:
+      - id: string
+        name: string
+        stage: string
+        required_artifacts: array
+        checks: array
+        approval_required: boolean
+        
+    # 检查项
+    checks:
+      - id: string
+        name: string
+        method: string
+        description: string
+        
+    # 脚本
+    scripts:
+      - id: string
+        name: string
+        interface:
+          inputs: array
+          outputs: array
+        implementation: string
+        
+  # 组合统计
+  statistics:
+    total_stages: number
+    total_gates: number
+    total_checks: number
+    total_scripts: number
+    
+    sources_contribution:
+      template: { stages: n, gates: n, checks: n }
+      reasoning: { stages: n, gates: n, checks: n }
+      elements: { stages: n, gates: n, checks: n }
+      
+  # 验证结果
+  validation:
+    status: string
+    errors: array
+    warnings: array
+```
+
+### 输出生成
+
+```yaml
+output_generation:
+  # 生成 SKILL.md
+  generate_skill_md:
+    template: "templates/SKILL.md.tmpl"
+    variables:
+      project_name: result.metadata.project_name
+      stages: result.flow.stages
+      gates: result.flow.gates
+      checks: result.flow.checks
+      
+  # 生成 Templates
+  generate_templates:
+    for stage in result.flow.stages:
+      if stage.needs_template:
+        template_file = f"templates/TEMPLATE-{stage.id_lowercase}.md"
+        generate_from_structure(template_file, stage)
+        
+  # 生成 References
+  generate_references:
+    for reference in result.flow.references:
+      reference_file = f"references/{reference.id}.md"
+      generate_from_structure(reference_file, reference)
+      
+  # 生成 Scripts
+  generate_scripts:
+    for script in result.flow.scripts:
+      script_file = f"scripts/{script.id}.py"
+      generate_from_template(script_file, script)
+      
+  # 生成 Constitution
+  generate_constitution:
+    constitution_file = "constitution-profiles.json"
+    generate_from_stages(constitution_file, result.flow.stages)
+```
+
+## 组合引擎示例
+
+### 示例：AI + React 项目的组合
+
+```yaml
+input:
+  project_features:
+    - "ai-llm-project"
+    - "react-app"
+    
+  matched_templates:
+    - "TEMPLATE-ai-feature.md"
+    - "TEMPLATE-react-feature.md"
+    
+  reasoning_result:
+    stages:
+      - id: "COST_ANALYSIS"
+        importance: "critical"
+        
+      - id: "PROMPT_DESIGN"
+        importance: "critical"
+        
+    checks:
+      - "成本已估算"
+      - "Prompt 已测试"
+
+combination_process:
+  # Step 1: 加载模板
+  templates_loaded:
+    ai_template:
+      stages: ["COST_ANALYSIS", "PROMPT_DESIGN", "AI_TESTING"]
+      checks: ["成本已估算", "Prompt 已测试", "模型已选择"]
+      
+    react_template:
+      stages: ["COMPONENT_DESIGN", "COMPONENT_DEVELOPMENT", "UI_TESTING"]
+      checks: ["组件已设计", "组件已开发", "UI 已测试"]
+      
+  # Step 2: 合并阶段
+  stages_merged:
+    # 通用阶段（来自流程骨架）
+    universal_stages: ["REQUIREMENT", "TASK_DECOMPOSITION", "DESIGN", "IMPLEMENTATION", "VERIFICATION", "DEPLOYMENT"]
+    
+    # AI 特定阶段
+    ai_stages: ["COST_ANALYSIS", "PROMPT_DESIGN", "AI_TESTING"]
+    
+    # React 特定阶段
+    react_stages: ["COMPONENT_DESIGN", "COMPONENT_DEVELOPMENT", "UI_TESTING"]
+    
+    # 合并结果
+    final_stages:
+      - "REQUIREMENT"
+      - "COST_ANALYSIS"  # AI
+      - "COMPONENT_DESIGN"  # React
+      - "PROMPT_DESIGN"  # AI
+      - "TASK_DECOMPOSITION"
+      - "DESIGN"
+      - "COMPONENT_DEVELOPMENT"  # React
+      - "IMPLEMENTATION"
+      - "AI_TESTING"  # AI
+      - "UI_TESTING"  # React
+      - "VERIFICATION"
+      - "DEPLOYMENT"
+      
+  # Step 3: 合并检查项
+  checks_merged:
+    universal_checks: ["需求已确认", "任务已确认", "设计已评审", "代码已审查", "测试已通过"]
+    ai_checks: ["成本已估算", "Prompt 已测试", "模型已选择"]
+    react_checks: ["组件已设计", "组件已开发", "UI 已测试"]
+    
+    final_checks: universal_checks + ai_checks + react_checks
+    
+  # Step 4: 从元素库补充
+  elements_added:
+    gates:
+      - "GATE-001: 需求确认"
+      - "GATE-002: 成本分析"  # AI
+      - "GATE-003: 组件设计"  # React
+      - "GATE-004: Prompt 设计"  # AI
+      - ...
+      
+    scripts:
+      - "check-gates.py"
+      - "check-cost.py"  # AI
+      - "check-components.py"  # React
+      
+  # Step 5: 验证
+  validation:
+    status: "PASSED"
+    errors: []
+    warnings: []
+
+output:
+  combination_result:
+    metadata:
+      project_name: "my-ai-web-app"
+      sources_used:
+        - name: "meta-templates"
+          items: ["TEMPLATE-ai-feature.md", "TEMPLATE-react-feature.md"]
+          
+        - name: "meta-capabilities"
+          items: ["stage-reasoning", "knowledge-composition"]
+          
+        - name: "element-library"
+          items: ["GATE-001", "GATE-002", "GATE-003", "GATE-004", ...]
+          
+    flow:
+      stages: 12
+      gates: 7
+      checks: 13
+      scripts: 4
+      
+    statistics:
+      total_stages: 12
+      total_gates: 7
+      total_checks: 13
+      total_scripts: 4
+      
+      sources_contribution:
+        template: { stages: 6, gates: 0, checks: 6 }
+        reasoning: { stages: 0, gates: 0, checks: 3 }
+        elements: { stages: 0, gates: 7, checks: 4 }
+```

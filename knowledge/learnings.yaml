@@ -1,0 +1,341 @@
+# 知识积累库
+# 存储从历史生成中学习到的规则和改进建议
+#
+# 本文件用于：
+# 1. 记录生成过程中发现的问题
+# 2. 存储用户反馈的改进建议
+# 3. 记录特定项目类型的特殊处理规则
+# 4. 持续改进生成质量
+#
+# 更新时间: 2026-06-22
+
+version: 1.0.0
+
+# ============================================================
+# 学习记录
+# 从历史生成中学习到的规则
+# ============================================================
+
+learnings:
+  # ----------------------------------------------------------
+  # 模板生成相关
+  # ----------------------------------------------------------
+  
+  - id: L001
+    category: template
+    date: 2026-06-18
+    source: smartmate-test
+    learning: |
+      元模板不应该硬编码特定项目的路径或文件名
+      应该使用抽象变量，由 harness-archaeology 在扫描时填充
+    rule: |
+      元模板中的变量应该：
+      - 使用通用名称（如 {{service_name}}, {{feature_name}}）
+      - 不包含特定项目的路径（如 dbproxy/, cgi/）
+      - 不包含特定的 API 名称（如云 API）
+    priority: high
+    status: applied
+    applied_version: 4.4.0
+  
+  - id: L002
+    category: template
+    date: 2026-06-18
+    source: smartmate-test
+    learning: |
+      Template 的 Step/Run/Expected 部分应该足够详细
+      包含具体的命令和预期输出，而不是 TODO 占位符
+    rule: |
+      元模板的每个 Step 应该包含：
+      - Input: 明确的输入列表
+      - Process: 详细的处理步骤
+      - Output: 明确的输出列表
+      - Run: 具体的命令（使用变量填充）
+      - Expected: 具体的预期输出
+    priority: high
+    status: applied
+    applied_version: 4.3.0
+  
+  - id: L003
+    category: template
+    date: 2026-06-18
+    source: smartmate-test
+    learning: |
+      工具集成（如 MCP）应该通过知识库配置，而不是硬编码
+      根据项目特征自动选择适用的工具
+    rule: |
+      工具集成知识库应该：
+      - 定义多种工具的检测规则
+      - 定义工具的使用方式
+      - 根据项目特征自动选择
+      - 支持多种代码托管平台
+    priority: high
+    status: applied
+    applied_version: 4.3.0
+  
+  # ----------------------------------------------------------
+  # 知识库相关
+  # ----------------------------------------------------------
+  
+  - id: L004
+    category: knowledge-base
+    date: 2026-06-18
+    source: github-top100-analysis
+    learning: |
+      项目模式知识库需要覆盖 GitHub Top 100 项目的主要类型
+      AI/LLM 项目占比 30%，是增长最快的方向
+    rule: |
+      项目模式知识库应该包含：
+      - AI/LLM 项目模式（agent-framework, ai-sdk, ai-application）
+      - 前端项目模式（static-website, web-app, component-library）
+      - 开发工具模式（cli-tool, dev-infra, learning-resource）
+      - 微服务架构模式
+      - Monorepo 模式
+    priority: high
+    status: applied
+    applied_version: 4.5.0
+  
+  - id: L005
+    category: knowledge-base
+    date: 2026-06-18
+    source: github-top100-analysis
+    learning: |
+      TypeScript 是 GitHub Top 100 中最受欢迎的语言（25%）
+      Python（20%）主要用于 AI/ML 项目
+    rule: |
+      语言检测应该支持：
+      - TypeScript/JavaScript（前端、AI Agent 框架）
+      - Python（AI/ML、自动化）
+      - Go（基础设施、CLI 工具）
+      - Rust（系统编程、AI 框架）
+      - Java（企业应用）
+    priority: medium
+    status: applied
+    applied_version: 4.5.0
+  
+  # ----------------------------------------------------------
+  # 脚本生成相关
+  # ----------------------------------------------------------
+  
+  - id: L006
+    category: script
+    date: 2026-06-18
+    source: smartmate-test
+    learning: |
+      脚本模板应该有完整的实现，而不是只有框架和注释
+      需要根据项目特征填充具体的实现
+    rule: |
+      脚本模板应该包含：
+      - 完整的功能实现
+      - 错误处理
+      - 命令行参数支持
+      - 输出格式化
+      - 使用变量填充项目特定内容
+    priority: high
+    status: applied
+    applied_version: 4.3.0
+  
+  - id: L007
+    category: script
+    date: 2026-06-18
+    source: smartmate-test
+    learning: |
+      检查脚本应该支持多种输出格式（JSON、文本）
+      便于与其他工具集成
+    rule: |
+      检查脚本应该支持：
+      - --json 参数输出 JSON 格式
+      - 默认输出人类可读的文本格式
+      - 退出码表示检查结果
+    priority: medium
+    status: applied
+    applied_version: 4.3.0
+  
+  # ----------------------------------------------------------
+  # 通用性相关
+  # ----------------------------------------------------------
+  
+  - id: L008
+    category: general
+    date: 2026-06-18
+    source: smartmate-test
+    learning: |
+      Your Harness 应该是通用的开发流程生成器
+      不针对特定项目，所有项目特定内容通过变量填充
+    rule: |
+      设计原则：
+      1. 通用性: 模式、模板、脚本应该是通用的
+      2. 可配置: 通过变量和配置支持项目特定内容
+      3. 可扩展: 支持添加新的模式和模板
+      4. 可学习: 从用户反馈中持续改进
+    priority: critical
+    status: applied
+    applied_version: 4.4.0
+  
+  - id: L009
+    category: general
+    date: 2026-06-18
+    source: smartmate-test
+    learning: |
+      知识库应该支持多种代码托管平台和 CI/CD 系统
+      不只是工蜂，还要支持 GitHub、GitLab 等
+    rule: |
+      工具集成知识库应该支持：
+      - 代码托管: GitHub, GitLab, 工蜂, Bitbucket
+      - CI/CD: GitHub Actions, GitLab CI, Jenkins, Travis CI
+      - 容器: Docker, Kubernetes
+      - 云平台: AWS, GCP, Azure, 腾讯云
+    priority: high
+    status: applied
+    applied_version: 4.4.0
+
+# ============================================================
+# 改进建议
+# 从用户反馈中收集的改进建议
+# ============================================================
+
+improvements:
+  # ----------------------------------------------------------
+  # 用户反馈
+  # ----------------------------------------------------------
+  
+  - id: I001
+    category: template
+    date: 2026-06-18
+    source: user-feedback
+    suggestion: |
+      希望 Template 能够包含更多的实际命令示例
+      而不是只有模板变量
+    priority: medium
+    status: pending
+    notes: |
+      可以在元模板中添加多个示例块
+      根据项目特征选择最合适的示例
+  
+  - id: I002
+    category: script
+    date: 2026-06-18
+    source: user-feedback
+    suggestion: |
+      希望脚本能够支持并行执行
+      对于多个检查项，可以并行执行提高效率
+    priority: low
+    status: pending
+    notes: |
+      可以使用 Python 的 concurrent.futures
+      或者 subprocess 并行执行
+  
+  - id: I003
+    category: knowledge-base
+    date: 2026-06-18
+    source: user-feedback
+    suggestion: |
+      希望能够自定义项目模式
+      对于特殊的项目类型，可以添加自定义模式
+    priority: medium
+    status: pending
+    notes: |
+      可以支持用户在项目中定义自定义模式
+      覆盖或扩展默认的项目模式
+
+# ============================================================
+# 特定项目类型规则
+# 从特定项目类型中学习的特殊处理规则
+# ============================================================
+
+project_type_rules:
+  # ----------------------------------------------------------
+  # AI/LLM 项目
+  # ----------------------------------------------------------
+  
+  ai-llm:
+    - rule: API Key 必须使用环境变量或密钥管理服务
+      severity: critical
+      check: check_api_key_management
+      
+    - rule: Prompt 变更需要审核
+      severity: high
+      check: check_prompt_safety
+      
+    - rule: 需要成本估算
+      severity: medium
+      check: check_cost_estimation
+      
+    - rule: 输出需要过滤敏感信息
+      severity: high
+      check: check_output_filtering
+  
+  # ----------------------------------------------------------
+  # 微服务项目
+  # ----------------------------------------------------------
+  
+  microservice:
+    - rule: 需要健康检查端点
+      severity: critical
+      check: check_health_endpoint
+      
+    - rule: 需要 API 版本管理
+      severity: high
+      check: check_api_versioning
+      
+    - rule: 需要服务发现配置
+      severity: high
+      check: check_service_discovery
+      
+    - rule: 需要负载均衡配置
+      severity: medium
+      check: check_load_balancer
+  
+  # ----------------------------------------------------------
+  # Monorepo 项目
+  # ----------------------------------------------------------
+  
+  monorepo:
+    - rule: 需要依赖检查
+      severity: critical
+      check: check_circular_dependencies
+      
+    - rule: 需要增量构建
+      severity: high
+      check: check_incremental_build
+      
+    - rule: 需要包版本管理
+      severity: high
+      check: check_package_versions
+      
+    - rule: 需要构建缓存
+      severity: medium
+      check: check_build_cache
+  
+  # ----------------------------------------------------------
+  # 前端项目
+  # ----------------------------------------------------------
+  
+  frontend:
+    - rule: 需要构建优化
+      severity: high
+      check: check_build_optimization
+      
+    - rule: 需要性能监控
+      severity: medium
+      check: check_performance_monitoring
+      
+    - rule: 需要无障碍检查
+      severity: medium
+      check: check_accessibility
+      
+    - rule: 需要浏览器兼容性
+      severity: medium
+      check: check_browser_compatibility
+
+# ============================================================
+# 版本历史
+# ============================================================
+
+version_history:
+  - version: 1.0.0
+    date: 2026-06-22
+    changes:
+      - 初始版本
+      - 添加学习记录
+      - 添加改进建议
+      - 添加特定项目类型规则

@@ -1,0 +1,619 @@
+# 个性化适配器
+# 版本: 1.0.0
+# 创建日期: 2026-06-22
+
+---
+
+schema:
+  name: personalization_adapter
+  version: "1.0"
+  description: "定义基于用户偏好的个性化适配机制"
+
+---
+
+## 概述
+
+个性化适配器让 Your Harness 能够根据用户的历史使用习惯、偏好设置和项目特点，提供个性化的生成结果。
+
+### 核心理念
+
+```
+通用生成: 适合大多数人的平均需求
+个性化生成: 适合这个特定用户的特定需求
+
+个性化 = 基础生成 + 用户偏好 + 项目上下文
+```
+
+### 个性化维度
+
+```yaml
+personalization_dimensions:
+  - id: PD_001
+    name: detail_level
+    description: "详细程度偏好"
+    options:
+      - minimal: "极简，只显示必要信息"
+      - standard: "标准，平衡详细和简洁"
+      - detailed: "详细，包含所有可能的检查项"
+      - exhaustive: "详尽，包含所有细节和解释"
+    
+  - id: PD_002
+    name: guidance_style
+    description: "指导风格偏好"
+    options:
+      - directive: "指令式，直接告诉该做什么"
+      - suggestive: "建议式，提供选项和推荐"
+      - exploratory: "探索式，引导思考和讨论"
+      - adaptive: "自适应，根据情况调整"
+      
+  - id: PD_003
+    name: automation_level
+    description: "自动化程度偏好"
+    options:
+      - manual: "手动，需要逐步确认"
+      - semi_auto: "半自动，关键节点确认"
+      - auto: "自动，仅在异常时确认"
+      - full_auto: "全自动，事后汇报"
+      
+  - id: PD_004
+    name: risk_tolerance
+    description: "风险容忍度"
+    options:
+      - conservative: "保守，多检查多确认"
+      - balanced: "平衡，适度检查"
+      - aggressive: "激进，减少检查提高效率"
+      
+  - id: PD_005
+    name: documentation_preference
+    description: "文档偏好"
+    options:
+      - minimal: "最少文档"
+      - essential: "必要文档"
+      - comprehensive: "完整文档"
+      - exhaustive: "详尽文档"
+      
+  - id: PD_006
+    name: coding_style
+    description: "代码风格偏好"
+    options:
+      - infer_from_project: "从项目推断"
+      - follow_convention: "遵循语言约定"
+      - follow_team: "遵循团队规范"
+      - custom: "自定义风格"
+```
+
+---
+
+## 用户画像
+
+### 用户画像结构
+
+```yaml
+user_profile:
+  id: "UP-001"
+  user_id: "user-12345"
+  created_at: "2026-06-01T10:00:00Z"
+  last_updated: "2026-06-22T15:00:00Z"
+  
+  # 显式偏好（用户主动设置）
+  explicit_preferences:
+    detail_level: "detailed"
+    guidance_style: "suggestive"
+    risk_tolerance: "balanced"
+    
+  # 推断偏好（从行为推断）
+  inferred_preferences:
+    automation_level: "semi_auto"
+    documentation_preference: "essential"
+    coding_style: "follow_team"
+    
+  # 推断依据
+  inference_basis:
+    - source: "modification_patterns"
+      description: "用户倾向于保留详细的检查项"
+      confidence: 0.85
+      
+    - source: "skip_patterns"
+      description: "用户经常跳过自动生成文档的步骤"
+      confidence: 0.78
+      
+    - source: "time_spent"
+      description: "用户在确认节点花费较少时间"
+      confidence: 0.72
+  
+  # 使用统计
+  usage_statistics:
+    total_sessions: 45
+    total_generations: 67
+    average_satisfaction: 4.2
+    common_modifications:
+      - modification: "add_more_checks"
+        frequency: 0.35
+        
+      - modification: "skip_documentation"
+        frequency: 0.28
+        
+      - modification: "increase_detail"
+        frequency: 0.22
+    
+  # 项目偏好（按项目类型）
+  project_specific_preferences:
+    ai_agent:
+      detail_level: "exhaustive"
+      automation_level: "manual"
+      
+    web_frontend:
+      detail_level: "standard"
+      automation_level: "auto"
+      
+    backend_api:
+      detail_level: "detailed"
+      automation_level: "semi_auto"
+```
+
+### 用户画像学习
+
+```yaml
+profile_learning:
+  name: user_profile_learning
+  description: "从用户行为中学习偏好"
+  
+  learning_sources:
+    - source: modifications
+      description: "用户对生成结果的修改"
+      signals:
+        - "添加了什么"
+        - "删除了什么"
+        - "修改了什么"
+        - "重新排序了什么"
+      
+    - source: skips
+      description: "用户跳过的步骤"
+      signals:
+        - "跳过了哪些步骤"
+        - "跳过的原因"
+        - "跳过的频率"
+        
+    - source: feedback
+      description: "用户的显式反馈"
+      signals:
+        - "满意度评分"
+        - "具体建议"
+        - "推荐标记"
+        
+    - source: time
+      description: "用户的时间分配"
+      signals:
+        - "在哪些步骤花费更多时间"
+        - "哪些步骤快速通过"
+        - "总时间 vs 预期时间"
+        
+    - source: completions
+      description: "用户的完成模式"
+      signals:
+        - "哪些项目类型完成率高"
+        - "哪些项目类型修改多"
+        - "哪些项目类型满意度高"
+  
+  learning_process:
+    - step: 1
+      name: collect_behavior
+      description: "收集用户行为数据"
+      
+    - step: 2
+      name: extract_signals
+      description: "提取偏好信号"
+      
+    - step: 3
+      name: aggregate_signals
+      description: "聚合多个信号"
+      
+    - step: 4
+      name: update_preferences
+      description: "更新用户偏好"
+      
+    - step: 5
+      name: validate_changes
+      description: "验证偏好变更的合理性"
+```
+
+---
+
+## 个性化适配
+
+### 适配规则
+
+```yaml
+adaptation_rules:
+  - id: ADAPT_001
+    name: detail_level_adaptation
+    description: "根据详细程度偏好调整生成内容"
+    
+    mappings:
+      minimal:
+        checks: "only_critical"
+        explanations: "none"
+        examples: "none"
+        alternatives: "none"
+        
+      standard:
+        checks: "important"
+        explanations: "brief"
+        examples: "key_examples"
+        alternatives: "recommended"
+        
+      detailed:
+        checks: "all"
+        explanations: "detailed"
+        examples: "comprehensive"
+        alternatives: "all"
+        
+      exhaustive:
+        checks: "all_with_variants"
+        explanations: "exhaustive"
+        examples: "all_possible"
+        alternatives: "all_with_pros_cons"
+  
+  - id: ADAPT_002
+    name: guidance_style_adaptation
+    description: "根据指导风格偏好调整指令措辞"
+    
+    mappings:
+      directive:
+        language: "imperative"
+        examples: ["执行 X 操作", "运行 Y 命令", "检查 Z 文件"]
+        tone: "direct"
+        
+      suggestive:
+        language: "recommendatory"
+        examples: ["建议执行 X 操作", "可以考虑运行 Y 命令", "建议检查 Z 文件"]
+        tone: "friendly"
+        
+      exploratory:
+        language: "questioning"
+        examples: ["您考虑过 X 吗？", "Y 可能有帮助吗？", "Z 的影响是什么？"]
+        tone: "curious"
+        
+      adaptive:
+        language: "context_based"
+        examples: "根据情况调整"
+        tone: "flexible"
+  
+  - id: ADAPT_003
+    name: automation_level_adaptation
+    description: "根据自动化程度偏好调整确认点"
+    
+    mappings:
+      manual:
+        checkpoints: "all"
+        auto_proceed: false
+        skip_allowed: false
+        
+      semi_auto:
+        checkpoints: "key_decisions"
+        auto_proceed: true
+        skip_allowed: true
+        
+      auto:
+        checkpoints: "exceptions_only"
+        auto_proceed: true
+        skip_allowed: true
+        notify: true
+        
+      full_auto:
+        checkpoints: "none"
+        auto_proceed: true
+        skip_allowed: true
+        notify: "after_completion"
+  
+  - id: ADAPT_004
+    name: risk_tolerance_adaptation
+    description: "根据风险容忍度调整检查严格度"
+    
+    mappings:
+      conservative:
+        gate_strictness: "very_strict"
+        required_checks: "all"
+        confirmation_frequency: "high"
+        warnings_threshold: "low"
+        
+      balanced:
+        gate_strictness: "standard"
+        required_checks: "important"
+        confirmation_frequency: "medium"
+        warnings_threshold: "medium"
+        
+      aggressive:
+        gate_strictness: "relaxed"
+        required_checks: "critical"
+        confirmation_frequency: "low"
+        warnings_threshold: "high"
+```
+
+### 适配应用
+
+```yaml
+adaptation_application:
+  name: apply_personalization
+  description: "将用户偏好应用到生成过程中"
+  
+  application_points:
+    # 1. 路由阶段
+    routing_adaptation:
+      - "根据用户偏好调整路由决策"
+      - "如果用户偏好详细，更倾向于 hybrid 模式"
+      - "如果用户偏好快速，更倾向于 skeleton-only 模式"
+      
+    # 2. 组合阶段
+    combination_adaptation:
+      - "根据详细程度选择包含的元素"
+      - "根据指导风格调整元素的措辞"
+      - "根据自动化程度调整闸门设置"
+      
+    # 3. 生成阶段
+    generation_adaptation:
+      - "根据详细程度调整生成的详细度"
+      - "根据文档偏好调整文档数量"
+      - "根据代码风格调整示例代码"
+      
+    # 4. 输出阶段
+    output_adaptation:
+      - "根据详细程度调整输出格式"
+      - "根据指导风格调整说明方式"
+      - "根据用户习惯调整命令格式"
+  
+  adaptation_flow:
+    ```yaml
+    1. 获取用户画像
+       user_profile = get_user_profile(user_id)
+       
+    2. 获取项目上下文
+       project_context = analyze_project(project_path)
+       
+    3. 检查项目特定偏好
+       if project_context.type in user_profile.project_specific:
+           preferences = user_profile.project_specific[project_context.type]
+       else:
+           preferences = user_profile.inferred_preferences
+           
+    4. 应用适配规则
+       adapted_generation = apply_adaptation_rules(
+           base_generation,
+           preferences
+       )
+       
+    5. 生成个性化输出
+       personalized_output = generate_output(adapted_generation)
+    ```
+```
+
+---
+
+## 偏好设置
+
+### 显式设置界面
+
+```yaml
+explicit_settings_ui:
+  name: user_preferences_settings
+  description: "用户显式设置偏好的界面"
+  
+  settings_categories:
+    - category: general
+      name: "通用设置"
+      preferences:
+        - detail_level
+        - guidance_style
+        - automation_level
+        
+    - category: quality
+      name: "质量设置"
+      preferences:
+        - risk_tolerance
+        - documentation_preference
+        
+    - category: project_types
+      name: "项目类型设置"
+      preferences:
+        - "AI/LLM 项目偏好"
+        - "Web 前端项目偏好"
+        - "后端 API 项目偏好"
+        - "其他项目类型偏好"
+        
+    - category: advanced
+      name: "高级设置"
+      preferences:
+        - coding_style
+        - custom_rules
+        - ignored_suggestions
+  
+  setting_ui_elements:
+    - element: slider
+      description: "用于连续偏好（如详细程度）"
+      example: "详细程度: [----●----] 简洁 ← → 详尽"
+      
+    - element: radio_group
+      description: "用于离散偏好（如指导风格）"
+      example: "指导风格: (●) 指令式  ( ) 建议式  ( ) 探索式"
+      
+    - element: checkbox
+      description: "用于启用/禁用功能"
+      example: "[✓] 自动应用学习的偏好"
+      
+    - element: custom_input
+      description: "用于自定义设置"
+      example: "自定义检查项: [________]"
+```
+
+### 偏好导入/导出
+
+```yaml
+preferences_io:
+  name: preferences_import_export
+  description: "偏好设置的导入导出"
+  
+  export_format:
+    ```yaml
+    # 导出的偏好配置
+    user_preferences:
+      version: "1.0"
+      export_date: "2026-06-22T15:00:00Z"
+      
+      general:
+        detail_level: "detailed"
+        guidance_style: "suggestive"
+        automation_level: "semi_auto"
+        
+      quality:
+        risk_tolerance: "balanced"
+        documentation_preference: "essential"
+        
+      project_types:
+        ai_agent:
+          detail_level: "exhaustive"
+        
+      advanced:
+        coding_style: "follow_team"
+    ```
+    
+  import_validation:
+    - "验证版本兼容性"
+    - "验证偏好值有效性"
+    - "合并而非覆盖现有设置"
+    - "记录导入历史"
+```
+
+---
+
+## 团队偏好
+
+### 团队偏好结构
+
+```yaml
+team_preferences:
+  id: "TP-001"
+  team_id: "team-ai-research"
+  created_at: "2026-06-01T10:00:00Z"
+  last_updated: "2026-06-22T15:00:00Z"
+  
+  # 团队级别设置（覆盖个人设置）
+  team_overrides:
+    coding_style: "custom"
+    custom_style_rules:
+      - "使用 type hints"
+      - "函数不超过 50 行"
+      - "使用 dataclass 而非 dict"
+      
+  documentation_preference: "comprehensive"
+  
+  # 团队标准流程
+  team_standard_flows:
+    ai_feature:
+      template: "TEMPLATE-ai-feature-team.md"
+      required_checks: ["cost_analysis", "safety_review", "performance_test"]
+      
+    bug_fix:
+      template: "TEMPLATE-bugfix-team.md"
+      required_checks: ["root_cause_analysis", "regression_test"]
+      
+  # 成员偏好汇总
+  member_preferences_summary:
+    total_members: 12
+    consensus_preferences:
+      detail_level: "detailed"  # 80% 成员选择
+      guidance_style: "suggestive"  # 75% 成员选择
+      automation_level: "semi_auto"  # 90% 成员选择
+      
+    divergent_preferences:
+      - preference: "risk_tolerance"
+        distribution:
+          conservative: 40%
+          balanced: 50%
+          aggressive: 10%
+        recommendation: "保持个人偏好"
+```
+
+### 团队偏好与个人偏好
+
+```yaml
+team_personal_hierarchy:
+  name: preference_hierarchy
+  description: "团队偏好和个人偏好的优先级"
+  
+  priority_order:
+    1: security_requirements
+      description: "安全要求（最高优先级）"
+      
+    2: team_overrides
+      description: "团队强制设置"
+      examples: "代码风格、必须检查项"
+      
+    3: project_requirements
+      description: "项目特定要求"
+      examples: "客户要求、合规要求"
+      
+    4: personal_preferences
+      description: "个人偏好"
+      
+    5: learned_preferences
+      description: "学习到的偏好"
+      
+    6: default_settings
+      description: "系统默认值"
+  
+  conflict_resolution:
+    - "安全要求 > 所有其他偏好"
+    - "团队强制设置 > 个人偏好"
+    - "项目要求 > 团队建议设置"
+    - "个人偏好 > 学习到的偏好"
+```
+
+---
+
+## 与元能力的协作
+
+### 与所有元能力的协作
+
+```yaml
+collaboration:
+  capabilities:
+    - capability: project-analysis
+      adaptation:
+        - "根据用户偏好调整分析深度"
+        - "根据用户习惯调整分析输出格式"
+        
+    - capability: stage-reasoning
+      adaptation:
+        - "根据风险容忍度调整阶段推荐"
+        - "根据自动化偏好调整闸门设置"
+        
+    - capability: flow-generation
+      adaptation:
+        - "根据详细程度调整流程详细度"
+        - "根据指导风格调整说明方式"
+        
+    - capability: knowledge-composition
+      adaptation:
+        - "根据用户偏好选择组合策略"
+        - "根据用户习惯调整元素选择"
+        
+    - capability: learning-system
+      adaptation:
+        - "根据用户反馈学习偏好"
+        - "根据使用模式更新画像"
+```
+
+---
+
+## 版本历史
+
+version_history:
+  - version: "1.0.0"
+    date: "2026-06-22"
+    changes:
+      - "初始版本"
+      - "定义 6 个个性化维度"
+      - "定义用户画像结构"
+      - "定义适配规则"
+      - "定义偏好设置界面"
+      - "定义团队偏好机制"

@@ -1,0 +1,466 @@
+---
+name: TEMPLATE-ai-pipeline
+description: AI/LLM 流水线变更模板
+version: 2.0.0
+---
+
+# {{feature_name}} - AI/LLM 流水线变更
+
+## 概述
+
+本模板用于 AI/LLM 项目的流水线变更，包括 Prompt 设计、模型配置、API Key 管理、响应处理等。
+
+**适用场景**:
+- 新增 AI 功能
+- 修改 Prompt 模板
+- 切换 LLM 提供商
+- 调整模型参数
+- 优化响应处理逻辑
+
+---
+
+## 前置检查
+
+### 代码托管检测
+
+```yaml
+# 检测项目使用的代码托管平台
+code_hosting: {{code_hosting}}
+
+# 根据平台选择对应的 MCP 工具
+mcp_tool: {{mcp_tool}}
+```
+
+### AI 框架检测
+
+```yaml
+# 检测项目使用的 AI 框架
+ai_framework: {{ai_framework}}
+
+# 支持的框架列表
+supported_frameworks:
+  - openai
+  - anthropic
+  - langchain
+  - llama-index
+  - autogen
+  - vllm
+```
+
+---
+
+## 变更流程
+
+### Step 1: 分析 AI 流水线需求
+
+**Input**:
+- 功能需求描述
+- 现有 AI 流水线文档（如有）
+- 模型配置文件
+
+**Process**:
+1. 理解功能需求，确定 AI 流水线类型
+2. 分析现有流水线，确定变更范围
+3. 识别涉及的组件（Prompt、模型、工具、响应处理）
+
+**Output**:
+- AI 流水线变更分析文档
+
+**Run**:
+```bash
+# 创建变更分析文档
+cat > docs/spec/{{feature_name}}/analyze/01-ai-pipeline-analysis.md << 'EOF'
+# AI 流水线变更分析
+
+## 变更类型
+[ ] 新增流水线
+[ ] 修改 Prompt
+[ ] 切换模型
+[ ] 调整参数
+[ ] 优化响应处理
+
+## 涉及组件
+- [ ] Prompt 模板
+- [ ] 模型配置
+- [ ] API Key
+- [ ] 响应解析
+- [ ] 错误处理
+
+## 预估影响
+- [ ] 成本
+- [ ] 延迟
+- [ ] 准确率
+EOF
+```
+
+**Expected**:
+- 文档创建成功
+- 包含变更类型和影响分析
+
+---
+
+### Step 2: 设计 Prompt 和模型配置
+
+**Input**:
+- 变更分析文档
+- 现有 Prompt 模板（如有）
+
+**Process**:
+1. 设计 Prompt 模板（System Prompt + User Prompt）
+2. 选择合适的模型和参数
+3. 配置 API Key 管理方案
+
+**Output**:
+- Prompt 设计文档
+- 模型配置文件
+
+**Run**:
+```bash
+# 创建 Prompt 设计文档
+cat > docs/spec/{{feature_name}}/design/01-prompt-design.md << 'EOF'
+# Prompt 设计
+
+## System Prompt
+```
+{{#if has_system_prompt}}
+[现有 System Prompt 内容]
+{{else}}
+[待设计的 System Prompt]
+{{/if}}
+```
+
+## User Prompt 模板
+```
+{{#if has_user_prompt}}
+[现有 User Prompt 模板]
+{{else}}
+[待设计的 User Prompt 模板]
+{{/if}}
+```
+
+## 模型选择
+- Provider: {{ai_provider}}
+- Model: {{ai_model}}
+- Temperature: {{temperature}}
+- Max Tokens: {{max_tokens}}
+EOF
+```
+
+**Expected**:
+- Prompt 设计文档创建成功
+- 模型配置参数明确
+
+---
+
+### Step 3: 检查 AI 安全性
+
+**Input**:
+- Prompt 设计文档
+- 模型配置
+
+**Process**:
+1. 检查 Prompt 是否包含敏感信息
+2. 检查 API Key 管理是否安全
+3. 检查输出过滤是否完善
+
+**Output**:
+- AI 安全检查报告
+
+**Run**:
+{{#if has_mcp_tool}}
+```bash
+# 调用 MCP 工具进行安全检查
+mcp_call tool="{{mcp_tool}}__check_ai_safety" \
+  arguments='{"prompt": "<system_prompt>", "config": "<model_config>"}'
+```
+{{else}}
+```bash
+# 运行本地安全检查脚本
+python scripts/check-ai-safety.py \
+  --prompt-file docs/spec/{{feature_name}}/design/01-prompt-design.md \
+  --config-file config/ai-config.yaml
+```
+{{/if}}
+
+**Expected**:
+- 无敏感信息泄露风险
+- API Key 使用加密存储
+- 输出有过滤机制
+
+---
+
+### Step 4: 估算成本
+
+**Input**:
+- 模型配置
+- 预估调用量
+
+**Process**:
+1. 计算 API 调用成本
+2. 评估缓存策略
+3. 确定预算上限
+
+**Output**:
+- 成本估算报告
+
+**Run**:
+```bash
+# 创建成本估算文档
+cat > docs/spec/{{feature_name}}/design/02-cost-estimation.md << 'EOF'
+# 成本估算
+
+## 模型定价
+- Provider: {{ai_provider}}
+- Model: {{ai_model}}
+- Input Price: ${{input_price}} / 1M tokens
+- Output Price: ${{output_price}} / 1M tokens
+
+## 预估用量
+- 日均调用: {{daily_calls}}
+- 平均输入 tokens: {{avg_input_tokens}}
+- 平均输出 tokens: {{avg_output_tokens}}
+
+## 成本计算
+- 日成本: ${{daily_cost}}
+- 月成本: ${{monthly_cost}}
+- 年成本: ${{yearly_cost}}
+
+## 预算控制
+- 月预算上限: ${{monthly_budget}}
+- 超预算告警: {{alert_threshold}}%
+EOF
+```
+
+**Expected**:
+- 成本估算准确
+- 预算控制方案明确
+
+---
+
+### Step 5: 实现 AI 流水线
+
+**Input**:
+- Prompt 设计文档
+- 模型配置
+- 成本估算
+
+**Process**:
+1. 实现 Prompt 模板
+2. 配置模型调用
+3. 实现响应处理
+4. 添加错误处理和重试
+
+**Output**:
+- AI 流水线代码
+- 单元测试
+
+**Run**:
+```bash
+# 创建 AI 流水线代码结构
+mkdir -p src/ai/pipelines/{{feature_name}}
+
+# 根据 AI 框架生成代码
+case "{{ai_framework}}" in
+  langchain)
+    cat > src/ai/pipelines/{{feature_name}}/pipeline.py << 'EOF'
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+
+# 配置模型
+llm = ChatOpenAI(
+    model="{{ai_model}}",
+    temperature={{temperature}},
+    max_tokens={{max_tokens}},
+)
+
+# 配置 Prompt
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "<system_prompt>"),
+    ("human", "{input}"),
+])
+
+# 创建流水线
+pipeline = prompt | llm
+EOF
+    ;;
+  anthropic)
+    cat > src/ai/pipelines/{{feature_name}}/pipeline.py << 'EOF'
+import anthropic
+
+client = anthropic.Anthropic()
+
+def run_pipeline(input_text: str):
+    response = client.messages.create(
+        model="{{ai_model}}",
+        max_tokens={{max_tokens}},
+        messages=[{"role": "user", "content": input_text}],
+    )
+    return response.content[0].text
+EOF
+    ;;
+esac
+```
+
+**Expected**:
+- 代码结构清晰
+- 包含错误处理
+- 有单元测试
+
+---
+
+### Step 6: 测试和验证
+
+**Input**:
+- AI 流水线代码
+- 测试用例
+
+**Process**:
+1. 编写单元测试
+2. 进行集成测试
+3. 验证输出质量
+
+**Output**:
+- 测试报告
+
+**Run**:
+```bash
+# 运行测试
+{{#if has_test_runner}}
+{{test_runner}} test tests/ai/pipelines/{{feature_name}}/
+{{else}}
+pytest tests/ai/pipelines/{{feature_name}}/ -v
+{{/if}}
+
+# 创建测试报告
+cat > docs/spec/{{feature_name}}/test/01-test-report.md << 'EOF'
+# AI 流水线测试报告
+
+## 测试结果
+- 单元测试: {{unit_test_pass}}/{{unit_test_total}} 通过
+- 集成测试: {{integration_test_pass}}/{{integration_test_total}} 通过
+
+## 质量指标
+- 平均响应时间: {{avg_response_time}}ms
+- 准确率: {{accuracy}}%
+- 成本: ${{cost_per_1000_calls}} / 1000 次调用
+EOF
+```
+
+**Expected**:
+- 所有测试通过
+- 质量指标达标
+
+---
+
+### Step 7: 部署和监控
+
+**Input**:
+- 测试通过的代码
+- 部署配置
+
+**Process**:
+1. 部署到测试环境
+2. 配置监控告警
+3. 灰度发布到生产环境
+
+**Output**:
+- 部署完成
+- 监控配置
+
+**Run**:
+```bash
+# 创建部署检查清单
+cat > docs/spec/{{feature_name}}/deploy/01-deployment-checklist.md << 'EOF'
+# AI 流水线部署检查清单
+
+## 部署前检查
+- [ ] Prompt 模板已审核
+- [ ] API Key 已配置
+- [ ] 成本预算已设置
+- [ ] 监控告警已配置
+
+## 部署步骤
+1. 部署到测试环境
+2. 验证功能正常
+3. 配置生产环境
+4. 灰度发布
+
+## 监控指标
+- 调用成功率
+- 平均响应时间
+- Token 使用量
+- 成本
+
+## 告警阈值
+- 错误率 > {{error_rate_threshold}}%
+- 响应时间 > {{response_time_threshold}}ms
+- 成本 > {{cost_threshold}}/小时
+EOF
+```
+
+**Expected**:
+- 部署成功
+- 监控告警配置完成
+
+---
+
+## 闸门检查
+
+### G1: 需求分析闸门
+- [ ] 变更类型已明确
+- [ ] 影响范围已分析
+- [ ] 相关人员已通知
+
+### G2: 设计闸门
+- [ ] Prompt 设计已完成
+- [ ] 模型配置已确定
+- [ ] 成本估算已通过
+
+### G3: 安全闸门
+- [ ] AI 安全检查已通过
+- [ ] API Key 管理方案已确认
+- [ ] 输出过滤已实现
+
+### G4: 测试闸门
+- [ ] 单元测试通过
+- [ ] 集成测试通过
+- [ ] 质量指标达标
+
+### G5: 部署闸门
+- [ ] 部署检查清单已完成
+- [ ] 监控告警已配置
+- [ ] 回滚方案已准备
+
+---
+
+## 常见问题
+
+### Q1: 如何管理 API Key？
+
+**推荐方案**:
+1. 使用环境变量
+2. 使用密钥管理服务（如 AWS Secrets Manager）
+3. 不在代码中硬编码
+
+### Q2: 如何控制成本？
+
+**推荐方案**:
+1. 设置日/月预算上限
+2. 实现请求缓存
+3. 使用更便宜的模型处理简单任务
+
+### Q3: 如何保证输出安全？
+
+**推荐方案**:
+1. Prompt 中明确输出格式
+2. 实现输出过滤
+3. 定期审核输出内容
+
+---
+
+## 参考资源
+
+- [OpenAI API 文档](https://platform.openai.com/docs)
+- [Anthropic API 文档](https://docs.anthropic.com)
+- [LangChain 文档](https://python.langchain.com)
+- [LLamaIndex 文档](https://llamaindex.ai/docs)

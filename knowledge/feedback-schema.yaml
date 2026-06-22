@@ -1,0 +1,479 @@
+# 反馈收集数据结构定义
+# 版本: 1.0.0
+# 创建日期: 2026-06-22
+
+---
+
+schema:
+  name: feedback_collection_schema
+  version: "1.0"
+  description: "定义 Your Harness 反馈收集的数据结构和流程"
+
+---
+
+## 反馈类型
+
+feedback_types:
+  # 隐式反馈 - 自动收集，无需用户操作
+  implicit:
+    id: FB_TYPE_IMPLICIT
+    name: 隐式反馈
+    description: "通过用户行为自动收集的反馈"
+    collection_method: automatic
+    priority: low
+    
+    metrics:
+      - id: FB_METRIC_001
+        name: completion_rate
+        description: "流程完成率"
+        type: percentage
+        collection_point: "流程结束时"
+        calculation: "完成的步骤数 / 总步骤数"
+        
+      - id: FB_METRIC_002
+        name: modification_count
+        description: "用户修改次数"
+        type: integer
+        collection_point: "用户编辑流程时"
+        calculation: "修改操作的次数"
+        
+      - id: FB_METRIC_003
+        name: skip_count
+        description: "跳过的步骤数"
+        type: integer
+        collection_point: "用户跳过步骤时"
+        calculation: "被跳过的步骤数量"
+        
+      - id: FB_METRIC_004
+        name: time_spent
+        description: "使用时间"
+        type: duration
+        collection_point: "流程结束时"
+        calculation: "从开始到结束的总时间"
+        
+      - id: FB_METRIC_005
+        name: step_dwell_time
+        description: "每个步骤的停留时间"
+        type: array
+        collection_point: "步骤切换时"
+        calculation: "每个步骤的平均停留时间"
+        
+      - id: FB_METRIC_006
+        name: gate_pass_rate
+        description: "闸门通过率"
+        type: percentage
+        collection_point: "闸门检查时"
+        calculation: "通过的闸门数 / 总闸门数"
+        
+      - id: FB_METRIC_007
+        name: error_encountered
+        description: "遇到的错误数"
+        type: integer
+        collection_point: "错误发生时"
+        calculation: "流程中遇到的错误次数"
+
+  # 显式反馈 - 需要用户主动提供
+  explicit:
+    id: FB_TYPE_EXPLICIT
+    name: 显式反馈
+    description: "用户主动提供的反馈"
+    collection_method: user_input
+    priority: high
+    
+    fields:
+      - id: FB_FIELD_001
+        name: satisfaction_score
+        description: "满意度评分"
+        type: integer
+        range: [1, 5]
+        required: true
+        prompt: "生成的流程对您有帮助吗？"
+        options:
+          - value: 1
+            label: "完全没帮助"
+          - value: 2
+            label: "不太有帮助"
+          - value: 3
+            label: "一般"
+          - value: 4
+            label: "比较有帮助"
+          - value: 5
+            label: "非常有帮助"
+            
+      - id: FB_FIELD_002
+        name: overall_rating
+        description: "整体评分"
+        type: integer
+        range: [1, 5]
+        required: false
+        prompt: "您对生成的流程整体满意吗？"
+        
+      - id: FB_FIELD_003
+        name: comments
+        description: "用户评论"
+        type: text
+        required: false
+        prompt: "有什么建议或意见吗？"
+        max_length: 1000
+        
+      - id: FB_FIELD_004
+        name: suggestions
+        description: "改进建议"
+        type: array
+        required: false
+        prompt: "有哪些地方可以改进？"
+        options:
+          - value: more_detailed
+            label: "可以更详细"
+          - value: less_detailed
+            label: "可以更简洁"
+          - value: more_checks
+            label: "需要更多检查项"
+          - value: fewer_checks
+            label: "检查项太多"
+          - value: wrong_stages
+            label: "阶段划分不合理"
+          - value: missing_stages
+            label: "缺少某些阶段"
+          - value: other
+            label: "其他"
+            
+      - id: FB_FIELD_005
+        name: would_recommend
+        description: "是否推荐"
+        type: boolean
+        required: false
+        prompt: "您愿意将这个流程推荐给其他人吗？"
+        
+      - id: FB_FIELD_006
+        name: specific_issues
+        description: "具体问题"
+        type: array
+        required: false
+        prompt: "遇到了哪些具体问题？"
+        
+  # 使用反馈 - 用户实际使用后的反馈
+  usage:
+    id: FB_TYPE_USAGE
+    name: 使用反馈
+    description: "用户实际使用流程后的反馈"
+    collection_method: automatic_with_prompt
+    priority: medium
+    
+    fields:
+      - id: FB_USAGE_001
+        name: completed_successfully
+        description: "是否成功完成任务"
+        type: boolean
+        required: true
+        
+      - id: FB_USAGE_002
+        name: modifications_made
+        description: "用户做了哪些修改"
+        type: array
+        required: false
+        sub_fields:
+          - name: modification_type
+            type: enum
+            options: [added, removed, modified, reordered]
+          - name: element_type
+            type: enum
+            options: [stage, check, gate, template, script]
+          - name: element_id
+            type: string
+          - name: reason
+            type: text
+            max_length: 200
+            
+      - id: FB_USAGE_003
+        name: skipped_steps
+        description: "用户跳过了哪些步骤"
+        type: array
+        required: false
+        sub_fields:
+          - name: step_id
+            type: string
+          - name: reason
+            type: text
+            max_length: 200
+            
+      - id: FB_USAGE_004
+        name: additional_notes
+        description: "用户的额外说明"
+        type: text
+        required: false
+        max_length: 500
+
+---
+
+## 反馈收集流程
+
+feedback_collection_flow:
+  name: standard_collection_flow
+  description: "标准反馈收集流程"
+  
+  triggers:
+    - event: generation_complete
+      description: "生成完成后触发"
+      delay: 0s
+      action: start_collection
+      
+    - event: user_modification
+      description: "用户修改后触发"
+      delay: 0s
+      action: record_modification
+      
+    - event: flow_completion
+      description: "用户完成流程后触发"
+      delay: 5s
+      action: request_feedback
+      
+    - event: session_end
+      description: "会话结束时触发"
+      delay: 0s
+      action: finalize_collection
+  
+  steps:
+    - step: 1
+      id: FC_STEP_001
+      name: 初始化收集器
+      description: "创建反馈收集会话"
+      action: |
+        ```yaml
+        feedback_session:
+          id: FS-{timestamp}
+          project_id: "{project_id}"
+          started_at: "{timestamp}"
+          status: active
+          implicit_data: {}
+          explicit_data: null
+          usage_data: null
+        ```
+        
+    - step: 2
+      id: FC_STEP_002
+      name: 收集隐式数据
+      description: "自动收集使用指标"
+      action: |
+        在用户使用流程的过程中，自动记录：
+        - 页面访问时间
+        - 步骤完成状态
+        - 修改操作
+        - 跳过操作
+        - 错误信息
+        
+    - step: 3
+      id: FC_STEP_003
+      name: 请求显式反馈
+      description: "在适当时机请求用户反馈"
+      condition: "flow_completion OR session_end"
+      action: |
+        展示反馈表单，请求用户：
+        1. 评分（必须）
+        2. 评论（可选）
+        3. 建议（可选）
+        
+    - step: 4
+      id: FC_STEP_004
+      name: 整合反馈数据
+      description: "将隐式和显式反馈整合"
+      action: |
+        ```yaml
+        feedback_record:
+          id: FR-{timestamp}
+          session_id: "{session_id}"
+          collected_at: "{timestamp}"
+          
+          implicit:
+            completion_rate: {calculated}
+            modification_count: {count}
+            skip_count: {count}
+            time_spent: {duration}
+            # ... 其他隐式指标
+            
+          explicit:
+            satisfaction_score: {user_input}
+            comments: {user_input}
+            suggestions: {user_input}
+            # ... 其他显式字段
+            
+          usage:
+            completed_successfully: {boolean}
+            modifications_made: {array}
+            skipped_steps: {array}
+        ```
+        
+    - step: 5
+      id: FC_STEP_005
+      name: 计算质量评分
+      description: "基于反馈计算质量评分"
+      action: |
+        使用质量评分公式：
+        ```
+        quality_score = (
+          satisfaction_score / 5 * 0.4 +
+          completion_rate * 0.3 +
+          (1 - modification_count / 5) * 0.2 +
+          would_recommend * 0.1
+        ) * 100
+        ```
+        
+    - step: 6
+      id: FC_STEP_006
+      name: 保存反馈记录
+      description: "保存到知识库"
+      action: |
+        保存位置：
+        - 完整记录：knowledge/feedbacks/{project_id}/
+        - 聚合统计：knowledge/feedbacks/aggregations/
+        
+    - step: 7
+      id: FC_STEP_007
+      name: 触发学习流程
+      description: "将反馈传递给学习系统"
+      action: |
+        调用元能力 6（学习系统）进行处理
+
+---
+
+## 反馈存储结构
+
+feedback_storage:
+  base_path: knowledge/feedbacks/
+  
+  structure:
+    project_feedbacks:
+      path: "{project_id}/{date}.yaml"
+      description: "单个项目的反馈记录"
+      example: "my-project/2026-06-22.yaml"
+      
+    aggregations:
+      path: "aggregations/{pattern_type}.yaml"
+      description: "按项目类型聚合的反馈"
+      example: "aggregations/ai_agent.yaml"
+      
+    daily_reports:
+      path: "reports/{date}.yaml"
+      description: "每日反馈报告"
+      example: "reports/2026-06-22.yaml"
+
+  schema:
+    project_feedback:
+      id: FR-{project_id}-{timestamp}
+      project_id: string
+      collected_at: datetime
+      generation_info:
+        session_id: string
+        harness_version: string
+        routing_mode: enum
+      implicit: object
+      explicit: object
+      usage: object
+      quality_score: number
+      metadata: object
+      
+    aggregation:
+      id: AGG-{pattern_type}
+      pattern_type: string
+      last_updated: datetime
+      total_records: integer
+      average_quality_score: number
+      average_satisfaction: number
+      common_modifications: array
+      trends: object
+
+---
+
+## 反馈分析规则
+
+feedback_analysis:
+  name: auto_analysis_rules
+  description: "自动分析反馈的规则"
+  
+  rules:
+    - id: FA_RULE_001
+      name: low_satisfaction_detection
+      description: "检测低满意度反馈"
+      condition: "satisfaction_score <= 2"
+      action:
+        - "标记为需要关注"
+        - "提取具体问题"
+        - "生成改进建议"
+        
+    - id: FA_RULE_002
+      name: high_modification_detection
+      description: "检测高修改率"
+      condition: "modification_count >= 5"
+      action:
+        - "分析修改模式"
+        - "识别可能的问题区域"
+        - "考虑更新相关模板"
+        
+    - id: FA_RULE_003
+      name: skip_pattern_detection
+      description: "检测跳过模式"
+      condition: "skip_count >= 3"
+      action:
+        - "分析跳过的步骤"
+        - "评估步骤必要性"
+        - "考虑简化或移除"
+        
+    - id: FA_RULE_004
+      name: excellent_feedback_detection
+      description: "检测优秀反馈"
+      condition: "satisfaction_score == 5 AND modification_count == 0"
+      action:
+        - "标记为成功案例"
+        - "提取成功模式"
+        - "考虑提升为最佳实践"
+        
+    - id: FA_RULE_005
+      name: trend_analysis
+      description: "趋势分析"
+      condition: "records_in_period >= 10"
+      action:
+        - "计算平均满意度变化"
+        - "识别改进趋势"
+        - "生成周期报告"
+
+---
+
+## 与元能力的协作
+
+capability_collaboration:
+  - capability: learning-system
+    relationship: feeds_into
+    description: "反馈数据作为学习系统的主要输入"
+    data_flow:
+      - "quality_score → 学习评分"
+      - "modifications → 成功/失败模式"
+      - "comments → 知识库更新建议"
+      
+  - capability: project-analysis
+    relationship: improves
+    description: "反馈帮助改进项目分析能力"
+    feedback_loop:
+      - "记录哪些特征识别准确"
+      - "记录哪些特征识别错误"
+      - "更新特征识别规则"
+      
+  - capability: stage-reasoning
+    relationship: improves
+    description: "反馈帮助改进阶段推理能力"
+    feedback_loop:
+      - "记录哪些阶段被跳过"
+      - "记录哪些阶段被添加"
+      - "优化推理规则"
+
+---
+
+## 版本历史
+
+version_history:
+  - version: "1.0.0"
+    date: "2026-06-22"
+    changes:
+      - "初始版本"
+      - "定义反馈类型"
+      - "定义收集流程"
+      - "定义存储结构"

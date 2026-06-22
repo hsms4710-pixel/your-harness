@@ -1,0 +1,394 @@
+#!/usr/bin/env python3
+"""
+AI 安全检查脚本
+检查 AI 项目的安全性，包括 Prompt 安全、API Key 管理、输出过滤等
+
+用法:
+    python check-ai-safety.py --prompt-file <prompt_file> --config-file <config_file>
+    python check-ai-safety.py --dir <project_dir>
+
+版本: {{version}}
+生成时间: {{generation_time}}
+"""
+
+import argparse
+import json
+import os
+import re
+import sys
+from pathlib import Path
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+
+
+@dataclass
+class SafetyCheckResult:
+    """安全检查结果"""
+    check_name: str
+    passed: bool
+    severity: str  # critical, warning, info
+    message: str
+    suggestion: Optional[str] = None
+
+
+class AISafetyChecker:
+    """AI 安全检查器"""
+    
+    def __init__(self, project_dir: str = "."):
+        self.project_dir = Path(project_dir)
+        self.results: List[SafetyCheckResult] = []
+    
+    def check_prompt_safety(self, prompt_file: Optional[str] = None) -> List[SafetyCheckResult]:
+        """检查 Prompt 安全性"""
+        results = []
+        
+        # 查找 Prompt 文件
+        if prompt_file:
+            prompt_path = self.project_dir / prompt_file
+        else:
+            prompt_path = self._find_prompt_file()
+        
+        if not prompt_path.exists():
+            results.append(SafetyCheckResult(
+                check_name="Prompt 文件存在性",
+                passed=False,
+                severity="warning",
+                message=f"未找到 Prompt 文件: {prompt_path}",
+                suggestion="创建 Prompt 设计文档，明确 System Prompt 和 User Prompt"
+            ))
+            return results
+        
+        # 读取 Prompt 内容
+        prompt_content = prompt_path.read_text()
+        
+        # 检查是否包含敏感信息
+        sensitive_patterns = [
+            (r'api[_-]?key[=:]\s*\S+', "API Key 暴露", "critical"),
+            (r'secret[=:]\s*\S+', "密钥暴露", "critical"),
+            (r'password[=:]\s*\S+', "密码暴露", "critical"),
+            (r'token[=:]\s*\S+', "Token 暴露", "warning"),
+        ]
+        
+        for pattern, desc, severity in sensitive_patterns:
+            if re.search(pattern, prompt_content, re.IGNORECASE):
+                results.append(SafetyCheckResult(
+                    check_name=f"Prompt {desc}检查",
+                    passed=False,
+                    severity=severity,
+                    message=f"Prompt 文件中发现{desc}",
+                    suggestion="移除敏感信息，使用环境变量或密钥管理服务"
+                ))
+        
+        # 检查是否有限制输出的指令
+        if not any(kw in prompt_content.lower() for kw in ['output', 'response', 'format', 'json', 'xml']):
+            results.append(SafetyCheckResult(
+                check_name="Prompt 输出限制",
+                passed=False,
+                severity="warning",
+                message="Prompt 中未明确输出格式限制",
+                suggestion="在 Prompt 中添加输出格式限制，防止模型输出敏感信息"
+            ))
+        
+        # 检查是否有安全指令
+        if not any(kw in prompt_content.lower() for kw in ['not', 'never', 'don\'t', '禁止', '不要']):
+            results.append(SafetyCheckResult(
+                check_name="Prompt 安全指令",
+                passed=False,
+                severity="info",
+                message="Prompt 中未包含安全限制指令",
+                suggestion="添加如 '不要输出敏感信息' 等安全指令"
+            ))
+        
+        # 如果没有发现问题
+        if not results:
+            results.append(SafetyCheckResult(
+                check_name="Prompt 安全性",
+                passed=True,
+                severity="info",
+                message="Prompt 安全检查通过"
+            ))
+        
+        return results
+    
+    def check_api_key_management(self) -> List[SafetyCheckResult]:
+        """检查 API Key 管理"""
+        results = []
+        
+        # 检查代码中是否硬编码了 API Key
+        code_files = list(self.project_dir.rglob('*.py')) + \
+                     list(self.project_dir.rglob('*.js')) + \
+                     list(self.project_dir.rglob('*.ts'))
+        
+        sensitive_patterns = [
+            (r'api[_-]?key\s*=\s*["\'][^"\']+["\']', "硬编码 API Key"),
+            (r'secret\s*=\s*["\'][^"\']+["\']', "硬编码 Secret"),
+            (r'token\s*=\s*["\'][^"\']+["\']', "硬编码 Token"),
+        ]
+        
+        for file_path in code_files:
+            content = file_path.read_text()
+            for pattern, desc in sensitive_patterns:
+                matches = re.findall(pattern, content, re.IGNORECASE)
+                if matches:
+                    results.append(SafetyCheckResult(
+                        check_name=f"代码硬编码检查 ({file_path.name})",
+                        passed=False,
+                        severity="critical",
+                        message=f"文件中发现{desc}",
+                        suggestion="使用环境变量或密钥管理服务存储敏感信息"
+                    ))
+        
+        # 检查是否有 .env 文件（可能是敏感的）
+        env_files = list(self.project_dir.glob('.env*'))
+        if env_files and '.env.example' not in [f.name for f in env_files]:
+            results.append(SafetyCheckResult(
+                check_name="环境变量文件",
+                passed=False,
+                severity="warning",
+                message="发现 .env 文件，可能包含敏感信息",
+                suggestion="确保 .env 文件在 .gitignore 中，只提交 .env.example"
+            ))
+        
+        # 检查 .gitignore 是否包含敏感文件
+        gitignore_path = self.project_dir / '.gitignore'
+        sensitive_patterns_in_gitignore = ['*.pem', '*.key', '*.p12', '.env', 'credentials']
+        
+        if gitignore_path.exists():
+            gitignore_content = gitignore_path.read_text()
+            for pattern in sensitive_patterns_in_gitignore:
+                if pattern not in gitignore_content:
+                    results.append(SafetyCheckResult(
+                        check_name=f".gitignore 包含 {pattern}",
+                        passed=False,
+                        severity="warning",
+                        message=f".gitignore 中未包含 {pattern}",
+                        suggestion=f"在 .gitignore 中添加 {pattern}"
+                    ))
+        
+        # 如果没有发现问题
+        if not results:
+            results.append(SafetyCheckResult(
+                check_name="API Key 管理",
+                passed=True,
+                severity="info",
+                message="API Key 管理检查通过"
+            ))
+        
+        return results
+    
+    def check_output_filtering(self) -> List[SafetyCheckResult]:
+        """检查输出过滤"""
+        results = []
+        
+        # 查找 AI 调用代码
+        ai_patterns = [
+            r'openai\.ChatCompletion',
+            r'anthropic\.messages',
+            r'langchain',
+            r'llama_index',
+        ]
+        
+        code_files = list(self.project_dir.rglob('*.py')) + \
+                     list(self.project_dir.rglob('*.js')) + \
+                     list(self.project_dir.rglob('*.ts'))
+        
+        found_ai_calls = False
+        has_output_filter = False
+        
+        for file_path in code_files:
+            content = file_path.read_text()
+            
+            # 检查是否有 AI 调用
+            for pattern in ai_patterns:
+                if re.search(pattern, content):
+                    found_ai_calls = True
+                    break
+            
+            # 检查是否有输出过滤
+            filter_patterns = [
+                r'filter',
+                r'sanitize',
+                r'clean',
+                r'validate',
+                r'process.*output',
+                r'handle.*response',
+            ]
+            
+            for pattern in filter_patterns:
+                if re.search(pattern, content, re.IGNORECASE):
+                    has_output_filter = True
+                    break
+        
+        if found_ai_calls and not has_output_filter:
+            results.append(SafetyCheckResult(
+                check_name="输出过滤",
+                passed=False,
+                severity="warning",
+                message="发现 AI 调用但未发现输出过滤逻辑",
+                suggestion="添加输出过滤函数，过滤敏感信息和不适当内容"
+            ))
+        elif not found_ai_calls:
+            results.append(SafetyCheckResult(
+                check_name="输出过滤",
+                passed=True,
+                severity="info",
+                message="未发现 AI 调用代码"
+            ))
+        else:
+            results.append(SafetyCheckResult(
+                check_name="输出过滤",
+                passed=True,
+                severity="info",
+                message="发现输出过滤逻辑"
+            ))
+        
+        return results
+    
+    def check_cost_estimation(self) -> List[SafetyCheckResult]:
+        """检查成本估算"""
+        results = []
+        
+        # 检查是否有成本相关的配置
+        cost_config_files = [
+            'cost.yaml',
+            'budget.yaml',
+            'config/cost.yaml',
+            '.env',
+        ]
+        
+        has_cost_config = any(
+            (self.project_dir / f).exists() 
+            for f in cost_config_files
+        )
+        
+        if not has_cost_config:
+            results.append(SafetyCheckResult(
+                check_name="成本配置",
+                passed=False,
+                severity="info",
+                message="未发现成本配置文件",
+                suggestion="建议添加成本预算配置，设置 API 调用上限"
+            ))
+        else:
+            results.append(SafetyCheckResult(
+                check_name="成本配置",
+                passed=True,
+                severity="info",
+                message="发现成本配置文件"
+            ))
+        
+        return results
+    
+    def _find_prompt_file(self) -> Optional[Path]:
+        """查找 Prompt 文件"""
+        prompt_patterns = [
+            '**/prompt*.md',
+            '**/prompt*.txt',
+            '**/*prompt*.md',
+            '**/*prompt*.txt',
+            'docs/**/*.md',
+        ]
+        
+        for pattern in prompt_patterns:
+            for path in self.project_dir.glob(pattern):
+                return path
+        
+        return None
+    
+    def run_all_checks(self, prompt_file: Optional[str] = None) -> Dict:
+        """运行所有检查"""
+        self.results = []
+        
+        # 运行各项检查
+        self.results.extend(self.check_prompt_safety(prompt_file))
+        self.results.extend(self.check_api_key_management())
+        self.results.extend(self.check_output_filtering())
+        self.results.extend(self.check_cost_estimation())
+        
+        # 统计结果
+        critical_count = sum(1 for r in self.results if r.severity == "critical" and not r.passed)
+        warning_count = sum(1 for r in self.results if r.severity == "warning" and not r.passed)
+        passed_count = sum(1 for r in self.results if r.passed)
+        
+        return {
+            "total_checks": len(self.results),
+            "passed": passed_count,
+            "critical": critical_count,
+            "warning": warning_count,
+            "results": [
+                {
+                    "check_name": r.check_name,
+                    "passed": r.passed,
+                    "severity": r.severity,
+                    "message": r.message,
+                    "suggestion": r.suggestion
+                }
+                for r in self.results
+            ]
+        }
+    
+    def print_report(self, report: Dict) -> None:
+        """打印检查报告"""
+        print("\n" + "=" * 60)
+        print("AI 安全检查报告")
+        print("=" * 60)
+        
+        print(f"\n总计: {report['total_checks']} 项检查")
+        print(f"通过: {report['passed']} 项")
+        print(f"严重问题: {report['critical']} 项")
+        print(f"警告: {report['warning']} 项")
+        
+        print("\n" + "-" * 60)
+        print("详细结果:")
+        print("-" * 60)
+        
+        for result in report['results']:
+            status = "✓" if result['passed'] else "✗"
+            severity_icon = {
+                "critical": "🔴",
+                "warning": "🟡",
+                "info": "🔵"
+            }.get(result['severity'], "⚪")
+            
+            print(f"\n{status} {severity_icon} {result['check_name']}")
+            if result['passed']:
+                print(f"   {result['message']}")
+            else:
+                print(f"   {result['message']}")
+                if result['suggestion']:
+                    print(f"   💡 建议: {result['suggestion']}")
+        
+        print("\n" + "=" * 60)
+        
+        # 返回状态码
+        if report['critical'] > 0:
+            print("\n❌ 存在严重安全问题，请修复后再继续")
+            sys.exit(1)
+        elif report['warning'] > 0:
+            print("\n⚠️ 存在安全警告，建议修复")
+            sys.exit(0)
+        else:
+            print("\n✅ 安全检查通过")
+            sys.exit(0)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='AI 安全检查脚本')
+    parser.add_argument('--prompt-file', help='Prompt 文件路径')
+    parser.add_argument('--config-file', help='配置文件路径')
+    parser.add_argument('--dir', default='.', help='项目目录')
+    parser.add_argument('--json', action='store_true', help='输出 JSON 格式')
+    
+    args = parser.parse_args()
+    
+    checker = AISafetyChecker(args.dir)
+    report = checker.run_all_checks(args.prompt_file)
+    
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    else:
+        checker.print_report(report)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,516 @@
+---
+version: 1.0.0
+description: |
+  智能路由规则
+  决定使用元模板还是元能力
+---
+
+# 智能路由规则
+
+## 路由决策流程
+
+```yaml
+routing_decision:
+  name: "混合模式路由决策"
+  description: "决定使用元模板还是元能力生成"
+  
+  # 决策流程
+  decision_flow:
+    # Step 1: 检查是否有匹配的元模板
+    1_template_check:
+      action: "在元模板库中查找匹配的模板"
+      
+      matching_criteria:
+        - "项目特征完全匹配元模板的触发条件"
+        - "元模板的置信度 >= 0.9"
+        - "元模板已验证有效"
+        
+      if_match:
+        route: "template-based"
+        confidence: "high"
+        
+    # Step 2: 检查是否可以组合多个元模板
+    2_combination_check:
+      action: "检查是否可以组合多个元模板"
+      
+      matching_criteria:
+        - "项目特征可以分解为多个已知模式"
+        - "每个模式都有对应的元模板"
+        - "模板之间可以无冲突组合"
+        
+      if_match:
+        route: "template-combination"
+        confidence: "medium"
+        
+    # Step 3: 使用元能力推理
+    3_capability_check:
+      action: "使用元能力进行推理"
+      
+      if_no_template_match:
+        route: "capability-driven"
+        confidence: "medium"
+        
+    # Step 4: 混合模式
+    4_hybrid_check:
+      action: "组合元模板和元能力"
+      
+      if_partial_match:
+        route: "hybrid"
+        confidence: "medium"
+```
+
+## 路由规则
+
+### 规则 1: 完全匹配路由
+
+```yaml
+rule_id: RT-001
+name: full-template-match
+priority: 1
+
+condition:
+  all:
+    - "has_matching_template == true"
+    - "template_confidence >= 0.9"
+    - "template_is_verified == true"
+
+action:
+  route: "template-based"
+  use: "matched_template"
+  
+  # 仍然使用元能力进行微调
+  capability_enhancement:
+    - "project-analysis"  # 验证模板匹配
+    - "knowledge-composition"  # 组合补充元素
+    
+confidence: "high"
+
+example:
+  project: "标准 React 前端项目"
+  matched_template: "TEMPLATE-react-feature.md"
+  confidence: 0.95
+  route: "template-based"
+```
+
+### 规则 2: 组合匹配路由
+
+```yaml
+rule_id: RT-002
+name: template-combination
+priority: 2
+
+condition:
+  all:
+    - "can_decompose_to_known_patterns == true"
+    - "all_patterns_have_templates == true"
+    - "templates_can_combine_without_conflict == true"
+
+action:
+  route: "template-combination"
+  use:
+    - "decomposed_patterns"
+    - "corresponding_templates"
+    
+  # 使用知识组合元能力
+  capability_enhancement:
+    - "knowledge-composition"  # 组合模板
+    - "flow-generation"  # 生成组合结果
+    
+confidence: "medium"
+
+example:
+  project: "AI + React 项目"
+  decomposition:
+    - pattern: "ai-llm-project"
+      template: "TEMPLATE-ai-feature.md"
+      
+    - pattern: "frontend-project"
+      template: "TEMPLATE-react-feature.md"
+      
+  route: "template-combination"
+```
+
+### 规则 3: 部分匹配路由
+
+```yaml
+rule_id: RT-003
+name: partial-template-match
+priority: 3
+
+condition:
+  all:
+    - "has_some_matching_templates == true"
+    - "has_unmatched_features == true"
+    - "unmatched_features_significance > threshold"
+
+action:
+  route: "hybrid"
+  use:
+    - "matched_templates"  # 使用匹配的模板
+    - "capability_reasoning"  # 使用元能力处理未匹配的部分
+    
+  # 混合使用
+  capability_enhancement:
+    - "stage-reasoning"  # 推理未匹配的部分
+    - "flow-generation"  # 组合模板和推理结果
+    - "knowledge-composition"  # 整合知识
+    
+confidence: "medium"
+
+example:
+  project: "AI Agent + 微服务 项目"
+  matched:
+    - pattern: "ai-llm-project"
+      template: "TEMPLATE-ai-feature.md"
+      
+  unmatched:
+    - feature: "agent-orchestration"
+      # 无对应模板，使用元能力推理
+      
+  route: "hybrid"
+```
+
+### 规则 4: 无匹配路由
+
+```yaml
+rule_id: RT-004
+name: no-template-match
+priority: 4
+
+condition:
+  all:
+    - "has_matching_template == false"
+    - "cannot_decompose_to_known_patterns == true"
+    - "project_is_sufficiently_complex"
+
+action:
+  route: "capability-driven"
+  use:
+    - "all_five_capabilities"  # 使用全部元能力
+    
+  # 完全依赖元能力
+  capabilities:
+    - "project-analysis"  # 分析项目
+    - "stage-reasoning"  # 推理阶段
+    - "knowledge-composition"  # 组合知识
+    - "flow-generation"  # 生成流程
+    - "learning-feedback"  # 学习反馈
+    
+confidence: "medium"
+
+example:
+  project: "全新类型的项目（如：区块链 + AI + VR）"
+  matched_templates: []
+  route: "capability-driven"
+```
+
+### 规则 5: 简单项目路由
+
+```yaml
+rule_id: RT-005
+name: simple-project
+priority: 5
+
+condition:
+  all:
+    - "project_complexity == 'low'"
+    - "has_no_special_features == true"
+    - "is_standard_project == true"
+
+action:
+  route: "skeleton-only"
+  use:
+    - "flow-skeleton"  # 只使用流程骨架
+    
+  # 最简单的路由
+  capabilities:
+    - "flow-generation"  # 只需要生成流程
+    
+confidence: "high"
+
+example:
+  project: "简单脚本项目"
+  complexity: "low"
+  route: "skeleton-only"
+```
+
+## 路由决策矩阵
+
+```yaml
+decision_matrix:
+  # 行：项目特征匹配度
+  # 列：项目复杂度
+  
+  axes:
+    x: "template_match"
+      values: ["perfect", "good", "partial", "none"]
+      
+    y: "project_complexity"
+      values: ["low", "medium", "high"]
+      
+  routes:
+    # 完美匹配 + 低复杂度
+    - x: "perfect"
+      y: "low"
+      route: "template-based"
+      confidence: "high"
+      
+    # 完美匹配 + 中复杂度
+    - x: "perfect"
+      y: "medium"
+      route: "template-based"
+      confidence: "high"
+      
+    # 完美匹配 + 高复杂度
+    - x: "perfect"
+      y: "high"
+      route: "template-based"
+      confidence: "high"
+      
+    # 良好匹配 + 低复杂度
+    - x: "good"
+      y: "low"
+      route: "template-based"
+      confidence: "high"
+      
+    # 良好匹配 + 中复杂度
+    - x: "good"
+      y: "medium"
+      route: "template-combination"
+      confidence: "medium"
+      
+    # 良好匹配 + 高复杂度
+    - x: "good"
+      y: "high"
+      route: "hybrid"
+      confidence: "medium"
+      
+    # 部分匹配 + 低复杂度
+    - x: "partial"
+      y: "low"
+      route: "template-combination"
+      confidence: "medium"
+      
+    # 部分匹配 + 中复杂度
+    - x: "partial"
+      y: "medium"
+      route: "hybrid"
+      confidence: "medium"
+      
+    # 部分匹配 + 高复杂度
+    - x: "partial"
+      y: "high"
+      route: "hybrid"
+      confidence: "medium"
+      
+    # 无匹配 + 低复杂度
+    - x: "none"
+      y: "low"
+      route: "skeleton-only"
+      confidence: "high"
+      
+    # 无匹配 + 中复杂度
+    - x: "none"
+      y: "medium"
+      route: "capability-driven"
+      confidence: "medium"
+      
+    # 无匹配 + 高复杂度
+    - x: "none"
+      y: "high"
+      route: "capability-driven"
+      confidence: "medium"
+```
+
+## 路由执行
+
+```yaml
+execution:
+  # 路由执行流程
+  process:
+    # 1. 分析项目特征
+    1_analyze:
+      use: "project-analysis"
+      output: "project_features"
+      
+    # 2. 计算模板匹配度
+    2_match:
+      for template in meta-templates:
+        score = compute_similarity(project_features, template.triggers)
+        if score >= 0.9:
+          add_to_matched_templates(template, score)
+          
+    # 3. 计算项目复杂度
+    3_complexity:
+      complexity = compute_complexity(project_features)
+      # 基于特征数量、依赖关系、特殊要求等
+      
+    # 4. 应用路由规则
+    4_route:
+      for rule in routing_rules:
+        if evaluate_condition(rule.condition):
+          selected_route = rule.route
+          break
+          
+    # 5. 执行路由
+    5_execute:
+      if selected_route == "template-based":
+        execute_template_based(project_features, matched_templates)
+        
+      elif selected_route == "template-combination":
+        execute_template_combination(project_features, decomposed_patterns)
+        
+      elif selected_route == "hybrid":
+        execute_hybrid(project_features, matched_templates, unmatched_features)
+        
+      elif selected_route == "capability-driven":
+        execute_capability_driven(project_features)
+        
+      elif selected_route == "skeleton-only":
+        execute_skeleton_only(project_features)
+```
+
+## 路由结果
+
+```yaml
+routing_result:
+  # 路由结果结构
+  structure:
+    project_name: string
+    analysis_timestamp: datetime
+    
+    # 项目分析结果
+    project_features:
+      - name: string
+        confidence: string
+        signals: array
+        
+    # 模板匹配结果
+    template_matching:
+      matched_templates:
+        - template_id: string
+          match_score: float
+          matched_features: array
+          
+      unmatched_features:
+        - feature_name: string
+          reason: string
+          
+    # 路由决策
+    routing_decision:
+      selected_route: string  # template-based | template-combination | hybrid | capability-driven | skeleton-only
+      confidence: string  # high | medium | low
+      reason: string
+      
+    # 执行计划
+    execution_plan:
+      capabilities_to_use: array
+      templates_to_use: array
+      elements_to_use: array
+      
+    # 预期输出
+    expected_output:
+      depth: string  # full | medium | light
+      artifacts: array
+```
+
+## 路由示例
+
+### 示例 1: React 前端项目
+
+```yaml
+project:
+  name: "my-react-app"
+  features:
+    - name: "frontend-project"
+      confidence: "high"
+      
+    - name: "react-app"
+      confidence: "high"
+      
+  complexity: "low"
+
+routing_result:
+  selected_route: "template-based"
+  confidence: "high"
+  matched_templates:
+    - "TEMPLATE-react-feature.md"
+    
+  reason: "项目特征完全匹配 React 前端模板，复杂度低"
+```
+
+### 示例 2: AI + React 项目
+
+```yaml
+project:
+  name: "my-ai-web-app"
+  features:
+    - name: "ai-llm-project"
+      confidence: "high"
+      
+    - name: "react-app"
+      confidence: "high"
+      
+  complexity: "medium"
+
+routing_result:
+  selected_route: "template-combination"
+  confidence: "medium"
+  matched_templates:
+    - "TEMPLATE-ai-feature.md"
+    - "TEMPLATE-react-feature.md"
+    
+  reason: "项目可以分解为 AI 和 React 两个已知模式"
+```
+
+### 示例 3: AI Agent 项目（部分匹配）
+
+```yaml
+project:
+  name: "my-ai-agent"
+  features:
+    - name: "ai-llm-project"
+      confidence: "high"
+      
+    - name: "agent-orchestration"
+      confidence: "high"
+      
+  complexity: "high"
+
+routing_result:
+  selected_route: "hybrid"
+  confidence: "medium"
+  matched_templates:
+    - "TEMPLATE-ai-feature.md"
+    
+  unmatched_features:
+    - feature: "agent-orchestration"
+      handling: "capability-reasoning"
+      
+  reason: "AI 部分有匹配模板，Agent 编排部分需要元能力推理"
+```
+
+### 示例 4: 全新类型项目
+
+```yaml
+project:
+  name: "my-blockchain-ai-vr"
+  features:
+    - name: "blockchain-integration"
+      confidence: "medium"
+      
+    - name: "ai-llm-project"
+      confidence: "high"
+      
+    - name: "vr-immersive"
+      confidence: "medium"
+      
+  complexity: "high"
+
+routing_result:
+  selected_route: "capability-driven"
+  confidence: "medium"
+  matched_templates: []
+  
+  reason: "项目包含多个非常见特征组合，无匹配模板，使用元能力推理"
+```

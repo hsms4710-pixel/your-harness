@@ -1,0 +1,697 @@
+---
+version: 1.0.0
+description: |
+  闸门元素定义
+  可复用的闸门定义
+---
+
+# Gate 元素定义
+
+## 通用闸门
+
+### GATE-001: 需求确认闸门
+
+```yaml
+id: GATE-001
+name: requirement-confirmation
+category: universal
+version: 1.0.0
+
+stage: "需求理解"
+order: 0
+
+required_artifacts:
+  - name: "需求文档"
+    path: "docs/spec/{feature}/analyze/00-requirements.md"
+    type: "markdown"
+    
+  - name: "澄清记录"
+    path: "docs/spec/{feature}/analyze/01-clarifications.md"
+    type: "markdown"
+    optional: true
+
+checks:
+  - id: CHK-001
+    name: "需求已完整收集"
+    method: "manual"
+    description: "检查需求文档是否完整覆盖所有功能点"
+    
+  - id: CHK-002
+    name: "模糊点已澄清"
+    method: "manual"
+    description: "检查是否有未解决的模糊点"
+    
+  - id: CHK-003
+    name: "用户已确认理解"
+    method: "manual"
+    description: "检查用户是否确认理解正确"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G0_REQUIREMENT
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/analyze/00-requirements.md
+  - docs/spec/{feature}/analyze/01-clarifications.md (如有)
+  
+  **通过标准**
+  - [ ] 需求已完整收集
+  - [ ] 模糊点已澄清
+  - [ ] 用户已确认理解
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+### GATE-002: 任务确认闸门
+
+```yaml
+id: GATE-002
+name: task-confirmation
+category: universal
+version: 1.0.0
+
+stage: "任务分解"
+order: 1
+
+required_artifacts:
+  - name: "任务列表"
+    path: "docs/spec/{feature}/design/00-tasks.md"
+    type: "markdown"
+    
+  - name: "依赖关系图"
+    path: "docs/spec/{feature}/design/01-dependencies.md"
+    type: "markdown"
+    optional: true
+
+checks:
+  - id: CHK-001
+    name: "任务粒度合理"
+    method: "manual"
+    description: "检查每个任务是否可以独立完成"
+    
+  - id: CHK-002
+    name: "依赖关系明确"
+    method: "manual"
+    description: "检查任务间的依赖关系是否清晰"
+    
+  - id: CHK-003
+    name: "工作量估算合理"
+    method: "manual"
+    description: "检查工作量估算是否合理"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G1_TASKS
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/design/00-tasks.md
+  
+  **通过标准**
+  - [ ] 任务粒度合理
+  - [ ] 依赖关系明确
+  - [ ] 工作量估算合理
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+### GATE-003: 设计评审闸门
+
+```yaml
+id: GATE-003
+name: design-review
+category: universal
+version: 1.0.0
+
+stage: "设计"
+order: 2
+
+required_artifacts:
+  - name: "技术方案文档"
+    path: "docs/spec/{feature}/design/02-technical-design.md"
+    type: "markdown"
+    
+  - name: "接口定义"
+    path: "docs/spec/{feature}/design/03-api-contract.md"
+    type: "markdown"
+    optional: true
+
+checks:
+  - id: CHK-001
+    name: "技术方案可行"
+    method: "manual"
+    description: "检查技术方案是否可行"
+    
+  - id: CHK-002
+    name: "接口定义完整"
+    method: "manual"
+    description: "检查接口定义是否完整"
+    
+  - id: CHK-003
+    name: "风险已识别"
+    method: "manual"
+    description: "检查技术风险是否已识别并有应对策略"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G2_DESIGN
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/design/02-technical-design.md
+  - docs/spec/{feature}/design/03-api-contract.md (如有)
+  
+  **通过标准**
+  - [ ] 技术方案可行
+  - [ ] 接口定义完整
+  - [ ] 风险已识别
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+### GATE-004: 代码审查闸门
+
+```yaml
+id: GATE-004
+name: code-review
+category: universal
+version: 1.0.0
+
+stage: "实现"
+order: 3
+
+required_artifacts:
+  - name: "代码"
+    path: "src/**/*"
+    type: "code"
+    
+  - name: "测试代码"
+    path: "tests/**/*"
+    type: "code"
+    
+  - name: "代码审查记录"
+    path: "docs/spec/{feature}/develop/review.md"
+    type: "markdown"
+
+checks:
+  - id: CHK-001
+    name: "代码通过 lint 检查"
+    method: "script"
+    script: "check-lint.py"
+    description: "检查代码是否通过 lint"
+    
+  - id: CHK-002
+    name: "测试通过"
+    method: "script"
+    script: "run-tests.py"
+    description: "检查测试是否全部通过"
+    
+  - id: CHK-003
+    name: "代码审查通过"
+    method: "manual"
+    description: "检查代码是否通过审查"
+
+approval_required: true
+user_confirmation_required: true
+per_task: true
+
+output_template: |
+  ## Gate: G3_CODE
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - src/**/*
+  - tests/**/*
+  - docs/spec/{feature}/develop/review.md
+  
+  **通过标准**
+  - [ ] 代码通过 lint 检查
+  - [ ] 测试通过
+  - [ ] 代码审查通过
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+### GATE-005: 质量检查闸门
+
+```yaml
+id: GATE-005
+name: quality-check
+category: universal
+version: 1.0.0
+
+stage: "验证"
+order: 4
+
+required_artifacts:
+  - name: "测试报告"
+    path: "docs/spec/{feature}/test/01-test-report.md"
+    type: "markdown"
+    
+  - name: "覆盖率报告"
+    path: "docs/spec/{feature}/test/02-coverage-report.md"
+    type: "markdown"
+    optional: true
+
+checks:
+  - id: CHK-001
+    name: "所有测试通过"
+    method: "script"
+    script: "check-test-results.py"
+    description: "检查所有测试是否通过"
+    
+  - id: CHK-002
+    name: "覆盖率达标"
+    method: "script"
+    script: "check-coverage.py"
+    description: "检查覆盖率是否达标"
+    
+  - id: CHK-003
+    name: "验收标准满足"
+    method: "manual"
+    description: "检查是否满足验收标准"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G4_QUALITY
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/test/01-test-report.md
+  - docs/spec/{feature}/test/02-coverage-report.md (如有)
+  
+  **通过标准**
+  - [ ] 所有测试通过
+  - [ ] 覆盖率达标
+  - [ ] 验收标准满足
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+### GATE-006: 上线审批闸门
+
+```yaml
+id: GATE-006
+name: deployment-approval
+category: universal
+version: 1.0.0
+
+stage: "上线"
+order: 5
+
+required_artifacts:
+  - name: "部署配置"
+    path: "deploy/**/*"
+    type: "config"
+    
+  - name: "回滚方案"
+    path: "docs/spec/{feature}/develop/rollback-plan.md"
+    type: "markdown"
+    
+  - name: "监控告警配置"
+    path: "docs/spec/{feature}/develop/monitoring-config.md"
+    type: "markdown"
+
+checks:
+  - id: CHK-001
+    name: "部署配置已准备"
+    method: "manual"
+    description: "检查部署配置是否已准备"
+    
+  - id: CHK-002
+    name: "回滚方案已准备"
+    method: "manual"
+    description: "检查回滚方案是否已准备"
+    
+  - id: CHK-003
+    name: "监控告警已配置"
+    method: "manual"
+    description: "检查监控告警是否已配置"
+    
+  - id: CHK-004
+    name: "上线窗口已确认"
+    method: "manual"
+    description: "检查上线窗口是否已确认"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G5_DEPLOY
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - deploy/**/*
+  - docs/spec/{feature}/develop/rollback-plan.md
+  - docs/spec/{feature}/develop/monitoring-config.md
+  
+  **通过标准**
+  - [ ] 部署配置已准备
+  - [ ] 回滚方案已准备
+  - [ ] 监控告警已配置
+  - [ ] 上线窗口已确认
+  
+  **需要用户确认**
+  1. 通过，可以开始上线
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+## 安全闸门
+
+### GATE-007: 安全设计闸门
+
+```yaml
+id: GATE-007
+name: security-design
+category: security
+version: 1.0.0
+
+stage: "安全设计"
+order: 2.5
+
+required_artifacts:
+  - name: "安全设计文档"
+    path: "docs/spec/{feature}/security/01-security-design.md"
+    type: "markdown"
+    
+  - name: "威胁模型"
+    path: "docs/spec/{feature}/security/02-threat-model.md"
+    type: "markdown"
+
+checks:
+  - id: CHK-001
+    name: "安全风险已识别"
+    method: "manual"
+    description: "检查安全风险是否已识别"
+    
+  - id: CHK-002
+    name: "防护方案已设计"
+    method: "manual"
+    description: "检查防护方案是否已设计"
+    
+  - id: CHK-003
+    name: "合规要求已考虑"
+    method: "manual"
+    description: "检查合规要求是否已考虑"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G2.5_SECURITY_DESIGN
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/security/01-security-design.md
+  - docs/spec/{feature}/security/02-threat-model.md
+  
+  **通过标准**
+  - [ ] 安全风险已识别
+  - [ ] 防护方案已设计
+  - [ ] 合规要求已考虑
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+### GATE-008: 安全审查闸门
+
+```yaml
+id: GATE-008
+name: security-review
+category: security
+version: 1.0.0
+
+stage: "安全审查"
+order: 4.5
+
+required_artifacts:
+  - name: "安全审查记录"
+    path: "docs/spec/{feature}/security/03-security-review.md"
+    type: "markdown"
+    
+  - name: "漏洞扫描报告"
+    path: "docs/spec/{feature}/security/04-vulnerability-scan.md"
+    type: "markdown"
+
+checks:
+  - id: CHK-001
+    name: "安全审查已通过"
+    method: "manual"
+    description: "检查安全审查是否通过"
+    
+  - id: CHK-002
+    name: "无高危漏洞"
+    method: "script"
+    script: "check-vulnerabilities.py"
+    description: "检查是否有高危漏洞"
+    
+  - id: CHK-003
+    name: "依赖安全"
+    method: "script"
+    script: "check-dependencies.py"
+    description: "检查依赖是否有安全问题"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G4.5_SECURITY_REVIEW
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/security/03-security-review.md
+  - docs/spec/{feature}/security/04-vulnerability-scan.md
+  
+  **通过标准**
+  - [ ] 安全审查已通过
+  - [ ] 无高危漏洞
+  - [ ] 依赖安全
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+## AI/LLM 闸门
+
+### GATE-009: Prompt 设计闸门
+
+```yaml
+id: GATE-009
+name: prompt-design
+category: ai-llm
+version: 1.0.0
+
+stage: "Prompt 设计"
+order: 2.3
+
+required_artifacts:
+  - name: "Prompt 设计文档"
+    path: "docs/spec/{feature}/ai/01-prompt-design.md"
+    type: "markdown"
+    
+  - name: "Prompt 测试结果"
+    path: "docs/spec/{feature}/ai/02-prompt-test.md"
+    type: "markdown"
+
+checks:
+  - id: CHK-001
+    name: "Prompt 结构已设计"
+    method: "manual"
+    description: "检查 Prompt 结构是否已设计"
+    
+  - id: CHK-002
+    name: "Prompt 已测试"
+    method: "manual"
+    description: "检查 Prompt 是否已测试"
+    
+  - id: CHK-003
+    name: "效果已验证"
+    method: "manual"
+    description: "检查 Prompt 效果是否已验证"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G2.3_PROMPT_DESIGN
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/ai/01-prompt-design.md
+  - docs/spec/{feature}/ai/02-prompt-test.md
+  
+  **通过标准**
+  - [ ] Prompt 结构已设计
+  - [ ] Prompt 已测试
+  - [ ] 效果已验证
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+### GATE-010: AI 安全闸门
+
+```yaml
+id: GATE-010
+name: ai-safety
+category: ai-llm
+version: 1.0.0
+
+stage: "AI 安全"
+order: 4.3
+
+required_artifacts:
+  - name: "AI 安全设计文档"
+    path: "docs/spec/{feature}/ai/03-safety-design.md"
+    type: "markdown"
+    
+  - name: "安全测试报告"
+    path: "docs/spec/{feature}/ai/04-safety-test.md"
+    type: "markdown"
+
+checks:
+  - id: CHK-001
+    name: "Prompt injection 防护已实现"
+    method: "manual"
+    description: "检查是否已实现 Prompt injection 防护"
+    
+  - id: CHK-002
+    name: "内容过滤已实现"
+    method: "manual"
+    description: "检查是否已实现内容过滤"
+    
+  - id: CHK-003
+    name: "输出验证已实现"
+    method: "manual"
+    description: "检查是否已实现输出验证"
+    
+  - id: CHK-004
+    name: "成本控制已实现"
+    method: "manual"
+    description: "检查是否已实现成本控制"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G4.3_AI_SAFETY
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/ai/03-safety-design.md
+  - docs/spec/{feature}/ai/04-safety-test.md
+  
+  **通过标准**
+  - [ ] Prompt injection 防护已实现
+  - [ ] 内容过滤已实现
+  - [ ] 输出验证已实现
+  - [ ] 成本控制已实现
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```
+
+## 微服务闸门
+
+### GATE-011: 服务边界闸门
+
+```yaml
+id: GATE-011
+name: service-boundary
+category: microservice
+version: 1.0.0
+
+stage: "服务边界设计"
+order: 2.7
+
+required_artifacts:
+  - name: "服务边界文档"
+    path: "docs/spec/{feature}/service/01-boundary.md"
+    type: "markdown"
+    
+  - name: "API 契约"
+    path: "docs/spec/{feature}/service/02-api-contract.md"
+    type: "markdown"
+
+checks:
+  - id: CHK-001
+    name: "服务职责已定义"
+    method: "manual"
+    description: "检查服务职责是否已定义"
+    
+  - id: CHK-002
+    name: "API 契约已定义"
+    method: "manual"
+    description: "检查 API 契约是否已定义"
+    
+  - id: CHK-003
+    name: "依赖关系已明确"
+    method: "manual"
+    description: "检查依赖关系是否已明确"
+
+approval_required: true
+user_confirmation_required: true
+
+output_template: |
+  ## Gate: G2.7_SERVICE_BOUNDARY
+  
+  **状态**：{status}
+  
+  **本阶段产物**
+  - docs/spec/{feature}/service/01-boundary.md
+  - docs/spec/{feature}/service/02-api-contract.md
+  
+  **通过标准**
+  - [ ] 服务职责已定义
+  - [ ] API 契约已定义
+  - [ ] 依赖关系已明确
+  
+  **需要用户确认**
+  1. 通过，进入下一阶段
+  2. 有问题，按反馈修改
+  3. 暂停，不继续
+```

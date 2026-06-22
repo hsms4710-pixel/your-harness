@@ -1,0 +1,503 @@
+---
+name: TEMPLATE-microservice
+description: 微服务架构项目变更模板
+version: 2.0.0
+---
+
+# {{feature_name}} - 微服务架构变更
+
+## 概述
+
+本模板用于微服务架构项目的变更，包括服务新增、API 变更、服务间通信、部署配置等。
+
+**适用场景**:
+- 新增微服务
+- 修改服务 API
+- 调整服务间通信
+- 修改部署配置
+- 服务拆分或合并
+
+---
+
+## 前置检查
+
+### 服务发现检测
+
+```yaml
+# 检测项目使用的服务发现机制
+service_discovery: {{service_discovery}}
+
+# 支持的服务发现
+supported_discovery:
+  - consul
+  - etcd
+  - eureka
+  - kubernetes-dns
+```
+
+### 通信协议检测
+
+```yaml
+# 检测服务间通信协议
+communication_protocol: {{communication_protocol}}
+
+# 支持的协议
+supported_protocols:
+  - http
+  - grpc
+  - kafka
+  - rabbitmq
+```
+
+---
+
+## 变更流程
+
+### Step 1: 分析微服务变更需求
+
+**Input**:
+- 功能需求描述
+- 现有服务架构文档
+- 服务依赖关系图
+
+**Process**:
+1. 理解功能需求，确定涉及的服务
+2. 分析服务依赖关系
+3. 确定变更范围和顺序
+
+**Output**:
+- 微服务变更分析文档
+
+**Run**:
+```bash
+# 创建变更分析文档
+cat > docs/spec/{{feature_name}}/analyze/01-microservice-analysis.md << 'EOF'
+# 微服务变更分析
+
+## 变更类型
+[ ] 新增服务
+[ ] 修改 API
+[ ] 调整通信
+[ ] 修改配置
+
+## 涉及服务
+{{#each affected_services}}
+- {{this.name}} ({{this.role}})
+{{/each}}
+
+## 服务依赖关系
+```
+[服务依赖图]
+```
+
+## 变更顺序
+1. {{step_1}}
+2. {{step_2}}
+3. {{step_3}}
+EOF
+```
+
+**Expected**:
+- 文档创建成功
+- 依赖关系清晰
+- 变更顺序合理
+
+---
+
+### Step 2: 设计服务 API
+
+**Input**:
+- 变更分析文档
+- 现有 API 文档
+
+**Process**:
+1. 设计 API 接口
+2. 定义请求/响应格式
+3. 确定版本策略
+
+**Output**:
+- API 设计文档
+- OpenAPI/Swagger 规范
+
+**Run**:
+```bash
+# 创建 API 设计文档
+cat > docs/spec/{{feature_name}}/design/01-api-design.md << 'EOF'
+# API 设计
+
+## API 概述
+- 服务名: {{service_name}}
+- 协议: {{communication_protocol}}
+- 版本: {{api_version}}
+
+## 接口定义
+{{#each api_endpoints}}
+### {{this.method}} {{this.path}}
+- 描述: {{this.description}}
+- 请求参数: {{this.request_params}}
+- 响应格式: {{this.response_format}}
+- 错误码: {{this.error_codes}}
+{{/each}}
+
+## 版本兼容性
+- 向后兼容: {{backward_compatible}}
+- 废弃字段: {{deprecated_fields}}
+EOF
+```
+
+**Expected**:
+- API 设计文档创建成功
+- 接口定义完整
+- 版本策略明确
+
+---
+
+### Step 3: 检查服务间兼容性
+
+**Input**:
+- API 设计文档
+- 依赖服务列表
+
+**Process**:
+1. 检查 API 变更对依赖服务的影响
+2. 检查数据格式兼容性
+3. 检查版本兼容性
+
+**Output**:
+- 兼容性检查报告
+
+**Run**:
+```bash
+# 创建兼容性检查文档
+cat > docs/spec/{{feature_name}}/design/02-compatibility-check.md << 'EOF'
+# 服务兼容性检查
+
+## 依赖服务影响分析
+{{#each dependent_services}}
+### {{this.name}}
+- 影响程度: {{this.impact_level}}
+- 需要修改: {{this.needs_change}}
+- 修改内容: {{this.change_content}}
+{{/each}}
+
+## 数据格式兼容性
+- 请求格式兼容: {{request_compatibility}}
+- 响应格式兼容: {{response_compatibility}}
+
+## 版本兼容性
+- API 版本: {{api_version}}
+- 最低支持版本: {{min_supported_version}}
+EOF
+```
+
+**Expected**:
+- 依赖服务影响已分析
+- 兼容性问题已识别
+- 解决方案已确定
+
+---
+
+### Step 4: 实现服务代码
+
+**Input**:
+- API 设计文档
+- 兼容性检查报告
+
+**Process**:
+1. 实现 API 接口
+2. 实现业务逻辑
+3. 添加错误处理
+4. 添加日志和监控
+
+**Output**:
+- 服务代码
+- 单元测试
+
+**Run**:
+```bash
+# 创建服务目录结构
+mkdir -p services/{{service_name}}/{api,logic,middleware}
+
+# 根据通信协议生成代码
+case "{{communication_protocol}}" in
+  grpc)
+    cat > services/{{service_name}}/api/service.proto << 'EOF'
+    syntax = "proto3";
+    package {{service_name}};
+    
+    service {{ServiceName}} {
+      rpc {{Method}}({{Request}}) returns ({{Response}});
+    }
+    
+    message {{Request}} {
+      // 请求参数
+    }
+    
+    message {{Response}} {
+      // 响应参数
+    }
+    EOF
+    ;;
+  http)
+    cat > services/{{service_name}}/api/handler.go << 'EOF'
+    package api
+    
+    import (
+        "encoding/json"
+        "net/http"
+    )
+    
+    func (h *Handler) {{Method}}(w http.ResponseWriter, r *http.Request) {
+        // 实现逻辑
+    }
+    EOF
+    ;;
+esac
+```
+
+**Expected**:
+- 代码结构清晰
+- 包含错误处理
+- 有单元测试
+
+---
+
+### Step 5: 配置服务部署
+
+**Input**:
+- 服务代码
+- 部署环境信息
+
+**Process**:
+1. 配置容器化
+2. 配置服务发现
+3. 配置负载均衡
+4. 配置健康检查
+
+**Output**:
+- Dockerfile
+- Kubernetes 配置
+- 部署配置
+
+**Run**:
+```bash
+# 创建 Dockerfile
+cat > services/{{service_name}}/Dockerfile << 'EOF'
+FROM golang:1.21 AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o {{service_name}} ./cmd/{{service_name}}
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/{{service_name}} .
+COPY --from=builder /app/config ./config
+EXPOSE {{port}}
+CMD ["./{{service_name}}"]
+EOF
+
+# 创建 Kubernetes 配置
+mkdir -p services/{{service_name}}/k8s
+
+cat > services/{{service_name}}/k8s/deployment.yaml << 'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{service_name}}
+spec:
+  replicas: {{replicas}}
+  selector:
+    matchLabels:
+      app: {{service_name}}
+  template:
+    metadata:
+      labels:
+        app: {{service_name}}
+    spec:
+      containers:
+      - name: {{service_name}}
+        image: {{image}}
+        ports:
+        - containerPort: {{port}}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{port}}
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: {{port}}
+EOF
+```
+
+**Expected**:
+- Dockerfile 创建成功
+- Kubernetes 配置完整
+- 健康检查已配置
+
+---
+
+### Step 6: 测试服务
+
+**Input**:
+- 服务代码
+- 部署配置
+
+**Process**:
+1. 编写单元测试
+2. 进行集成测试
+3. 进行负载测试
+
+**Output**:
+- 测试报告
+
+**Run**:
+```bash
+# 运行测试
+{{#if has_test_runner}}
+{{test_runner}} test services/{{service_name}}/...
+{{else}}
+go test ./services/{{service_name}}/... -v
+{{/if}}
+
+# 创建测试报告
+cat > docs/spec/{{feature_name}}/test/01-test-report.md << 'EOF'
+# 微服务测试报告
+
+## 测试结果
+- 单元测试: {{unit_test_pass}}/{{unit_test_total}} 通过
+- 集成测试: {{integration_test_pass}}/{{integration_test_total}} 通过
+- 负载测试: {{load_test_pass}}/{{load_test_total}} 通过
+
+## 性能指标
+- 平均响应时间: {{avg_response_time}}ms
+- P99 响应时间: {{p99_response_time}}ms
+- 最大吞吐量: {{max_throughput}} RPS
+
+## 兼容性测试
+- 依赖服务兼容: {{dependency_compatibility}}
+EOF
+```
+
+**Expected**:
+- 所有测试通过
+- 性能指标达标
+- 兼容性测试通过
+
+---
+
+### Step 7: 部署服务
+
+**Input**:
+- 测试通过的代码
+- 部署配置
+
+**Process**:
+1. 部署到测试环境
+2. 验证服务健康
+3. 配置监控告警
+4. 灰度发布到生产环境
+
+**Output**:
+- 服务部署完成
+- 监控配置
+
+**Run**:
+```bash
+# 创建部署检查清单
+cat > docs/spec/{{feature_name}}/deploy/01-deployment-checklist.md << 'EOF'
+# 微服务部署检查清单
+
+## 部署前检查
+- [ ] 代码已合并到主分支
+- [ ] 测试已通过
+- [ ] 配置已更新
+- [ ] 依赖服务已通知
+
+## 部署步骤
+1. 构建 Docker 镜像
+2. 推送到镜像仓库
+3. 更新 Kubernetes 部署
+4. 验证服务健康
+
+## 监控指标
+- 服务可用性
+- 请求成功率
+- 响应时间
+- 错误率
+
+## 告警阈值
+- 错误率 > {{error_rate_threshold}}%
+- 响应时间 > {{response_time_threshold}}ms
+- 服务不可用 > {{unavailability_threshold}}秒
+EOF
+```
+
+**Expected**:
+- 部署成功
+- 服务健康
+- 监控告警配置完成
+
+---
+
+## 闸门检查
+
+### G1: 需求分析闸门
+- [ ] 变更类型已明确
+- [ ] 依赖服务已识别
+- [ ] 变更顺序已确定
+
+### G2: 设计闸门
+- [ ] API 设计已完成
+- [ ] 兼容性已检查
+- [ ] 版本策略已确定
+
+### G3: 实现闸门
+- [ ] 代码已实现
+- [ ] 单元测试已编写
+- [ ] 配置已完成
+
+### G4: 测试闸门
+- [ ] 单元测试通过
+- [ ] 集成测试通过
+- [ ] 性能测试通过
+
+### G5: 部署闸门
+- [ ] 部署检查清单已完成
+- [ ] 监控告警已配置
+- [ ] 回滚方案已准备
+
+---
+
+## 常见问题
+
+### Q1: 如何处理服务间通信超时？
+
+**推荐方案**:
+1. 设置合理的超时时间
+2. 实现重试机制
+3. 使用熔断器
+
+### Q2: 如何保证服务间数据一致性？
+
+**推荐方案**:
+1. 使用分布式事务（如 Saga 模式）
+2. 使用消息队列
+3. 最终一致性设计
+
+### Q3: 如何进行服务版本管理？
+
+**推荐方案**:
+1. API 版本化（v1, v2）
+2. 灰度发布
+3. 金丝雀发布
+
+---
+
+## 参考资源
+
+- [Microservices Pattern](https://microservices.io)
+- [Kubernetes Documentation](https://kubernetes.io/docs)
+- [gRPC Documentation](https://grpc.io/docs)
+- [Service Mesh](https://istio.io/latest/docs)

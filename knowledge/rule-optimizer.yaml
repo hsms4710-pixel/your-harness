@@ -1,0 +1,754 @@
+# 推理规则优化器
+# 版本: 1.0.0
+# 创建日期: 2026-06-22
+
+---
+
+schema:
+  name: rule_optimizer
+  version: "1.0"
+  description: "定义推理规则的自动优化机制"
+
+---
+
+## 概述
+
+规则优化器是智能优化系统的核心组件，它能够基于历史数据自动优化推理规则的准确性和有效性。
+
+### 核心理念
+
+```
+传统规则: 静态定义，手动维护
+优化规则: 数据驱动，自动改进
+
+优化循环:
+  规则执行 → 结果收集 → 效果评估 → 规则调整 → 更好的规则
+```
+
+### 优化目标
+
+```yaml
+optimization_goals:
+  - name: accuracy
+    description: "提高规则的匹配准确率"
+    metric: "true_positive / (true_positive + false_positive)"
+    
+  - name: coverage
+    description: "提高规则的覆盖范围"
+    metric: "covered_cases / total_cases"
+    
+  - name: confidence
+    description: "提高规则的置信度"
+    metric: "average_confidence_score"
+    
+  - name: effectiveness
+    description: "提高规则的实际效果"
+    metric: "successful_outcomes / triggered_cases"
+```
+
+---
+
+## 规则性能追踪
+
+### 性能指标
+
+```yaml
+performance_metrics:
+  # 基础指标
+  basic:
+    - id: PM_001
+      name: trigger_count
+      description: "规则触发次数"
+      calculation: "count(times_rule_fired)"
+      
+    - id: PM_002
+      name: match_accuracy
+      description: "匹配准确率"
+      calculation: "true_matches / total_matches"
+      
+    - id: PM_003
+      name: false_positive_rate
+      description: "误触发率"
+      calculation: "false_positives / total_triggers"
+      
+    - id: PM_004
+      name: false_negative_rate
+      description: "漏匹配率"
+      calculation: "false_negatives / total_should_match"
+      
+  # 效果指标
+  effectiveness:
+    - id: PM_005
+      name: success_rate
+      description: "触发后成功完成率"
+      calculation: "successful_outcomes / total_triggers"
+      
+    - id: PM_006
+      name: user_satisfaction
+      description: "用户满意度"
+      calculation: "average_satisfaction_after_rule_trigger"
+      
+    - id: PM_007
+      name: modification_rate
+      description: "触发后修改率"
+      calculation: "modifications_after_trigger / total_triggers"
+      
+    - id: PM_008
+      name: override_rate
+      description: "用户覆盖率"
+      calculation: "user_overrides / total_triggers"
+      
+  # 效率指标
+  efficiency:
+    - id: PM_009
+      name: computation_time
+      description: "规则计算时间"
+      calculation: "average_time_to_evaluate_rule"
+      
+    - id: PM_010
+      name: resource_usage
+      description: "资源使用量"
+      calculation: "average_resources_consumed"
+```
+
+### 性能追踪结构
+
+```yaml
+rule_performance:
+  rule_id: "R006"
+  rule_name: "ai_llm_integration"
+  tracking_period: "2026-06-01 to 2026-06-22"
+  
+  # 基础指标
+  basic_metrics:
+    total_triggers: 45
+    true_matches: 42
+    false_positives: 3
+    false_negatives: 2
+    
+  # 效果指标
+  effectiveness_metrics:
+    success_rate: 0.88
+    average_satisfaction: 4.2
+    modification_rate: 0.15
+    override_rate: 0.05
+    
+  # 效率指标
+  efficiency_metrics:
+    average_computation_time: "150ms"
+    
+  # 趋势
+  trends:
+    trigger_count: "up"  # 使用增加
+    success_rate: "stable"
+    satisfaction: "up"
+    
+  # 评估结果
+  evaluation:
+    overall_health: "healthy"
+    score: 85
+    recommendations: []
+```
+
+---
+
+## 优化策略
+
+### 策略 1: 阈值调整
+
+```yaml
+strategy_id: OPT_001
+strategy_name: threshold_adjustment
+priority: high
+
+trigger:
+  condition: "false_positive_rate > 0.2 OR false_negative_rate > 0.1"
+  
+process:
+  steps:
+    - step: 1
+      name: analyze_mismatches
+      description: "分析误匹配和漏匹配的案例"
+      action: |
+        ```yaml
+        mismatch_analysis:
+          false_positives:
+            - case_id: "xxx"
+              features: []
+              why_triggered: ""
+              why_should_not: ""
+              
+          false_negatives:
+            - case_id: "xxx"
+              features: []
+              why_not_triggered: ""
+              why_should: ""
+        ```
+        
+    - step: 2
+      name: identify_threshold_issues
+      description: "识别阈值相关的问题"
+      action: |
+        检查：
+        - 阈值是否过于宽松（导致误触发）
+        - 阈值是否过于严格（导致漏匹配）
+        - 阈值是否需要分层（不同场景不同阈值）
+        
+    - step: 3
+      name: propose_threshold_changes
+      description: "提出阈值调整建议"
+      action: |
+        ```yaml
+        threshold_changes:
+          current:
+            confidence_threshold: 0.7
+            
+          proposed:
+            confidence_threshold: 0.75  # 更严格，减少误触发
+            
+          expected_impact:
+            false_positive_reduction: 0.3
+            false_negative_increase: 0.05
+        ```
+        
+    - step: 4
+      name: validate_changes
+      description: "在历史数据上验证调整效果"
+      action: |
+        使用历史案例验证：
+        - 回测调整后的规则
+        - 比较调整前后的指标
+        - 确认改进效果
+        
+    - step: 5
+      name: apply_changes
+      description: "应用调整"
+      condition: "validation_passed"
+      action: |
+        更新规则定义
+        记录调整历史
+        通知相关人员
+
+# 阈值调整规则
+threshold_adjustment_rules:
+  - id: TA_RULE_001
+    name: reduce_false_positives
+    condition: "false_positive_rate > 0.2"
+    action: "increase_threshold_by_0.05"
+    
+  - id: TA_RULE_002
+    name: reduce_false_negatives
+    condition: "false_negative_rate > 0.1"
+    action: "decrease_threshold_by_0.05"
+    
+  - id: TA_RULE_003
+    name: balance_accuracy_coverage
+    condition: "both_metrics_suboptimal"
+    action: "analyze_case_by_case_and_adjust"
+    
+  - id: TA_RULE_004
+    name: context_based_threshold
+    condition: "different_contexts_need_different_thresholds"
+    action: "implement_context_specific_thresholds"
+```
+
+### 策略 2: 条件优化
+
+```yaml
+strategy_id: OPT_002
+strategy_name: condition_optimization
+priority: medium
+
+trigger:
+  condition: "false_positive_rate > 0.15 AND threshold_adjustment_ineffective"
+  
+process:
+  steps:
+    - step: 1
+      name: analyze_false_positives
+      description: "深入分析误触发案例"
+      action: |
+        对每个误触发案例：
+        - 提取项目特征
+        - 分析为什么触发了规则
+        - 识别共同的"误触发"模式
+        
+    - step: 2
+      name: identify_condition_gaps
+      description: "识别条件的不足"
+      action: |
+        检查：
+        - 是否缺少必要的排除条件
+        - 是否需要更精确的匹配条件
+        - 是否需要额外的上下文条件
+        
+    - step: 3
+      name: propose_condition_changes
+      description: "提出条件优化建议"
+      action: |
+        ```yaml
+        condition_changes:
+          current:
+            trigger: "项目涉及 AI/LLM 技术"
+            
+          proposed:
+            trigger: "项目涉及 AI/LLM 技术 AND NOT 纯研究项目"
+            
+          added_exclusions:
+            - "research_project"
+            - "academic_paper"
+            
+          expected_impact:
+            false_positive_reduction: 0.4
+        ```
+        
+    - step: 4
+      name: validate_with_cases
+      description: "用历史案例验证"
+      action: |
+        - 回测所有历史案例
+        - 确认误触发减少
+        - 确认不会增加漏匹配
+        
+    - step: 5
+      name: apply_and_monitor
+      description: "应用并监控"
+      action: |
+        更新规则
+        设置监控期（1 周）
+        跟踪改进效果
+
+# 条件优化类型
+condition_optimization_types:
+  - type: add_exclusion
+    description: "添加排除条件"
+    example: "NOT 纯前端项目"
+    
+  - type: add_requirement
+    description: "添加必要条件"
+    example: "AND 有 API 调用"
+    
+  - type: refine_pattern
+    description: "精细化匹配模式"
+    example: "从 '有 AI' 改为 '使用 OpenAI API'"
+    
+  - type: add_context
+    description: "添加上下文条件"
+    example: "AND 项目规模 > medium"
+```
+
+### 策略 3: 权重调整
+
+```yaml
+strategy_id: OPT_003
+strategy_name: weight_optimization
+priority: medium
+
+trigger:
+  condition: "multiple_rules_trigger_and_need_priority"
+  
+process:
+  steps:
+    - step: 1
+      name: identify_weighting_issues
+      description: "识别权重相关问题"
+      action: |
+        当多个规则同时触发时：
+        - 当前权重是否合理
+        - 高权重规则是否真的更重要
+        - 权重是否需要动态调整
+        
+    - step: 2
+      name: analyze_co_trigger_patterns
+      description: "分析规则共触发模式"
+      action: |
+        ```yaml
+        co_trigger_analysis:
+          rule_pairs:
+            - rules: ["R006", "R007"]
+              co_trigger_rate: 0.6
+              which_should_win: "R006"
+              current_winner: "R006"
+              
+            - rules: ["R004", "R006"]
+              co_trigger_rate: 0.3
+              which_should_win: "R004"
+              current_winner: "R006"  # 问题！
+        ```
+        
+    - step: 3
+      name: propose_weight_changes
+      description: "提出权重调整建议"
+      action: |
+        基于共触发分析：
+        - 调整规则权重
+        - 或调整权重计算公式
+        
+    - step: 4
+      name: simulate_and_validate
+      description: "模拟验证"
+      action: |
+        在历史数据上模拟：
+        - 应用新的权重
+        - 检查决策变化
+        - 评估整体效果
+        
+    - step: 5
+      name: apply_gradually
+      description: "渐进式应用"
+      action: |
+        - 先在低风险场景应用
+        - 逐步扩大应用范围
+        - 持续监控效果
+
+# 权重优化方法
+weight_optimization_methods:
+  - method: static_adjustment
+    description: "静态调整规则权重值"
+    example: "R006.weight: 0.8 → 0.7"
+    
+  - method: dynamic_weighting
+    description: "基于上下文动态计算权重"
+    example: "weight = base_weight * context_factor"
+    
+  - method: learned_weights
+    description: "从历史数据学习最优权重"
+    example: "使用机器学习优化权重"
+```
+
+### 策略 4: 规则合并/拆分
+
+```yaml
+strategy_id: OPT_004
+strategy_name: rule_merge_split
+priority: low
+
+trigger:
+  condition: "rules_highly_correlated OR rule_too_broad"
+  
+process:
+  steps:
+    - step: 1
+      name: detect_merge_split_candidates
+      description: "检测合并/拆分候选"
+      action: |
+        合并候选：
+        - 两个规则总是同时触发
+        - 两个规则的后续阶段高度重叠
+        
+        拆分候选：
+        - 一个规则的触发案例差异很大
+        - 一个规则需要不同的后续处理
+        
+    - step: 2
+      name: analyze_impact
+      description: "分析合并/拆分的影响"
+      action: |
+        ```yaml
+        merge_analysis:
+          candidates: ["R006", "R007"]
+          
+          current:
+            R006_triggers: 45
+            R007_triggers: 38
+            co_trigger: 35
+            
+          proposed_merge:
+            combined_triggers: 48  # 去重后
+            
+          impact:
+            reduction_in_rules: 1
+            coverage_change: "neutral"
+            complexity_reduction: "high"
+        ```
+        
+    - step: 3
+      name: design_new_rule
+      description: "设计新的规则"
+      action: |
+        合并时：
+        - 合并触发条件
+        - 合并后续阶段
+        - 选择较高的置信度
+        
+        拆分时：
+        - 识别不同的子模式
+        - 为每个子模式创建规则
+        - 确保无重叠
+        
+    - step: 4
+      name: validate_extensively
+      description: "广泛验证"
+      action: |
+        - 回测所有历史案例
+        - 检查是否有遗漏
+        - 检查是否有冲突
+        
+    - step: 5
+      name: migrate_and_monitor
+      description: "迁移并监控"
+      action: |
+        - 更新规则定义
+        - 迁移历史学习记录
+        - 密切监控初期效果
+
+# 合并/拆分规则
+merge_split_rules:
+  - id: MS_RULE_001
+    name: high_correlation_merge
+    condition: "co_trigger_rate > 0.8 AND stage_overlap > 0.7"
+    action: "merge_rules"
+    
+  - id: MS_RULE_002
+    name: low_diversity_split
+    condition: "rule_triggers_high_diversity AND different_optimal_actions"
+    action: "split_rule"
+    
+  - id: MS_RULE_003
+    name: maintain_hierarchical_structure
+    condition: "merge_would_create_cycle"
+    action: "do_not_merge"
+```
+
+---
+
+## 优化流程
+
+### 自动优化流程
+
+```yaml
+automatic_optimization_flow:
+  name: continuous_optimization
+  description: "持续自动优化流程"
+  
+  schedule:
+    - trigger: "daily"
+      time: "02:00"  # 凌晨低峰期
+      scope: "all_rules"
+      
+    - trigger: "weekly"
+      time: "Monday 10:00"
+      scope: "rules_with_issues"
+      
+    - trigger: "threshold_breached"
+      scope: "affected_rule"
+  
+  steps:
+    - step: 1
+      id: AO_STEP_001
+      name: collect_performance_data
+      description: "收集所有规则的性能数据"
+      action: |
+        ```yaml
+        data_collection:
+          period: "last_7_days"
+          metrics: ["PM_001" to "PM_010"]
+          output: "rule_performance_reports/"
+        ```
+        
+    - step: 2
+      id: AO_STEP_002
+      name: evaluate_rule_health
+      description: "评估每个规则的健康状态"
+      action: |
+        对每个规则计算健康分数：
+        ```yaml
+        health_score = (
+          accuracy_score * 0.3 +
+          effectiveness_score * 0.3 +
+          coverage_score * 0.2 +
+          efficiency_score * 0.2
+        )
+        ```
+        
+    - step: 3
+      id: AO_STEP_003
+      name: identify_issues
+      description: "识别需要优化的规则"
+      action: |
+        ```yaml
+        issue_detection:
+          thresholds:
+            health_score_below: 70
+            false_positive_above: 0.2
+            false_negative_above: 0.1
+            success_rate_below: 0.8
+            
+          output: "rules_needing_optimization"
+        ```
+        
+    - step: 4
+      id: AO_STEP_004
+      name: generate_optimization_proposals
+      description: "生成优化提案"
+      action: |
+        对每个有问题的规则：
+        - 分析问题原因
+        - 选择优化策略
+        - 生成具体提案
+        
+    - step: 5
+      id: AO_STEP_005
+      name: validate_proposals
+      description: "验证优化提案"
+      action: |
+        - 回测历史数据
+        - 模拟效果
+        - 生成验证报告
+        
+    - step: 6
+      id: AO_STEP_006
+      name: apply_or_flag
+      description: "应用或标记需要人工审核"
+      action: |
+        ```yaml
+        decision:
+          auto_apply:
+            - "threshold_adjustment with high confidence"
+            - "minor condition refinement"
+            
+          flag_for_review:
+            - "major structural changes"
+            - "rule merge/split"
+            - "low confidence proposals"
+        ```
+        
+    - step: 7
+      id: AO_STEP_007
+      name: monitor_changes
+      description: "监控应用后的效果"
+      action: |
+        设置监控期（7 天）
+        跟踪改进效果
+        如效果不佳，回滚
+```
+
+### 人工审核流程
+
+```yaml
+human_review_flow:
+  name: human_in_the_loop
+  description: "需要人工审核的优化流程"
+  
+  triggers:
+    - "major_rule_changes"
+    - "rule_merge_or_split"
+    - "low_confidence_optimization"
+    - "admin_requested_review"
+  
+  steps:
+    - step: 1
+      name: generate_review_request
+      description: "生成审核请求"
+      action: |
+        ```yaml
+        review_request:
+          id: "RR-2026-06-22-001"
+          created_at: "2026-06-22T10:00:00Z"
+          rule_id: "R006"
+          optimization_type: "merge_with_R007"
+          
+          current_state:
+            # 规则当前状态
+            
+          proposed_change:
+            # 建议的变更
+            
+          analysis:
+            # 分析依据
+            
+          risk_assessment:
+            # 风险评估
+            
+          recommended_action: "approve"
+        ```
+        
+    - step: 2
+      name: notify_stakeholders
+      description: "通知相关人员"
+      action: |
+        - 发送审核请求
+        - 附上分析报告
+        - 设置审核期限
+        
+    - step: 3
+      name: wait_for_decision
+      description: "等待审核决定"
+      timeout: "72h"
+      
+    - step: 4
+      name: apply_decision
+      description: "应用决定"
+      action: |
+        ```yaml
+        decision:
+          status: "approved | rejected | modified"
+          reviewed_by: "admin-001"
+          reviewed_at: "2026-06-23T14:00:00Z"
+          comments: ""
+          
+          if approved:
+            - apply_optimization
+            - notify_system
+            
+          if rejected:
+            - discard_proposal
+            - log_rejection_reason
+            
+          if modified:
+            - apply_modifications
+            - revalidate
+        ```
+```
+
+---
+
+## 与元能力的协作
+
+### 与元能力 2（阶段推理）的协作
+
+```yaml
+collaboration:
+  capability: stage-reasoning
+  
+  rule_optimizer_contribution:
+    - "持续优化推理规则的准确率"
+    - "减少误触发和漏匹配"
+    - "提高推理结果的质量"
+    
+  data_flow:
+    - "推理结果 → 性能数据"
+    - "用户反馈 → 效果评估"
+    - "优化后的规则 → 更好的推理"
+```
+
+### 与元能力 6（学习系统）的协作
+
+```yaml
+collaboration:
+  capability: learning-system
+  
+  rule_optimizer_contribution:
+    - "从学习记录中提取优化信号"
+    - "将成功的模式转化为规则改进"
+    - "持续更新知识库"
+    
+  data_flow:
+    - "LearningRecord → 规则性能数据"
+    - "质量评分 → 规则有效性评估"
+    - "最佳实践 → 规则改进建议"
+```
+
+---
+
+## 版本历史
+
+version_history:
+  - version: "1.0.0"
+    date: "2026-06-22"
+    changes:
+      - "初始版本"
+      - "定义性能指标"
+      - "定义 4 种优化策略"
+      - "定义自动优化流程"
+      - "定义人工审核流程"
